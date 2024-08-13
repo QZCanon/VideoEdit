@@ -326,6 +326,7 @@ HEADERS += \
     FitSDK/fit_workout_step_mesg_listener.hpp \
     FitSDK/fit_zones_target_mesg.hpp \
     FitSDK/fit_zones_target_mesg_listener.hpp \
+    core/types.h \
     dashboard/dashboard.h \
     mainwindow.h \
     myslide/myslide.h
@@ -339,3 +340,6 @@ FORMS += \
 qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
+
+DISTFILES += \
+    nootbook.txt
