@@ -326,6 +326,7 @@ HEADERS += \
     FitSDK/fit_workout_step_mesg_listener.hpp \
     FitSDK/fit_zones_target_mesg.hpp \
     FitSDK/fit_zones_target_mesg_listener.hpp \
+    core/defines.h \
     core/types.h \
     dashboard/dashboard.h \
     mainwindow.h \

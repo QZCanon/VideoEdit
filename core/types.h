@@ -5,8 +5,9 @@
 namespace Canon {
 
 typedef struct FitMessage_ {
-    FitMessage_() :
-        speed(0)
+    FitMessage_()
+      : isValid(false)
+      , speed(0)
       , temperature(0)
       , position_lat(0.0)
       , position_long(0.0)
@@ -14,6 +15,7 @@ typedef struct FitMessage_ {
       , distance(0)
       , timeStamp(0)
     {}
+    bool isValid;
     uint16_t speed;
     uint16_t temperature;
     double position_lat;
