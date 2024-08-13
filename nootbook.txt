@@ -1,0 +1,57 @@
+
+# 码表原始数据
+= TYPE=2 NAME=record NUMBER=20
+--- timestamp=1092311204=2024-08-11T11:46:44Z
+--- speed=3777=13.597 km/h
+--- temperature=26=26 deg.C
+--- distance=29345=293.45 m
+--- grade=-10=-0.10 %
+--- altitude=5255=551.0 m
+--- position_lat=363917231=30.5031899 deg
+--- position_long=1241659893=104.0747300 deg
+
+# 解析结果
+On Mesg:
+   New Mesg: record.  It has 10 field(s) and 0 developer field(s).
+   Field0(timestamp) has 1 value(s)
+       Val0: 1092311204.000000 s
+   Field1(speed) has 1 value(s)
+       Val0: 3.777000 m/s
+   Field2(temperature) has 1 value(s)
+       Val0: 26.000000 C
+   Field3(distance) has 1 value(s)
+       Val0: 293.450000 m
+   Field4(grade) has 1 value(s)
+       Val0: -0.100000 %
+   Field5(altitude) has 1 value(s)
+       Val0: 551.000000 m
+   Field6(position_lat) has 1 value(s)
+       Val0: 363917231.000000 semicircles
+   Field7(position_long) has 1 value(s)
+       Val0: 1241659893.000000 semicircles
+   Field8(enhanced_speed) has 1 value(s)
+       Val0: 3.777000 m/s
+   Field9(enhanced_altitude) has 1 value(s)
+       Val0: 551.000000 m
+Record:
+   distance:
+      native: 293.450000
+   speed:
+      native: 3.777000
+
+
+# 时间戳信息
+    码表UTC：1989-12-31 00:00:00
+
+# 时间同步
+    码表时间和相机时间，统一已1900-1-1 00:00:00 开始，以下称 startTime
+
+时间转换：
+    a、码表时间戳起始转换成由startTime开始计算，结果为t
+        T1 = t + timestamp
+    b、视频时间转换
+        当前帧的时间 T2 = 视频开始录制时间 t1 + 当前播放进度 t2，
+        
+    T1 与 T2 进行匹配
+
+
