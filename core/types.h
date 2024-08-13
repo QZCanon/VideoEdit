@@ -4,6 +4,10 @@
 #include <stdint.h>
 namespace Canon {
 
+
+/*
+ * 当前每种数据只支持一个
+ */
 typedef struct FitMessage_ {
     FitMessage_()
       : isValid(false)

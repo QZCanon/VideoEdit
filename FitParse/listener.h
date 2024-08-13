@@ -27,8 +27,7 @@ public:
         printf("On Mesg:\n");
         qDebug() << L"   New Mesg: " << mesg.GetName().c_str() << L".  It has " << mesg.GetNumFields() << L" field(s) and " << mesg.GetNumDevFields() << " developer field(s).\n";
 
-        for (FIT_UINT16 i = 0; i < (FIT_UINT16)mesg.GetNumFields(); i++)
-        {
+        for (FIT_UINT16 i = 0; i < (FIT_UINT16)mesg.GetNumFields(); i++) {
             Canon::FitMessage fitMsg;
 
             fit::Field* field = mesg.GetFieldByIndex(i);
@@ -36,21 +35,18 @@ public:
 
             qDebug() << L"   Field" << i << " (" << field->GetName().c_str() << ") has " << field->GetNumValues() << L" value(s)\n";
             PrintValues(*field);
-
-            if (fitMessage_cb) {
-                fitMessage_cb(fitMsg);
-            } else {
-                qErrnoWarning("fit message is nil!");
+            if (!fitMsg.isValid) {
+                qWarning() << "fitMsg is invalid!";
+                continue;
             }
+            if (fitMessage_cb) { fitMessage_cb(fitMsg); }
+            else { qErrnoWarning("fit message is nil!"); }
         }
 
-        for (auto devField : mesg.GetDeveloperFields())
-        {
+        for (auto devField : mesg.GetDeveloperFields()) {
             qDebug() << L"   Developer Field(" << devField.GetName().c_str() << ") has " << devField.GetNumValues() << L" value(s)\n";
             PrintValues(devField);
         }
-
-
     }
 
     void OnMesg(fit::FileIdMesg& mesg) override
@@ -173,34 +169,34 @@ public:
         for (FIT_UINT8 j = 0; j < (FIT_UINT8)field->GetNumValues(); ++j) {
             fitMsg.isValid = true;
             switch (field->GetType()) {
-            case FIT_BASE_TYPE_ENUM:
-            case FIT_BASE_TYPE_BYTE:
-            case FIT_BASE_TYPE_SINT8:
-            case FIT_BASE_TYPE_UINT8:
-            case FIT_BASE_TYPE_SINT16:
-            case FIT_BASE_TYPE_UINT16:
-            case FIT_BASE_TYPE_SINT32:
-            case FIT_BASE_TYPE_UINT32:
-            case FIT_BASE_TYPE_SINT64:
-            case FIT_BASE_TYPE_UINT64:
-            case FIT_BASE_TYPE_UINT8Z:
-            case FIT_BASE_TYPE_UINT16Z:
-            case FIT_BASE_TYPE_UINT32Z:
-            case FIT_BASE_TYPE_UINT64Z:
-            case FIT_BASE_TYPE_FLOAT32:
-            case FIT_BASE_TYPE_FLOAT64:
-                FIT_FLOAT64 ret = field->GetFLOAT64Value(j);
-                if      (name == "timestamp")           { fitMsg.timeStamp     = static_cast<uint64_t>(ret); }
-                else if (name == "speed")               { fitMsg.speed         = static_cast<uint16_t>(ret); }
-                else if (name == "temperature")         { fitMsg.temperature   = static_cast<uint16_t>(ret); }
-                else if (name == "distance")            { fitMsg.distance      = static_cast<uint32_t>(ret); }
-                else if (name == "grade")               { fitMsg.grade         = ret;                        }
-                else if (name == "position_lat")        { fitMsg.position_lat  = ret;                        }
-                else if (name == "position_long")       { fitMsg.position_long = ret;                        }
-                else if (name == "enhanced_speed")      {}
-                else if (name == "enhanced_altitude")   {}
-                else if (name == "altitude")            {}
-                break;
+                case FIT_BASE_TYPE_ENUM:
+                case FIT_BASE_TYPE_BYTE:
+                case FIT_BASE_TYPE_SINT8:
+                case FIT_BASE_TYPE_UINT8:
+                case FIT_BASE_TYPE_SINT16:
+                case FIT_BASE_TYPE_UINT16:
+                case FIT_BASE_TYPE_SINT32:
+                case FIT_BASE_TYPE_UINT32:
+                case FIT_BASE_TYPE_SINT64:
+                case FIT_BASE_TYPE_UINT64:
+                case FIT_BASE_TYPE_UINT8Z:
+                case FIT_BASE_TYPE_UINT16Z:
+                case FIT_BASE_TYPE_UINT32Z:
+                case FIT_BASE_TYPE_UINT64Z:
+                case FIT_BASE_TYPE_FLOAT32:
+                case FIT_BASE_TYPE_FLOAT64:
+                    FIT_FLOAT64 ret = field->GetFLOAT64Value(j);
+                    if      (name == "timestamp")           { fitMsg.timeStamp     = static_cast<uint64_t>(ret); }
+                    else if (name == "speed")               { fitMsg.speed         = static_cast<uint16_t>(ret); }
+                    else if (name == "temperature")         { fitMsg.temperature   = static_cast<uint16_t>(ret); }
+                    else if (name == "distance")            { fitMsg.distance      = static_cast<uint32_t>(ret); }
+                    else if (name == "grade")               { fitMsg.grade         = ret;                        }
+                    else if (name == "position_lat")        { fitMsg.position_lat  = ret;                        }
+                    else if (name == "position_long")       { fitMsg.position_long = ret;                        }
+                    else if (name == "enhanced_speed")      {}
+                    else if (name == "enhanced_altitude")   {}
+                    else if (name == "altitude")            {}
+                    break;
             }
         }
 
@@ -216,29 +212,29 @@ public:
            {
            // Get float 64 values for numeric types to receive values that have
            // their scale and offset properly applied.
-           case FIT_BASE_TYPE_ENUM:
-           case FIT_BASE_TYPE_BYTE:
-           case FIT_BASE_TYPE_SINT8:
-           case FIT_BASE_TYPE_UINT8:
-           case FIT_BASE_TYPE_SINT16:
-           case FIT_BASE_TYPE_UINT16:
-           case FIT_BASE_TYPE_SINT32:
-           case FIT_BASE_TYPE_UINT32:
-           case FIT_BASE_TYPE_SINT64:
-           case FIT_BASE_TYPE_UINT64:
-           case FIT_BASE_TYPE_UINT8Z:
-           case FIT_BASE_TYPE_UINT16Z:
-           case FIT_BASE_TYPE_UINT32Z:
-           case FIT_BASE_TYPE_UINT64Z:
-           case FIT_BASE_TYPE_FLOAT32:
-           case FIT_BASE_TYPE_FLOAT64:
-               qDebug() << field.GetFLOAT64Value(j);
-               break;
-           case FIT_BASE_TYPE_STRING:
-               qDebug() << field.GetSTRINGValue(j).c_str();
-               break;
-           default:
-               break;
+               case FIT_BASE_TYPE_ENUM:
+               case FIT_BASE_TYPE_BYTE:
+               case FIT_BASE_TYPE_SINT8:
+               case FIT_BASE_TYPE_UINT8:
+               case FIT_BASE_TYPE_SINT16:
+               case FIT_BASE_TYPE_UINT16:
+               case FIT_BASE_TYPE_SINT32:
+               case FIT_BASE_TYPE_UINT32:
+               case FIT_BASE_TYPE_SINT64:
+               case FIT_BASE_TYPE_UINT64:
+               case FIT_BASE_TYPE_UINT8Z:
+               case FIT_BASE_TYPE_UINT16Z:
+               case FIT_BASE_TYPE_UINT32Z:
+               case FIT_BASE_TYPE_UINT64Z:
+               case FIT_BASE_TYPE_FLOAT32:
+               case FIT_BASE_TYPE_FLOAT64:
+                   qDebug() << field.GetFLOAT64Value(j);
+                   break;
+               case FIT_BASE_TYPE_STRING:
+                   qDebug() << field.GetSTRINGValue(j).c_str();
+                   break;
+               default:
+                   break;
            }
            qDebug() << L" " << field.GetUnits().c_str() << L"\n";;
        }
