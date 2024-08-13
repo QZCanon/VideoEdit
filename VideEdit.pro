@@ -19,6 +19,7 @@ DEFINES += QT_DEPRECATED_WARNINGS
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
+    FitParse/fitparse.cpp \
     FitSDK/fit.cpp \
     FitSDK/fit_accumulated_field.cpp \
     FitSDK/fit_accumulator.cpp \
@@ -49,6 +50,8 @@ SOURCES += \
     myslide/myslide.cpp
 
 HEADERS += \
+    FitParse/fitparse.h \
+    FitParse/listener.h \
     FitSDK/fit.hpp \
     FitSDK/fit_aad_accel_features_mesg.hpp \
     FitSDK/fit_aad_accel_features_mesg_listener.hpp \

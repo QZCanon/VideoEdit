@@ -3,6 +3,8 @@
 
 #include <QMainWindow>
 
+#include "FitParse/fitparse.h"
+
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
@@ -17,5 +19,7 @@ public:
 
 private:
     Ui::MainWindow *ui;
+
+    std::shared_ptr<FitParse> fitParse{nullptr};
 };
 #endif // MAINWINDOW_H
