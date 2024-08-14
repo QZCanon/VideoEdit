@@ -2,16 +2,14 @@
 
 FitParse::FitParse(QObject *parent) : QObject(parent)
 {
-    ReadFitFile();
-
     listener.SetFitMessageCallback(std::bind(&FitParse::MessageCallback,
                                              this,
                                              std::placeholders::_1));
 }
 
-void FitParse::ReadFitFile()
+void FitParse::ReadFitFile(const std::string& fileName)
 {
-    fitMsgList.clear(); // 先清空队列
+    stopWatchMsgList.clear(); // 先清空队列
 
     std::fstream file;
     file.open(fileName, std::ios::in | std::ios::binary);
@@ -50,10 +48,10 @@ void FitParse::ReadFitFile()
     }
 }
 
-void FitParse::MessageCallback(Canon::FitMessage &msg)
+void FitParse::MessageCallback(Canon::StopWatchMessage &msg)
 {
     {
         std::unique_lock<std::mutex> lock(mutex);
-        fitMsgList.push_back(msg);
+        stopWatchMsgList.push_back(msg);
     }
 }

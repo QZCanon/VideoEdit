@@ -344,3 +344,37 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 
 DISTFILES += \
     nootbook.txt
+
+DEFINES += QT_DEPRECATED_WARNINGS
+
+#arm64 的编译宏
+contains(QMAKE_HOST.arch, aarch64){
+    #aarch64 是编译器类型，如果不是这个编译器， 可以把.arch 替换成对应的类型
+    #arm 64平台
+    message("编译目标平台: arm-64")
+    message("编译器平台类型: $$QMAKE_HOST.arch")
+}else{
+    message("编译目标平台: x86")
+    message("编译器平台类型: $$QMAKE_HOST.arch")
+
+    win32{
+        # 仅x86-windows下的
+        message("win32")
+    }
+
+    #仅在linux -x86 平台下的内容
+    unix{
+        message("unix")
+        INCLUDEPATH += \
+            /usr/local/ffmpeg/include/
+        LIBS += \
+            /usr/local/ffmpeg/lib/libavformat.61.dylib \
+            /usr/local/ffmpeg/lib/libavcodec.61.dylib \
+            /usr/local/ffmpeg/lib/libavdevice.61.dylib \
+            /usr/local/ffmpeg/lib/libavfilter.10.dylib \
+            /usr/local/ffmpeg/lib/libavutil.59.dylib \
+            /usr/local/ffmpeg/lib/libpostproc.58.dylib \
+            /usr/local/ffmpeg/lib/libswresample.5.dylib \
+            /usr/local/ffmpeg/lib/libswscale.8.dylib
+    }
+}

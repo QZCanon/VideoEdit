@@ -127,15 +127,16 @@ void MySlide::paintEvent(QPaintEvent *)
     progressSumPix = PSum;
     int currentProgress = (int)((float)PSum/100*progressValue);
 
-    //        QPainter painter(this) ;//背景
-    //        painter.setBrush(Qt::green);//画刷QBrushQColor(0x00,0xFF,0x00)
-    //        painter.setPen(QPen(QColor(232,60,60),1,Qt::SolidLine));//画笔
-    //        painter.drawRoundRect(0, 0,
-    //                              w,h,
-    //                              0,0);
+           QPainter painter(this) ;//背景
+           painter.setBrush(Qt::green);//画刷QBrushQColor(0x00,0xFF,0x00)
+           painter.setPen(QPen(QColor(232,60,60),1,Qt::SolidLine));//画笔
+           // painter.drawRoundRect(0, 0,
+           //                       w,h,
+           //                       0,0); // TODO
 
     QPainter painter2(this) ;//灰色区域
-    painter2.setRenderHint(QPainter::Qt4CompatiblePainting);  // 反锯齿;
+    // painter2.setRenderHint(QPainter::Qt4CompatiblePainting);  // 反锯齿;
+    painter2.setRenderHint(QPainter::Antialiasing, true);
     painter2.setBrush(QColor(194,194,196));//画刷
     painter2.setPen(QPen(QColor(194,194,196),1,Qt::SolidLine));//画笔
     //    QRectF rectangle3((float)PSum/100*progressValue+buttonHeight/2, currentY, PSum-currentProgress, lineHeight);
@@ -143,7 +144,8 @@ void MySlide::paintEvent(QPaintEvent *)
     painter2.drawRoundedRect(rectangle3, 1.0, 1.0);
 
     QPainter painter1(this) ;//红色区域
-    painter1.setRenderHint(QPainter::Qt4CompatiblePainting);  // 反锯齿;
+    // painter1.setRenderHint(QPainter::Qt4CompatiblePainting);  // 反锯齿;
+    painter1.setRenderHint(QPainter::Antialiasing, true);
     painter1.setBrush(QColor(232,60,60));//画刷QBrushQColor(0x00,0xFF,0x00)
     painter1.setPen(QPen(QColor(232,60,60),1,Qt::SolidLine));//画笔
     QRectF rectangle2(buttonHeight/2, currentY, currentProgress, lineHeight);

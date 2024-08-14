@@ -2,6 +2,7 @@
 #define FITPARSE_H
 
 #include <QDebug>
+#include <QObject>
 #include <fstream>
 #include <vector>
 #include <mutex>
@@ -18,11 +19,11 @@ class FitParse : public QObject
     Q_OBJECT
 public:
     explicit FitParse(QObject *parent = nullptr);
-    FitParse(std::string& fileName_) : fileName(fileName_) {}
+
+    void ReadFitFile(const std::string& fileName);
 
 private:
-    void ReadFitFile();
-    void MessageCallback(Canon::FitMessage& fitMsg);
+    void MessageCallback(Canon::StopWatchMessage& fitMsg);
 
 signals:
 
@@ -30,11 +31,9 @@ private:
     fit::Decode          decode;
     fit::MesgBroadcaster mesgBroadcaster;
     Listener             listener;
-    const std::string    fileName;
 
-    std::mutex                     mutex;
-    std::vector<Canon::FitMessage> fitMsgList;
-
+    std::mutex           mutex;
+    Canon::StopWatchList stopWatchMsgList;
 };
 
 

@@ -20,7 +20,7 @@ class Listener
     , public fit::RecordMesgListener
 {
 public:
-    void SetFitMessageCallback(FitMessageCallback cb) { fitMessage_cb = cb; }
+    void SetFitMessageCallback(StopWatchMessageCallback cb) { fitMessage_cb = cb; }
 
     void OnMesg(fit::Mesg& mesg) override
     {
@@ -28,7 +28,7 @@ public:
         qDebug() << L"   New Mesg: " << mesg.GetName().c_str() << L".  It has " << mesg.GetNumFields() << L" field(s) and " << mesg.GetNumDevFields() << " developer field(s).\n";
 
         for (FIT_UINT16 i = 0; i < (FIT_UINT16)mesg.GetNumFields(); i++) {
-            Canon::FitMessage fitMsg;
+            Canon::StopWatchMessage fitMsg;
 
             fit::Field* field = mesg.GetFieldByIndex(i);
             GetFitMsg(fitMsg, field);
@@ -164,7 +164,7 @@ public:
        printf( "   Field Number: %d\n", desc.GetFieldDefinitionNumber() );
     }
 
-    void GetFitMsg(Canon::FitMessage& fitMsg, const fit::FieldBase* field) {
+    void GetFitMsg(Canon::StopWatchMessage& fitMsg, const fit::FieldBase* field) {
         const auto& name  = field->GetName();
         for (FIT_UINT8 j = 0; j < (FIT_UINT8)field->GetNumValues(); ++j) {
             fitMsg.isValid = true;
@@ -185,6 +185,7 @@ public:
                 case FIT_BASE_TYPE_UINT64Z:
                 case FIT_BASE_TYPE_FLOAT32:
                 case FIT_BASE_TYPE_FLOAT64:
+                {
                     FIT_FLOAT64 ret = field->GetFLOAT64Value(j);
                     if      (name == "timestamp")           { fitMsg.timeStamp     = static_cast<uint64_t>(ret); }
                     else if (name == "speed")               { fitMsg.speed         = static_cast<uint16_t>(ret); }
@@ -197,6 +198,7 @@ public:
                     else if (name == "enhanced_altitude")   {}
                     else if (name == "altitude")            {}
                     break;
+                }
             }
         }
 
@@ -297,7 +299,7 @@ public:
     }
 
 private:
-    FitMessageCallback fitMessage_cb;
+    StopWatchMessageCallback fitMessage_cb;
 };
 
 #endif // LISTENER_H

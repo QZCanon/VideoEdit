@@ -1,6 +1,15 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
+#include <QTime>
+#include <iostream>
 
+extern "C"{
+#include <libavformat/avformat.h>
+#include <libavcodec/avcodec.h>
+#include <libavutil/imgutils.h>
+#include <libavutil/opt.h>
+#include <libswscale/swscale.h>
+}
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -10,13 +19,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     fitParse = std::make_shared<FitParse>();
 
-//    qDebug().setVerbosity(7);
-
-//    qDebug() << "debug";
-//    qInfo() << "info";
-//    qWarning() << "warning";
-//    qCritical() << "qCritical";
-
+    avformat_network_init();
 }
 
 MainWindow::~MainWindow()
@@ -24,3 +27,13 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
+void Delay(int msec)
+{
+    QTime dieTime = QTime::currentTime().addMSecs(msec);
+    while( QTime::currentTime() < dieTime )
+        QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
+}
+
+void MainWindow::on_pushButton_clicked()
+{
+}

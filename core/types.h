@@ -2,14 +2,15 @@
 #define TYPES_H
 
 #include <stdint.h>
-namespace Canon {
+#include <vector>
 
+namespace Canon {
 
 /*
  * 当前每种数据只支持一个
  */
-typedef struct FitMessage_ {
-    FitMessage_()
+typedef struct StopWatchMessage_ {
+    StopWatchMessage_()
       : isValid(false)
       , speed(0)
       , temperature(0)
@@ -27,7 +28,9 @@ typedef struct FitMessage_ {
     double grade;
     uint32_t distance;
     uint64_t timeStamp;
-} FitMessage;
+} StopWatchMessage;
+
+using StopWatchList = std::vector<Canon::StopWatchMessage>;
 
 }
 

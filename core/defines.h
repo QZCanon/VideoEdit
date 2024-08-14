@@ -4,6 +4,6 @@
 #include <functional>
 #include "types.h"
 
-using FitMessageCallback = std::function<void(Canon::FitMessage&)>;
+using StopWatchMessageCallback = std::function<void(Canon::StopWatchMessage&)>;
 
 #endif // DEFINES_H
