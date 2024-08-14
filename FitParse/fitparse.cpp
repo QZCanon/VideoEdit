@@ -13,11 +13,9 @@ void FitParse::ReadFitFile(const std::string& fileName)
 
     std::fstream file;
     file.open(fileName, std::ios::in | std::ios::binary);
-
-    // open
     if (!file.is_open())
     {
-       // qDebug() << "Error opening file " << fileName;
+       qDebug() << "Error opening file " << fileName;
     }
 
     if (!decode.CheckIntegrity(file))
@@ -34,16 +32,11 @@ void FitParse::ReadFitFile(const std::string& fileName)
     mesgBroadcaster.AddListener((fit::MesgListener &)listener);
 
     // read
-    try
-    {
+    try {
        decode.Read(&file, &mesgBroadcaster, &mesgBroadcaster, &listener);
-    }
-    catch (const fit::RuntimeException& e)
-    {
+    } catch (const fit::RuntimeException& e) {
        qDebug() << "Exception decoding file: " << e.what();
-    }
-    catch (...)
-    {
+    } catch (...) {
        qDebug() << "Exception decoding file";
     }
 }

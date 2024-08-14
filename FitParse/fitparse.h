@@ -4,7 +4,6 @@
 #include <QDebug>
 #include <QObject>
 #include <fstream>
-#include <vector>
 #include <mutex>
 
 #include "FitSDK/fit_decode.hpp"
