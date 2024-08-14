@@ -360,6 +360,7 @@ contains(QMAKE_HOST.arch, aarch64){
     win32{
         # 仅x86-windows下的
         message("win32")
+        QMAKE_CXXFLAGS += "-Wa,-mbig-obj"
     }
 
     #仅在linux -x86 平台下的内容
@@ -378,3 +379,4 @@ contains(QMAKE_HOST.arch, aarch64){
             /usr/local/ffmpeg/lib/libswscale.8.dylib
     }
 }
+
