@@ -17,7 +17,7 @@ MainWindow::MainWindow(QWidget *parent)
     m_bReLoad = true;
     setWindowTitle("播放器");
     setWindowIcon(QIcon(":/icon/icon.webp"));// 图标
-    setFixedSize(800,600);//设置固定大小
+    // setFixedSize(800,600);//设置固定大小
 
     // 1.放置播放窗口
     m_pPlayer       = new QMediaPlayer;//媒体播放器类
@@ -106,8 +106,7 @@ void MainWindow::OnMediaStateChanged(QMediaPlayer::MediaStatus status)
         ui->BtnPlay->setEnabled(true);
         ui->BtnStop->setEnabled(false);
         ui->myslide->setEnabled(false);
-    } else if(QMediaPlayer::MediaStatus::BufferedMedia == status)// 播放
-    {
+    } else if(QMediaPlayer::MediaStatus::BufferedMedia == status) { // 播放
         ui->BtnPlay->setEnabled(false);
         ui->BtnStop->setEnabled(true);
         ui->myslide->setEnabled(true);
