@@ -80,7 +80,7 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 DISTFILES += \
     nootbook.txt
 
-DEFINES += QT_DEPRECATED_WARNINGS
+
 
 #arm64 的编译宏
 contains(QMAKE_HOST.arch, aarch64){
@@ -106,17 +106,17 @@ contains(QMAKE_HOST.arch, aarch64){
                                                         -lpostproc \
                                                         -lswresample \
                                                         -lswscale
-        else:win32:CONFIG(debug, debug|release): LIBS += -LE:/install/ffmpeg-6.1.1/lib/ \
-                                                        -lavformat \
-                                                        -lavcodec \
-                                                        -lavdevice \
-                                                        -lavfilter \
-                                                        -lavutil \
-                                                        -lpostproc \
-                                                        -lswresample \
-                                                        -lswscale
+        # else:win32:CONFIG(debug, debug|release): LIBS += -LE:/install/ffmpeg-6.1.1/lib/ \
+        #                                                 -lavformat \
+        #                                                 -lavcodec \
+        #                                                 -lavdevice \
+        #                                                 -lavfilter \
+        #                                                 -lavutil \
+        #                                                 -lpostproc \
+        #                                                 -lswresample \
+        #                                                 -lswscale
 
-        LIBS += -LE:\install\ffmpeg-6.1.1\bin -lavcodec-60
+        # LIBS += -LE:\install\ffmpeg-6.1.1\bin -lavcodec-60
 
         INCLUDEPATH += E:/install/ffmpeg-6.1.1/include
         DEPENDPATH += E:/install/ffmpeg-6.1.1/include
@@ -125,6 +125,7 @@ contains(QMAKE_HOST.arch, aarch64){
 
     #仅在linux -x86 平台下的内容
     unix{
+        DEFINES += QT_DEPRECATED_WARNINGS
         message("unix")
         INCLUDEPATH += \
             /usr/local/ffmpeg/include/
