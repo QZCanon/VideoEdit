@@ -103,8 +103,8 @@ public:
             if (packet.stream_index == videoStreamIndex) {
                 if (avcodec_send_packet(codecContext, &packet) == 0) {
                     if (avcodec_receive_frame(codecContext, frame) == 0) {
-                        // LOG_DEBUG() << "---------------------------";
-                        // double t1 = (double)clock();
+                        LOG_DEBUG() << "---------------------------";
+                        double t1 = (double)clock() / 1000;
                         // Convert frame to QImage
                         if (!swsContext) {
                             swsContext = sws_getCachedContext(
@@ -112,21 +112,21 @@ public:
                                 codecContext->width, codecContext->height, AV_PIX_FMT_RGB24, SWS_BILINEAR, nullptr, nullptr, nullptr
                             );
                         }
-                        // double t2 = (double)clock();
-                        // uint8_t *data[4];
-                        // int linesize[4];
-                        // av_image_alloc(data, linesize, codecContext->width, codecContext->height, AV_PIX_FMT_RGB24, 1);
-                        // double t3 = (double)clock();
-                        // sws_scale(swsContext, frame->data, frame->linesize, 0, codecContext->height, data, linesize);
-                        // double t4 = (double)clock();
-                        // QImage image(data[0], codecContext->width, codecContext->height, QImage::Format_RGB888);
-                        // QPixmap pixmap = QPixmap::fromImage(image).scaled(label->size(), Qt::KeepAspectRatio);
-                        // QMetaObject::invokeMethod(label, "setPixmap", Qt::QueuedConnection, Q_ARG(QPixmap, pixmap));
-                        // double t5 = (double)clock();
-                        // LOG_DEBUG() << "sws_getCachedContext time: " << t2 - t1 << "(ms)";
-                        // LOG_DEBUG() << "av_image_alloc time:       " << t3 - t2 << "(ms)";
-                        // LOG_DEBUG() << "sws_scale time:            " << t4 - t3 << "(ms)";
-                        // LOG_DEBUG() << "draw pic time:             " << t5 - t4 << "(ms)";
+                        double t2 = (double)clock() / 1000;
+                        uint8_t *data[4];
+                        int linesize[4];
+                        av_image_alloc(data, linesize, codecContext->width, codecContext->height, AV_PIX_FMT_RGB24, 1);
+                        double t3 = (double)clock() / 1000;
+                        sws_scale(swsContext, frame->data, frame->linesize, 0, codecContext->height, data, linesize);
+                        double t4 = (double)clock() / 1000;
+                        QImage image(data[0], codecContext->width, codecContext->height, QImage::Format_RGB888);
+                        QPixmap pixmap = QPixmap::fromImage(image).scaled(label->size(), Qt::KeepAspectRatio);
+                        QMetaObject::invokeMethod(label, "setPixmap", Qt::QueuedConnection, Q_ARG(QPixmap, pixmap));
+                        double t5 = (double)clock() / 1000;
+                        LOG_DEBUG() << "sws_getCachedContext time: " << t2 - t1 << "(ms)";
+                        LOG_DEBUG() << "av_image_alloc time:       " << t3 - t2 << "(ms)";
+                        LOG_DEBUG() << "sws_scale time:            " << t4 - t3 << "(ms)";
+                        LOG_DEBUG() << "draw pic time:             " << t5 - t4 << "(ms)";
                         // av_freep(&data[0]);
                     }
                 }
