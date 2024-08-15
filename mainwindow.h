@@ -4,7 +4,19 @@
 #include <QMainWindow>
 #include <memory>
 
+#include <QLabel>
+#include <QTimer>
+#include <QImage>
+#include <QPixmap>
+
 #include "FitParse/fitparse.h"
+#include "VideoPlayer/VideoPlayer.h"
+
+extern "C" {
+#include <libavformat/avformat.h>
+#include <libavcodec/avcodec.h>
+#include <libswscale/swscale.h>
+}
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -25,5 +37,7 @@ private:
     Ui::MainWindow *ui;
 
     std::shared_ptr<FitParse> fitParse{nullptr};
+
+    VideoPlayer *player{nullptr};
 };
 #endif // MAINWINDOW_H

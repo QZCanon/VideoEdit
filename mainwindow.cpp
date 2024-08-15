@@ -1,7 +1,9 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include <QTime>
-#include <iostream>
+#include "Logger/logger.h"
+#include <thread>
+#include "VideoPlayer/VideoPlayer.h"
 
 extern "C"{
 #include <libavformat/avformat.h>
@@ -10,6 +12,9 @@ extern "C"{
 #include <libavutil/opt.h>
 #include <libswscale/swscale.h>
 }
+std::thread th;
+int labelWidth = 640;
+int labelHeight = 480;
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -19,20 +24,20 @@ MainWindow::MainWindow(QWidget *parent)
 
     fitParse = std::make_shared<FitParse>();
 
-    avformat_network_init();
+    player = new VideoPlayer("/Users/qinzhou/workspace/test/input_file.mp4", ui->label);
+    player->start();
+
 }
 
 MainWindow::~MainWindow()
 {
+
+    player->stopPlayback();
+    player->wait();
+
     delete ui;
 }
 
-void Delay(int msec)
-{
-    QTime dieTime = QTime::currentTime().addMSecs(msec);
-    while( QTime::currentTime() < dieTime )
-        QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
-}
 
 void MainWindow::on_pushButton_clicked()
 {

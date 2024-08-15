@@ -1,6 +1,10 @@
 QMAKE_MACOSX_DEPLOYMENT_TARGET=10.15
 QT       += core gui
 
+#---opengl----------------------------
+QT       +=opengl
+QT       += core gui openglwidgets
+
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 CONFIG += c++11
@@ -53,6 +57,8 @@ HEADERS += \
     FitParse/fitparse.h \
     FitParse/listener.h \
     FitSDK/*.hpp \
+    Logger/logger.h \
+    VideoPlayer/VideoPlayer.h \
     core/defines.h \
     core/types.h \
     dashboard/dashboard.h \

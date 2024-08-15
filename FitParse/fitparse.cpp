@@ -1,4 +1,5 @@
 #include "fitparse.h"
+#include "Logger/logger.h"
 
 FitParse::FitParse(QObject *parent) : QObject(parent)
 {
@@ -13,14 +14,12 @@ void FitParse::ReadFitFile(const std::string& fileName)
 
     std::fstream file;
     file.open(fileName, std::ios::in | std::ios::binary);
-    if (!file.is_open())
-    {
-       qDebug() << "Error opening file " << fileName;
+    if (!file.is_open()) {
+       LOG_DEBUG() << "Error opening file " << fileName;
     }
 
-    if (!decode.CheckIntegrity(file))
-    {
-       printf("FIT file integrity failed.\nAttempting to decode...\n");
+    if (!decode.CheckIntegrity(file)) {
+       LOG_DEBUG() << "FIT file integrity failed.\nAttempting to decode...";
     }
 
     // add listener
@@ -35,14 +34,15 @@ void FitParse::ReadFitFile(const std::string& fileName)
     try {
        decode.Read(&file, &mesgBroadcaster, &mesgBroadcaster, &listener);
     } catch (const fit::RuntimeException& e) {
-       qDebug() << "Exception decoding file: " << e.what();
+       LOG_DEBUG() << "Exception decoding file: " << e.what();
     } catch (...) {
-       qDebug() << "Exception decoding file";
+       LOG_DEBUG() << "Exception decoding file";
     }
 }
 
 void FitParse::MessageCallback(Canon::StopWatchMessage &msg)
 {
+    LOG_DEBUG() << "msg fit is rec";
     {
         std::unique_lock<std::mutex> lock(mutex);
         stopWatchMsgList.push_back(msg);
