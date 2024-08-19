@@ -125,7 +125,6 @@ contains(QMAKE_HOST.arch, aarch64){
 
     #仅在linux -x86 平台下的内容
     unix{
-        DEFINES += QT_DEPRECATED_WARNINGS
         message("unix")
         INCLUDEPATH += \
             /usr/local/ffmpeg/include/

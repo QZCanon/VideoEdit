@@ -3,7 +3,6 @@
 
 #include <QMainWindow>
 #include <memory>
-
 #include <QWidget>
 #include <QMediaPlayer>
 #include <QVideoWidget>
@@ -15,6 +14,7 @@
 #include <QTime>
 
 #include "FitParse/fitparse.h"
+#include "dashboard/dashboard.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -28,19 +28,31 @@ public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 
+private:
+    void InitWindows();
+    void InitUIComponent();
+    void InitMedia();
+    void InitFitParse();
+    void InitDashBoard();
+
 private slots:
 
 private:
     Ui::MainWindow *ui;
+    QHBoxLayout* layout;
 
-    std::shared_ptr<FitParse> fitParse{nullptr};
+    std::shared_ptr<FitParse>     m_fitParse{nullptr};      // fit文件解析
 
-    // VideoPlayer *player{nullptr};
-    QVideoWidget* m_pPlayerWidget{nullptr}; // 视频显示组件
-    QAudioOutput* m_audio{nullptr};         // 音频播放器
-    QMediaPlayer* m_pPlayer;                // 媒体播放器类
-    bool          m_bReLoad;                // 已经载入还没设置进度条最大值
-    float         m_scale{0.0};
+    std::shared_ptr<QVideoWidget> m_pPlayerWidget{nullptr}; // 视频显示组件
+    std::shared_ptr<QAudioOutput> m_audio{nullptr};         // 音频播放器
+    std::shared_ptr<QMediaPlayer> m_pPlayer{nullptr};       // 媒体播放器类
+    bool                          m_bReLoad;                // 已经载入还没设置进度条最大值
+    float                         m_scale{0.0};             // 进度条与媒体文件长度计算比例（100 / duration）
+
+    std::shared_ptr<DashBoard>    m_dashBoard{nullptr};
+
+protected:
+    void moveEvent(QMoveEvent *) override;
 
 public slots:
     void OnSetMediaFile(void);                           // 选择文件导入

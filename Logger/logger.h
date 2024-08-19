@@ -34,7 +34,12 @@ private:
 //     if (Logger::GetInstance->GetLogLevel() <= LogLevel::DEBUG) \
 //         qDebug() << "[DEBUG][" <<  __FILE_NAME__ << "][line:" << __LINE__ << "][" << __FUNCTION__ << "()|")
 
-#define LOG_DEBUG() ( \
-        qDebug() << "[DEBUG][" <<  __FILE_NAME__ << "][line:" << __LINE__ << "][" << __FUNCTION__ << "()|")
+#if defined(Q_OS_MAC)
+    #define LOG_DEBUG() ( \
+            qDebug() << "[DEBUG][" <<  __FILE_NAME__ << "][line:" << __LINE__ << "][" << __FUNCTION__ << "()|")
+#elif defined(Q_OS_DARWIN)
+    #define LOG_DEBUG() ( \
+            qDebug() << "[DEBUG][" <<  __FILE__ << "][line:" << __LINE__ << "][" << __FUNCTION__ << "()|")
+#endif
 
 #endif // LOGGER_H
