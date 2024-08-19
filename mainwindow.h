@@ -37,6 +37,7 @@ private:
     Ui::MainWindow *ui;
 
 
+    int test();
 protected:
 
 

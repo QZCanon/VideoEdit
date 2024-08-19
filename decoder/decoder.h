@@ -14,7 +14,6 @@ extern "C" {
 #include <libswscale/swscale.h>
 }
 
-
 class Decoder : public QObject
 {
     Q_OBJECT
@@ -37,8 +36,8 @@ private:
     enum AVHWDeviceType type;
     int i;
 
-    std::string inputName;
-    std::string outName;
+    std::string inputName = "F:/test.mp4";
+    std::string outName = "F:/out.mp4";
 };
 
 #endif // DECODER_H

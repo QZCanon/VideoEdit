@@ -17,13 +17,13 @@ static FILE *output_file = NULL;
 static int hw_decoder_init(AVCodecContext *ctx, const enum AVHWDeviceType type)
 {
 	int err = 0;
-	//创建硬件设备信息上下文 
+	//创建硬件设备信息上下�? 
 	if ((err = av_hwdevice_ctx_create(&hw_device_ctx, type,
 		NULL, NULL, 0)) < 0) {
 		fprintf(stderr, "Failed to create specified HW device.\n");
 		return err;
 	}
-	//绑定编解码器上下文和硬件设备信息上下文
+	//绑定编解码器上下文和硬件设备信息上下�?
 	ctx->hw_device_ctx = av_buffer_ref(hw_device_ctx);
  
 	return err;
@@ -109,12 +109,12 @@ static int decode_write(AVCodecContext *avctx, AVPacket *packet)
 
         if (ret >= 0 && tmp_frame) {
             static int frame_count = 0;
-            // 为保存的图片分配缓冲区
+            // 为保存的图片分配缓冲�?
             uint8_t *buffer = nullptr;
             size_t buffer_size = av_image_get_buffer_size(tmp_frame->format, tmp_frame->width, tmp_frame->height, 1);
             buffer = (uint8_t*)av_malloc(buffer_size);
 
-            // 复制帧数据到缓冲区
+            // 复制帧数据到缓冲�?
             ret = av_image_copy_to_buffer(buffer, buffer_size,
                                         (const uint8_t * const *)tmp_frame->data,
                                         (const int *)tmp_frame->linesize, tmp_frame->format,
@@ -124,7 +124,7 @@ static int decode_write(AVCodecContext *avctx, AVPacket *packet)
                 goto fail;
             }
 
-            // 保存图片到文件
+            // 保存图片到文�?
             char filename[100];
             snprintf(filename, sizeof(filename), "frame_%03d.yuv", frame_count++);
             FILE *output_file = fopen(filename, "wb");
@@ -215,12 +215,12 @@ int main(int argc, char *argv[])
 	video = input_ctx->streams[video_stream];
 	if (avcodec_parameters_to_context(decoder_ctx, video->codecpar) < 0)
 		return -1;
-	//填入回调函数 通过这个函数 编解码器能够知道显卡支持的像素格式
+	//填入回调函数 通过这个函数 编解码器能够知道显卡支持的像素格�?
 	decoder_ctx->get_format = get_hw_format;
  
 	if (hw_decoder_init(decoder_ctx, type) < 0)
 		return -1;
-   //绑定完成后 打开编解码器
+   //绑定完成�? 打开编解码器
 	if ((ret = avcodec_open2(decoder_ctx, decoder, NULL)) < 0) {
 		fprintf(stderr, "Failed to open codec for stream #%u\n", video_stream);
 		return -1;
