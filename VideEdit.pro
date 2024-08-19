@@ -51,6 +51,7 @@ SOURCES += \
     FitSDK/fit_protocol_validator.cpp \
     FitSDK/fit_unicode.cpp \
     dashboard/dashboard.cpp \
+    decoder/decoder.cpp \
     main.cpp \
     mainwindow.cpp \
     myslide/myslide.cpp
@@ -64,6 +65,7 @@ HEADERS += \
     core/defines.h \
     core/types.h \
     dashboard/dashboard.h \
+    decoder/decoder.h \
     mainwindow.h \
     myslide/myslide.h
 
