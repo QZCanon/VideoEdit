@@ -15,6 +15,8 @@
 
 #include "FitParse/fitparse.h"
 #include "dashboard/dashboard.h"
+#include "VideoRenderer/videorenderer.h"
+#include "decoder/decoder.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -33,9 +35,15 @@ private:
 
 private slots:
 
+    void Decodered();
+
 private:
     Ui::MainWindow *ui;
 
+    Decoder* decoder = nullptr;
+    GL_Image* glImage = nullptr;
+
+    QTimer timer;
 
 protected:
 
@@ -43,5 +51,6 @@ protected:
 public slots:
 
 
+    void slotTimeOut();
 };
 #endif // MAINWINDOW_H

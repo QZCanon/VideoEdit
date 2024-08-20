@@ -1,8 +1,11 @@
 #include "decoder.h"
+#include "Logger/logger.h"
+
+#include <iostream>
 
 AVBufferRef *hw_device_ctx = NULL;
 enum AVPixelFormat hw_pix_fmt;
-FILE *output_file = NULL;
+// FILE *output_file = NULL;
 
 Decoder::Decoder(QObject *parent)
     : QObject{parent}
@@ -45,8 +48,10 @@ int Decoder::DecodeWrite(AVCodecContext *avctx, AVPacket *packet)
     AVFrame *frame = NULL, *sw_frame = NULL;
     AVFrame *tmp_frame = NULL;
     uint8_t *buffer = NULL;
-    int size;
+    // int size;
     int ret = 0;
+    std::string name;
+    // int frame_count = 0;
 
     ret = avcodec_send_packet(avctx, packet);
     if (ret < 0) {
@@ -58,7 +63,12 @@ int Decoder::DecodeWrite(AVCodecContext *avctx, AVPacket *packet)
         if (!(frame = av_frame_alloc()) || !(sw_frame = av_frame_alloc())) {
             fprintf(stderr, "Can not alloc frame\n");
             ret = AVERROR(ENOMEM);
-            goto fail;
+
+            av_frame_free(&frame);
+            av_frame_free(&sw_frame);
+            av_freep(&buffer);
+            if (ret < 0)
+                return ret;
         }
 
         ret = avcodec_receive_frame(avctx, frame);
@@ -66,57 +76,48 @@ int Decoder::DecodeWrite(AVCodecContext *avctx, AVPacket *packet)
             av_frame_free(&frame);
             av_frame_free(&sw_frame);
             return 0;
-        }
-        else if (ret < 0) {
+        } else if (ret < 0) {
             fprintf(stderr, "Error while decoding\n");
-            goto fail;
+
+            av_frame_free(&frame);
+            av_frame_free(&sw_frame);
+            av_freep(&buffer);
+            if (ret < 0)
+                return ret;
         }
 
         if (frame->format == hw_pix_fmt) {
             /* retrieve data from GPU to CPU */
             if ((ret = av_hwframe_transfer_data(sw_frame, frame, 0)) < 0) {
                 fprintf(stderr, "Error transferring the data to system memory\n");
-                goto fail;
+
+            av_frame_free(&frame);
+            av_frame_free(&sw_frame);
+            av_freep(&buffer);
+            if (ret < 0)
+                return ret;
             }
             tmp_frame = sw_frame;
-        }
-        else
+        } else {
             tmp_frame = frame;
-
-        size = av_image_get_buffer_size(static_cast<AVPixelFormat>(tmp_frame->format), tmp_frame->width, tmp_frame->height, 1);
-        buffer = (uint8_t *)av_malloc(size);
-        if (!buffer) {
-            fprintf(stderr, "Can not alloc buffer\n");
-            ret = AVERROR(ENOMEM);
-            goto fail;
-        }
-        ret = av_image_copy_to_buffer(buffer, size,
-            (const uint8_t * const *)tmp_frame->data,
-            (const int *)tmp_frame->linesize, static_cast<AVPixelFormat>(tmp_frame->format),
-            tmp_frame->width, tmp_frame->height, 1);
-        if (ret < 0) {
-            fprintf(stderr, "Can not copy image to buffer\n");
-            goto fail;
         }
 
-        if ((ret = fwrite(buffer, 1, size, output_file)) < 0) {
-            fprintf(stderr, "Failed to dump raw data.\n");
-            goto fail;
-        }
+        emit DecoderSendAVFrame(tmp_frame);
 
-    fail:
-        av_frame_free(&frame);
-        av_frame_free(&sw_frame);
-        av_freep(&buffer);
-        if (ret < 0)
-            return ret;
+        // std::cout  << "format:" << av_get_pix_fmt_name((AVPixelFormat)tmp_frame->format)
+        //             << " w: " << tmp_frame->width
+        //             << " h: " << tmp_frame->height << std::endl;
+
     }
+    return 0;
 }
 
 int Decoder::DoWork()
 {
     //通过你传入的名字来找到对应的硬件解码类型
-    type = av_hwdevice_find_type_by_name("videotoolbox");
+
+    type = av_hwdevice_find_type_by_name(hwdevice.c_str());
+
     if (type == AV_HWDEVICE_TYPE_NONE) {
         // fprintf(stderr, "Device type %s is not supported.\n", argv[1]);
         fprintf(stderr, "Available device types:");
@@ -178,7 +179,7 @@ int Decoder::DoWork()
     }
 
     /* open the file to dump raw data */
-    output_file = fopen(outName.c_str(), "w+");
+    // output_file = fopen(outName.c_str(), "w+");
 
     /* actual decoding and dump the raw data */
     while (ret >= 0) {
@@ -198,9 +199,13 @@ int Decoder::DoWork()
     ret = DecodeWrite(decoder_ctx, &packet);
     av_packet_unref(&packet);
 
-    if (output_file)
-        fclose(output_file);
+    // if (output_file)
+    //     fclose(output_file);
     avcodec_free_context(&decoder_ctx);
     avformat_close_input(&input_ctx);
     av_buffer_unref(&hw_device_ctx);
+
+    emit DecoderIsFinish();
+
+    return 0;
 }

@@ -3,9 +3,10 @@ QT       += core gui
 
 #---opengl----------------------------
 QT       +=opengl
-QT       += core gui openglwidgets
+QT       += core gui
 QT	 += multimedia
 QT += multimediawidgets
+QT += openglwidgets
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -50,6 +51,7 @@ SOURCES += \
     FitSDK/fit_profile.cpp \
     FitSDK/fit_protocol_validator.cpp \
     FitSDK/fit_unicode.cpp \
+    VideoRenderer/videorenderer.cpp \
     dashboard/dashboard.cpp \
     decoder/decoder.cpp \
     main.cpp \
@@ -62,6 +64,7 @@ HEADERS += \
     FitSDK/*.hpp \
     Logger/logger.h \
     VideoPlayer/VideoPlayer.h \
+    VideoRenderer/videorenderer.h \
     core/defines.h \
     core/types.h \
     dashboard/dashboard.h \
@@ -80,7 +83,9 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
 
 DISTFILES += \
-    nootbook.txt
+    nootbook.txt \
+    shader/fragmentshader.frag \
+    shader/vertexshader.vert
 
 
 
