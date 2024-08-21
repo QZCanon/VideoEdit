@@ -24,6 +24,8 @@ void GL_Image::setImageData(uchar* imageSrc, uint width, uint height)
 void GL_Image::AVFrameSlot(AVFrame* frame)
 {
     frameList.push_back(frame);
+    // LOG_DEBUG() << "AV_NUM_DATA_POINTERS: " << AV_NUM_DATA_POINTERS;
+
     // LOG_DEBUG() << "frame list size: " << frameList.size();
     // LOG_DEBUG() << "w: " << frame->width << " h: " << frame->height;
     // return;
@@ -43,49 +45,48 @@ void GL_Image::initializeGL()
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 }
 
-
-void p010ToRGBA(uint16_t y, uint16_t u, uint16_t v, uint8_t& r, uint8_t& g, uint8_t& b) {
-    // Convert YUV to RGB
-    int Y = y - 64;
-    int U = u - 512;
-    int V = v - 512;
-
-    int R = Y + (1.402 * V);
-    int G = Y - (0.344136 * U) - (0.714136 * V);
-    int B = Y + (1.772 * U);
-
-    // Clip RGB values to 0-255
-    r = std::clamp(R, 0, 255);
-    g = std::clamp(G, 0, 255);
-    b = std::clamp(B, 0, 255);
+// Clip function to ensure values are in the range [0, 255]
+static inline uint8_t clip(int value) {
+    return (uint8_t)(value < 0 ? 0 : (value > 255 ? 255 : value));
 }
 
-// Convert P010LE to RGBA
-void convertP010ToRGBA(uint8_t* p010Data, uint8_t* rgbaData) {
-    int stride = width * 2; // P010 uses 2 bytes per pixel
+// Convert p010le to RGBA
+uint8_t * convert_p010le_to_rgba(const uint8_t *y_plane, const uint8_t *uv_plane, int width, int height) {
+    int uv_width = width / 2;
+    int uv_height = height / 2;
+    int stride = width * 4; // RGBA stride
+
+    uint8_t *rgba_data = (uint8_t *)malloc(width * height * 4);
 
     for (int y = 0; y < height; ++y) {
         for (int x = 0; x < width; ++x) {
-            // Calculate the pixel position
-            int p010Index = y * stride + x * 2;
+            int y_index = y * width + x;
+            int uv_index = (y / 2) * uv_width + (x / 2) * 4; // 4 bytes per UV pair (U and V)
 
-            // Extract YUV components (P010LE has 10-bit YUV, packed in 16-bit words)
-            uint16_t y = (p010Data[p010Index] << 2) | (p010Data[p010Index + 1] >> 6);
-            uint16_t u = ((p010Data[p010Index + 1] & 0x3F) << 4) | (p010Data[p010Index + 2] >> 4);
-            uint16_t v = ((p010Data[p010Index + 2] & 0x0F) << 6) | (p010Data[p010Index + 3] >> 2);
+            // Convert 10-bit to 8-bit
+            int y_val = (y_plane[y_index * 2] <<  2)   | (y_plane[y_index * 2 + 1] >> 6);
+            int u_val = ((uv_plane[uv_index] << 2)     | (uv_plane[uv_index + 1] >> 6)) - 128;
+            int v_val = ((uv_plane[uv_index + 2] << 2) | (uv_plane[uv_index + 3] >> 6)) - 128;
 
-            // Convert YUV to RGB
-            uint8_t r, g, b;
-            p010ToRGBA(y, u, v, r, g, b);
+            // YUV to RGB conversion
+            int r = y_val + 1.402 * v_val;
+            int g = y_val - 0.344136 * u_val - 0.714136 * v_val;
+            int b = y_val + 1.772 * u_val;
 
-            // Store RGBA values (each pixel is 4 bytes in RGBA format)
-            int rgbaIndex = y * width * 4 + x * 4;
-            rgbaData[rgbaIndex] = r;
-            rgbaData[rgbaIndex + 1] = g;
-            rgbaData[rgbaIndex + 2] = b;
-            rgbaData[rgbaIndex + 3] = 255; // Alpha channel (opaque)
+            // Clip values to the range [0, 255]
+            r = clip(r);
+            g = clip(g);
+            b = clip(b);
+
+            // Store the RGBA values
+            int rgba_index = y * stride + x * 4;
+            rgba_data[rgba_index]     = r;   // R
+            rgba_data[rgba_index + 1] = g;   // G
+            rgba_data[rgba_index + 2] = b;   // B
+            rgba_data[rgba_index + 3] = 255; // A (alpha)
         }
     }
+    return rgba_data;
 }
 
 // 窗口绘制函数
@@ -108,32 +109,25 @@ void GL_Image::paintGL()
         return;
     }
 
+    uint8_t *rgbaData = convert_p010le_to_rgba(m_frame->data[0], m_frame->data[1],
+                                               m_frame->width,   m_frame->height);
+
+    if (rgbaData == nullptr) {
+        LOG_DEBUG() << "rgbaData is null";
+        return;
+    }
     glBindTexture(GL_TEXTURE_2D, textureId_);
-
-    uint8_t *rgbaData = new uint8_t[width * height * 2 + (width / 2) * (height / 2) * 4];
-    uint8_t *d = m_frame->data;
-    convertP010ToRGBA(m_frame->data, rgbaData);
-
-    // ConvertToRGB(rgbaData, imageSize_, m_frame);
-
-    // SwsContext *swsCtx = sws_getContext(
-    //     m_frame->width, m_frame->height, (const AVPixelFormat)m_frame->format,
-    //     m_frame->width, m_frame->height, AV_PIX_FMT_RGBA,
-    //     SWS_BILINEAR, nullptr, nullptr, nullptr);
-    // uint8_t *rgbaData = (uint8_t *)av_malloc(width * height * 2 + (width / 2) * (height / 2) * 4);
-    // sws_scale(swsCtx, m_frame->data, m_frame->linesize, 0, m_frame->height, &rgbaData, m_frame->linesize);
-
     if(!initTextureFlag)
     {
         // 生成纹理
         // glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, imageSize_.width(), imageSize_.height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, imageData_);
-        glTexImage2D(GL_TEXTURE_2D, 0, 
-                    GL_RGBA, 
-                    imageSize_.width(), 
-                    imageSize_.height(), 
-                    0, 
-                    GL_RGBA, 
-                    GL_UNSIGNED_BYTE, 
+        glTexImage2D(GL_TEXTURE_2D, 0,
+                    GL_RGBA,
+                    imageSize_.width(),
+                    imageSize_.height(),
+                    0,
+                    GL_RGBA,
+                    GL_UNSIGNED_BYTE,
                     rgbaData);
 
         // 初始化顶点坐标（居中显示）

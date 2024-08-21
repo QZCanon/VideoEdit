@@ -24,6 +24,7 @@ public:
     int DoWork();
     int DecodeWrite(AVCodecContext *avctx, AVPacket *packet);
     int HwDecoderInit(AVCodecContext *ctx, const AVHWDeviceType type);
+
 signals:
     void DecoderSendAVFrame(AVFrame*);
     void DecoderIsFinish();
@@ -40,6 +41,8 @@ private:
 
 #if defined(Q_OS_MAC)
     std::string hwdevice  = "videotoolbox";
+    // std::string inputName = "/Users/qinzhou/workspace/test/DJI_20240820194031_0041_D.MP4";
+    // std::string inputName = "/Users/qinzhou/workspace/test/20240820194031.mp4";
     std::string inputName = "/Users/qinzhou/workspace/test/input_file.mp4";
 #elif defined(Q_OS_WIN)
     std::string hwdevice  = "dxva2";

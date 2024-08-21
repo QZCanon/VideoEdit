@@ -86,27 +86,34 @@ int Decoder::DecodeWrite(AVCodecContext *avctx, AVPacket *packet)
                 return ret;
         }
 
+        // LOG_DEBUG() << "hw_pix_fmt: " << av_get_pix_fmt_name(hw_pix_fmt)
+        //             << ", frame format: " << av_get_pix_fmt_name((AVPixelFormat)frame->format);
+
         if (frame->format == hw_pix_fmt) {
             /* retrieve data from GPU to CPU */
             if ((ret = av_hwframe_transfer_data(sw_frame, frame, 0)) < 0) {
-                fprintf(stderr, "Error transferring the data to system memory\n");
-
-            av_frame_free(&frame);
-            av_frame_free(&sw_frame);
-            av_freep(&buffer);
-            if (ret < 0)
-                return ret;
+                LOG_DEBUG() << "Error transferring the data to system memory";
+                av_frame_free(&frame);
+                av_frame_free(&sw_frame);
+                av_freep(&buffer);
+                if (ret < 0)
+                    return ret;
             }
             tmp_frame = sw_frame;
         } else {
             tmp_frame = frame;
         }
 
+        // LOG_DEBUG() << "----------";
+        // for (int i = 0; i < AV_NUM_DATA_POINTERS; i++) {
+        //     LOG_DEBUG() << "linesize[" << i << "] size: " << tmp_frame->linesize[i];
+        // }
+
         emit DecoderSendAVFrame(tmp_frame);
 
-        // std::cout  << "format:" << av_get_pix_fmt_name((AVPixelFormat)tmp_frame->format)
+        // LOG_DEBUG()  << "format:" << av_get_pix_fmt_name((AVPixelFormat)tmp_frame->format)
         //             << " w: " << tmp_frame->width
-        //             << " h: " << tmp_frame->height << std::endl;
+        //             << " h: " << tmp_frame->height;
 
     }
     return 0;
