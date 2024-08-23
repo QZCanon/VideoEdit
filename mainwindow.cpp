@@ -16,19 +16,19 @@ MainWindow::MainWindow(QWidget *parent)
 
     glImage = new GL_Image(ui->widget);
     glImage->setFixedSize(ui->widget->size());
+    glImage->Start();
     decoder = new Decoder;
 
     connect(decoder, SIGNAL(DecoderSendAVFrame(AVFrame*)), glImage, SLOT(AVFrameSlot(AVFrame*)));
     connect(decoder, SIGNAL(DecoderIsFinish()), this, SLOT(Decodered()));
-
-    decoder->DoWork();
+    decoder->Init();
 
     connect(&timer, SIGNAL(timeout()), this, SLOT(slotTimeOut()));
     timer.setTimerType(Qt::PreciseTimer);
-    // timer.start(10);
+    timer.start(10);
 
-    QPushButton * button = new QPushButton("cli", ui->widget);
-    button->setGeometry(100,100,100,30);
+    // QPushButton * button = new QPushButton("cli", ui->widget);
+    // button->setGeometry(100,100,100,30);
 
 }
 

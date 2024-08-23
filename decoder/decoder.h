@@ -3,6 +3,8 @@
 
 #include <QObject>
 
+#include <thread>
+
 extern "C" {
 #include <libavcodec/avcodec.h>
 #include <libavformat/avformat.h>
@@ -20,14 +22,18 @@ class Decoder : public QObject
     Q_OBJECT
 public:
     explicit Decoder(QObject *parent = nullptr);
-
+    ~Decoder();
+    int Init();
+    void Start();
     int DoWork();
-    int DecodeWrite(AVCodecContext *avctx, AVPacket *packet);
-    int HwDecoderInit(AVCodecContext *ctx, const AVHWDeviceType type);
 
 signals:
     void DecoderSendAVFrame(AVFrame*);
     void DecoderIsFinish();
+
+private:
+    int DecodeWrite(AVCodecContext *avctx, AVPacket *packet);
+    int HwDecoderInit(AVCodecContext *ctx, const AVHWDeviceType type);
 
 private:
     AVFormatContext *input_ctx = NULL;
@@ -37,13 +43,15 @@ private:
     AVCodec *decoder = NULL;
     AVPacket packet;
     enum AVHWDeviceType type;
-    int i;
+    // int i;
+    AVBufferRef *hw_device_ctx = NULL;
+    std::thread th;
+
+    bool isExitDecode = false;
 
 #if defined(Q_OS_MAC)
     std::string hwdevice  = "videotoolbox";
-    // std::string inputName = "/Users/qinzhou/workspace/test/DJI_20240820194031_0041_D.MP4";
-    // std::string inputName = "/Users/qinzhou/workspace/test/20240820194031.mp4";
-    std::string inputName = "/Users/qinzhou/workspace/test/input_file.mp4";
+    std::string inputName = "/Users/qinzhou/workspace/test/DJI_20240820194031_0041_D.MP4";
 #elif defined(Q_OS_WIN)
     std::string hwdevice  = "dxva2";
     std::string inputName = "F:/test.mp4";

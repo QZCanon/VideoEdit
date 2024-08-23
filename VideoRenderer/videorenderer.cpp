@@ -2,13 +2,7 @@
 #include "VideoRenderer/videorenderer.h"
 #include "Logger/logger.h"
 #include "core/utils.h"
-
-
-int width = 1920;
-int height = 1080;
-
-#define WIGTH 1920
-#define HEIGHT 1080
+#include <sys/time.h>>
 
 GL_Image::GL_Image(QWidget* parent):
     QOpenGLWidget(parent)
@@ -18,25 +12,48 @@ GL_Image::GL_Image(QWidget* parent):
     scaleVal_ = 1.0;
 }
 
-// 设置待显示的数据源和尺寸
-void GL_Image::setImageData(uchar* imageSrc, uint width, uint height)
+GL_Image::~GL_Image()
 {
-    imageData_ = imageSrc;
-    imageSize_.setWidth(width);
-    imageSize_.setHeight(height);
+    // isExitThread = true;
+    // if (m_repaintThread.joinable()) {
+    //     m_repaintThread.join();
+    // }
+}
+
+void GL_Image::Start()
+{
+    // isExitThread = false;
+    // m_repaintThread = std::thread(&GL_Image::DoWork, this);
+}
+
+void GL_Image::DoWork()
+{
+    while (1) {
+        if (isExitThread) {
+            break;
+        }
+        AVFrame* frame = nullptr;
+        {
+            std::unique_lock<std::mutex> lck(m_mutex);
+            while(frameList.empty()) {
+                cond.wait(lck);
+            }
+            frame = frameList.front();
+        }
+        // if (frame)
+        //     RepaintGL(frame);
+    }
 }
 
 void GL_Image::AVFrameSlot(AVFrame* frame)
 {
-    frameList.push_back(frame);
-    // LOG_DEBUG() << "AV_NUM_DATA_POINTERS: " << AV_NUM_DATA_POINTERS;
-
-    // LOG_DEBUG() << "frame list size: " << frameList.size();
-    // LOG_DEBUG() << "w: " << frame->width << " h: " << frame->height;
-    // return;
-    // m_frame = frame;
-    imageSize_.setWidth(frame->width);
-    imageSize_.setHeight(frame->height);
+    if (frame) {
+        // std::unique_lock<std::mutex> lck(m_mutex);
+        frameList.push(frame);
+        imageSize_.setWidth(frame->width);
+        imageSize_.setHeight(frame->height);
+        // cond.notify_one();
+    }
 }
 
 void GL_Image::initializeGL()
@@ -52,15 +69,18 @@ void GL_Image::initializeGL()
 
 // 窗口绘制函数
 void GL_Image::paintGL()
+// void GL_Image::RepaintGL(AVFrame* frame)
 {
     if (frameList.size() <= 0) {
         return;
     }
-    static size_t idx = 0;
-    m_frame = frameList[idx++];
-    if (idx >= frameList.size()) {
-        idx = 0;
-    }
+    // static size_t idx = 0;
+    // m_frame = frameList[idx++];
+    // if (idx >= frameList.size()) {
+    //     idx = 0;
+    // }
+    m_frame = frameList.front();
+    frameList.pop();
     static bool initTextureFlag = false;
     // 设置背景颜色
     glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
@@ -93,9 +113,11 @@ void GL_Image::paintGL()
     
     // convertP010LEToRGBA(m_frame->data[0], m_frame->data[1], rgbaData, m_frame->width, m_frame->height);
 
+    double t1 = (double)clock();
     convert_hardware_yuv_to_rgba(m_frame->data[0], m_frame->data[1],
                                  rgbaData, 1920, 1080, (AVPixelFormat)m_frame->format);
-                                 
+    double t2 = (double)clock();
+    LOG_DEBUG() << "t: " << (t2 - t1) / CLOCKS_PER_SEC;
     if (rgbaData == nullptr) {
         LOG_DEBUG() << "rgbaData is null";
         return;
@@ -191,7 +213,8 @@ void GL_Image::paintGL()
     // free(uData);
     // free(vData);
     free(rgbaData);
-
+    delete m_frame;
+    m_frame = nullptr;
     return ;
 
 }

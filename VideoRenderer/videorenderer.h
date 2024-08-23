@@ -9,7 +9,10 @@ extern "C" {
 #include <QWheelEvent>
 #include <QOpenGLWidget>
 #include <QTimer>
-#include <vector>
+
+#include <queue>
+#include <mutex>
+#include <thread>
 
 class GL_Image : public QOpenGLWidget
 {
@@ -30,8 +33,13 @@ public:
     };
 
     GL_Image(QWidget* parent = nullptr);
-    // 设置实时显示的数据源
-    void setImageData(uchar* imageSrc, uint width, uint height);
+    ~GL_Image();
+
+    void Start();
+
+private:
+    void DoWork();
+    void RepaintGL();
 
 public slots:
     void AVFrameSlot(AVFrame *);
@@ -62,10 +70,12 @@ private:
     float scaleVal_;             //缩放倍率
 
     AVFrame* m_frame{nullptr};
+    std::thread m_repaintThread;
+    bool isExitThread = false;
 
-    std::vector<AVFrame*> frameList;
-    int width = 1920, height = 1080;
-
+    std::mutex m_mutex;
+    std::condition_variable cond;//条件变量
+    std::queue<AVFrame*> frameList;
 };
 
 #endif // VIDEORENDERER_H
