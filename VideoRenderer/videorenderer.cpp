@@ -91,9 +91,11 @@ void GL_Image::paintGL()
     // 转换 8 位 YUV 到 RGBAs
     // convertYUVToRGBA(yData, uData, vData, rgbaData, m_frame->width, HEIGHT);
     
-    convertP010LEToRGBA(m_frame->data[0], m_frame->data[1], rgbaData, m_frame->width, m_frame->height);
+    // convertP010LEToRGBA(m_frame->data[0], m_frame->data[1], rgbaData, m_frame->width, m_frame->height);
 
-
+    convert_hardware_yuv_to_rgba(m_frame->data[0], m_frame->data[1],
+                                 rgbaData, 1920, 1080, (AVPixelFormat)m_frame->format);
+                                 
     if (rgbaData == nullptr) {
         LOG_DEBUG() << "rgbaData is null";
         return;

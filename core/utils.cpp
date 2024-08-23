@@ -2,42 +2,43 @@
 #include <iostream>
 #include "Logger/logger.h"
 
-/**
- *
- * DJI action4，ffmpeg解码后y分量和uv分量的字节数相同，即2个y分量共享一组uv分量，采样比例为422
- *
- * p010le
- * yuv分量存储数据类型：uint8_t
- *  y分量：
- *      一个y分量占2字节
- *      字节序：低位在前，高为在后
- *      例：{11, 01, 22, 02 ...}
- *          =》 第一个y分量：0x0111
- *              第二个y分量：0x0222
- *
- *      u分量和v分量都占两个字节
- *      字节序：u分量低字节  u分量高字节  v分量低字节  v分量高字节
- *      例：{45, 03, 56, 04, 67, 05, 78, 06  ...}
- *          =》 第一个u分量：0x0345  第一个v分量：0x0456
- *              第二个u分量：0x0567  第二个v分量：0x0678
- *
- * 转换为yuv422p
- *      一个y分量占一个字节
- *      转换：yuv422p_y = p010le_y >> 2;
- *         即：uint8_t yuv422p_y = (p010le_data[0]) >> 2 | (p010le_data[1] << 6)
- *                                  (删[1:0]，空[7:6])        (高2位数据移植[7:6])
- *      uv分量转换同理
- *
- *
- */
 
-// 假设图像的宽度和高度
-#define WIDTH  1920
-#define HEIGHT 1080
+void convert_hardware_yuv_to_rgba(const uint8_t *y_plane,
+                                  const uint8_t *uv_plane,
+                                  uint8_t *rgba_frame,
+                                  int width,
+                                  int height,
+                                  AVPixelFormat hw_pix_fmt)
+{
+    // Initialize SwsContext for format conversion
+    SwsContext *sws_ctx = sws_getContext(width, height, hw_pix_fmt,
+                                         width, height, AV_PIX_FMT_RGBA,
+                                         SWS_BILINEAR, NULL, NULL, NULL);
+    if (!sws_ctx) {
+        // Handle error
+        return;
+    }
 
-// 计算 YUV 数据在数组中的大小
-#define Y_SIZE (WIDTH * HEIGHT)         // 每个 Y 值为 1 字节（8 位）
-#define UV_SIZE ((WIDTH / 2) * (HEIGHT / 2) * 2) // UV 数据为 2 字节/分量
+    // Prepare source and destination data pointers and line sizes
+    uint8_t *src_data[4] = {0};
+    int src_linesize[4] = {0};
+    uint8_t *dst_data[4] = {rgba_frame};
+    int dst_linesize[4] = {4 * width}; // RGBA format has 4 bytes per pixel
+
+    // Set source data pointers and line sizes
+    src_data[0]     = (uint8_t *)y_plane;  // Y plane
+    src_linesize[0] = width * 2;       // For 10-bit YUV, 2 bytes per pixel in Y plane
+    src_data[1]     = (uint8_t *)uv_plane;  // UV plane
+    src_linesize[1] = width * 2;        // For 10-bit YUV, 2 bytes per pixel in UV plane
+
+    // Convert the frame
+    sws_scale(sws_ctx, (const uint8_t * const *)src_data, src_linesize,
+              0, height, dst_data, dst_linesize);
+
+    // Clean up
+    sws_freeContext(sws_ctx);
+}
+
 
 void convertP010LEToRGBA(uint8_t* yData, uint8_t* uvData, uint8_t* rgbaData,
                          int width, int height)

@@ -2,15 +2,17 @@
 #include "Logger/logger.h"
 
 #include <iostream>
+#include <thread>
 
 AVBufferRef *hw_device_ctx = NULL;
 enum AVPixelFormat hw_pix_fmt;
-// FILE *output_file = NULL;
+
+std::thread th;
 
 Decoder::Decoder(QObject *parent)
     : QObject{parent}
 {
-
+    // th = std::thread(Decoder::DoWork(), this);
 }
 
 int Decoder::HwDecoderInit(AVCodecContext *ctx, const enum AVHWDeviceType type)
@@ -85,10 +87,7 @@ int Decoder::DecodeWrite(AVCodecContext *avctx, AVPacket *packet)
             if (ret < 0)
                 return ret;
         }
-
-        // LOG_DEBUG() << "hw_pix_fmt: " << av_get_pix_fmt_name(hw_pix_fmt)
-        //             << ", frame format: " << av_get_pix_fmt_name((AVPixelFormat)frame->format);
-
+        // LOG_DEBUG() << "hw_pix_fmt: " << av_get_pix_fmt_name(hw_pix_fmt);
         if (frame->format == hw_pix_fmt) {
             /* retrieve data from GPU to CPU */
             if ((ret = av_hwframe_transfer_data(sw_frame, frame, 0)) < 0) {
@@ -104,21 +103,9 @@ int Decoder::DecodeWrite(AVCodecContext *avctx, AVPacket *packet)
             tmp_frame = frame;
         }
 
-        // LOG_DEBUG() << "----------";
-        // for (int i = 0; i < AV_NUM_DATA_POINTERS; i++) {
-        //     LOG_DEBUG() << "linesize[" << i << "] size: " << tmp_frame->linesize[i];
-        // }
+        // LOG_DEBUG() << "format: " << av_get_pix_fmt_name((AVPixelFormat)tmp_frame->format);
 
-        // LOG_DEBUG() << "y bytes: " << tmp_frame->linesize[0] << ", uv bytes: " << tmp_frame->linesize[1];
-        static bool key = true;
-        if (key) {
-            // key = false;
-            emit DecoderSendAVFrame(tmp_frame);
-        }
-
-        // LOG_DEBUG()  << "format:" << av_get_pix_fmt_name((AVPixelFormat)tmp_frame->format)
-        //             << " w: " << tmp_frame->width
-        //             << " h: " << tmp_frame->height;
+        emit DecoderSendAVFrame(tmp_frame);
 
     }
     return 0;
