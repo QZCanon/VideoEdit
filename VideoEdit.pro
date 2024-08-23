@@ -67,6 +67,7 @@ HEADERS += \
     VideoPlayer/VideoPlayer.h \
     VideoRenderer/videorenderer.h \
     core/defines.h \
+    core/ring_buffer.hpp \
     core/types.h \
     core/utils.h \
     dashboard/dashboard.h \

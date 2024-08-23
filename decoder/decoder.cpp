@@ -93,6 +93,14 @@ int Decoder::Init()
         return AVERROR(ENOMEM);
 
     video = input_ctx->streams[video_stream];
+    AVRational rate = video->avg_frame_rate;
+    m_fps = rate.num / rate.den;
+    LOG_DEBUG() << "fps: " << m_fps;
+
+    int frames = video->nb_frames;
+    LOG_DEBUG() << "frames: " << frames;
+    LOG_DEBUG() << "duration: " << input_ctx->duration / AV_TIME_BASE;
+
     if (avcodec_parameters_to_context(decoder_ctx, video->codecpar) < 0)
         return -1;
     //填入回调函数 通过这个函数 编解码器能够知道显卡支持的像素格式
@@ -136,11 +144,8 @@ int Decoder::HwDecoderInit(AVCodecContext *ctx, const enum AVHWDeviceType type)
 
 int Decoder::DecodeWrite(AVCodecContext *avctx, AVPacket *packet)
 {
-
-    // int size;
     int ret = 0;
     std::string name;
-    // int frame_count = 0;
 
     ret = avcodec_send_packet(avctx, packet);
     if (ret < 0) {
@@ -182,17 +187,13 @@ int Decoder::DecodeWrite(AVCodecContext *avctx, AVPacket *packet)
                     return ret;
             }
             tmp_frame = sw_frame;
+            av_frame_free(&frame);
         } else {
             tmp_frame = frame;
+            av_frame_free(&sw_frame);
         }
-        static int frame_count = 0;
-        LOG_DEBUG() << "format: " << av_get_pix_fmt_name((AVPixelFormat)tmp_frame->format) << " frame count: " << frame_count++;
 
-        // emit DecoderSendAVFrame(tmp_frame); // 接收方需要copy一份，并自己管理内存
-
-        av_frame_free(&frame);
-        av_frame_free(&sw_frame);
-
+        m_frameList.PushBack(std::move(tmp_frame));
     }
 
     return 0;

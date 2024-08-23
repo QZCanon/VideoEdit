@@ -5,6 +5,8 @@
 
 #include <thread>
 
+#include "core/ring_buffer.hpp"
+
 extern "C" {
 #include <libavcodec/avcodec.h>
 #include <libavformat/avformat.h>
@@ -26,6 +28,10 @@ public:
     int Init();
     void Start();
     int DoWork();
+    auto GetFileFPS() const { return m_fps; }
+    AVFrame* GetFrame() {
+        return m_frameList.FrontAndPop();
+    }
 
 signals:
     void DecoderSendAVFrame(AVFrame*);
@@ -46,12 +52,16 @@ private:
     // int i;
     AVBufferRef *hw_device_ctx = NULL;
     std::thread th;
+    uint8_t m_fps = 0;
 
     bool isExitDecode = false;
 
+    RingBuffer<AVFrame*, 3> m_frameList;
+
 #if defined(Q_OS_MAC)
     std::string hwdevice  = "videotoolbox";
-    std::string inputName = "/Users/qinzhou/workspace/test/DJI_20240820194031_0041_D.MP4";
+    std::string inputName = "/Users/qinzhou/workspace/test/input_file.mp4";
+    // std::string inputName = "/Users/qinzhou/workspace/test/DJI_20240820194031_0041_D.MP4";
 #elif defined(Q_OS_WIN)
     std::string hwdevice  = "dxva2";
     std::string inputName = "F:/test.mp4";

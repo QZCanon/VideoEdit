@@ -14,6 +14,8 @@ extern "C" {
 #include <mutex>
 #include <thread>
 
+#include "core/ring_buffer.hpp"
+
 class GL_Image : public QOpenGLWidget
 {
     Q_OBJECT
@@ -37,6 +39,7 @@ public:
 
     void Start();
 
+    void SetFrame(AVFrame *frame);
 private:
     void DoWork();
     void RepaintGL();
@@ -59,7 +62,7 @@ protected:
 
 private:
     uchar* imageData_;           //纹理显示的数据源
-    QSize imageSize_;            //图片尺寸
+
     QSize adaptImageSize_;       //适配尺寸
     QSize Ortho2DSize_;          //窗口尺寸
     GLuint textureId_;           //纹理对象ID
@@ -76,6 +79,7 @@ private:
     std::mutex m_mutex;
     std::condition_variable cond;//条件变量
     std::queue<AVFrame*> frameList;
+    RingBuffer<AVFrame*, 3> avframeList;
 };
 
 #endif // VIDEORENDERER_H

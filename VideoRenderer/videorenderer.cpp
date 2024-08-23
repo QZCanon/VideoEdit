@@ -45,14 +45,48 @@ void GL_Image::DoWork()
     }
 }
 
-void GL_Image::AVFrameSlot(AVFrame* frame)
+void GL_Image::AVFrameSlot(AVFrame* src_frame)
 {
-    if (frame) {
-        // std::unique_lock<std::mutex> lck(m_mutex);
-        frameList.push(frame);
-        imageSize_.setWidth(frame->width);
-        imageSize_.setHeight(frame->height);
-        // cond.notify_one();
+    if (src_frame) {
+        // LOG_DEBUG() << src_frame->height << "*" << src_frame->width;
+        // AVFrame* dst_frame = nullptr;
+
+        // 检查源帧是否有效
+        if (!src_frame || !src_frame->data[0]) {
+            LOG_DEBUG() << "Invalid source frame\n";
+            return;
+        }
+
+
+            // std::unique_lock<std::mutex> lck(m_mutex);
+            // 分配目标帧
+            AVFrame* frame = av_frame_alloc();
+            if (!frame) {
+                LOG_DEBUG() << "Could not allocate destination frame\n";
+                return;
+            }
+
+            // 设置目标帧参数
+            (frame)->width = src_frame->width;
+            (frame)->height = src_frame->height;
+            (frame)->format = src_frame->format;
+
+            // 分配目标帧的数据缓冲区
+            if (av_frame_get_buffer(frame, 32) < 0) {
+                LOG_DEBUG() << "Could not allocate the frame data\n";
+                av_frame_free(&frame);
+                return;
+            }
+
+            // 执行数据拷贝
+            if (av_frame_copy(frame, src_frame) < 0) {
+                LOG_DEBUG() << "Could not copy frame data\n";
+                av_frame_free(&frame);
+                return;
+            }
+
+            // frameList.push(frame);
+            avframeList.PushBack(std::move(frame));
     }
 }
 
@@ -67,66 +101,48 @@ void GL_Image::initializeGL()
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 }
 
+void GL_Image::SetFrame(AVFrame* frame)
+{
+    m_frame = frame;
+}
+
 // 窗口绘制函数
 void GL_Image::paintGL()
-// void GL_Image::RepaintGL(AVFrame* frame)
 {
-    if (frameList.size() <= 0) {
-        return;
-    }
-    // static size_t idx = 0;
-    // m_frame = frameList[idx++];
-    // if (idx >= frameList.size()) {
-    //     idx = 0;
-    // }
-    m_frame = frameList.front();
-    frameList.pop();
-    static bool initTextureFlag = false;
     // 设置背景颜色
     glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     if(m_frame == nullptr){
+        LOG_DEBUG() << "frame is null";
         return;
     }
-    // LOG_DEBUG() << "w : " << m_frame->width << ", h: " << m_frame->height;
-    // LOG_DEBUG() << "linesize[0] : " << m_frame->linesize[0]
-    //                << ", linesize[1]: " << m_frame->linesize[1];
-    // uint8_t *yData = (uint8_t*)malloc(sizeof(uint8_t) * (m_frame->linesize[0] / 2));
-    // uint8_t *uData = (uint8_t*)malloc(sizeof(uint8_t) * (m_frame->linesize[1] / 4));
-    // uint8_t *vData = (uint8_t*)malloc(sizeof(uint8_t) * (m_frame->linesize[1] / 4));
+
     uint8_t *rgbaData = (uint8_t*)malloc(m_frame->width * m_frame->height * 4);
 
-    // 转换 P010LE 到 8 位 YUV
-    // if (m_frame->data[0] && m_frame->data[1]) {
-    //      convertP010LETo8bit(m_frame->data[0],
-    //                          m_frame->linesize[0],
-    //                          m_frame->data[1],
-    //                          m_frame->linesize[1],
-    //                          yData,
-    //                          uData,
-    //                          vData);
-    // }
+    convert_hardware_yuv_to_rgba(m_frame->data[0],
+                                 m_frame->data[1],
+                                 rgbaData,
+                                 1920,
+                                 1080,
+                                 (AVPixelFormat)m_frame->format);
 
-    // 转换 8 位 YUV 到 RGBAs
-    // convertYUVToRGBA(yData, uData, vData, rgbaData, m_frame->width, HEIGHT);
-    
-    // convertP010LEToRGBA(m_frame->data[0], m_frame->data[1], rgbaData, m_frame->width, m_frame->height);
+    QSize imageSize_;            //图片尺寸
+    imageSize_.setWidth(m_frame->width);
+    imageSize_.setHeight(m_frame->height);
 
-    double t1 = (double)clock();
-    convert_hardware_yuv_to_rgba(m_frame->data[0], m_frame->data[1],
-                                 rgbaData, 1920, 1080, (AVPixelFormat)m_frame->format);
-    double t2 = (double)clock();
-    LOG_DEBUG() << "t: " << (t2 - t1) / CLOCKS_PER_SEC;
+    av_frame_free(&m_frame);
+
     if (rgbaData == nullptr) {
         LOG_DEBUG() << "rgbaData is null";
         return;
     }
+
     glBindTexture(GL_TEXTURE_2D, textureId_);
+    static bool initTextureFlag = false;
     if(!initTextureFlag)
     {
         // 生成纹理
-        // glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, imageSize_.width(), imageSize_.height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, imageData_);
         glTexImage2D(GL_TEXTURE_2D, 0,
                     GL_RGBA,
                     imageSize_.width(),
@@ -190,11 +206,18 @@ void GL_Image::paintGL()
     else
     {
         // 第一次显示用glTexImage2D方式显示，后面用glTexSubImage2D动态修改纹理数据的方式显示
-        glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0,
-                        imageSize_.width(), imageSize_.height(),
-                        GL_RGBA, GL_UNSIGNED_BYTE, rgbaData);
+        glTexSubImage2D(GL_TEXTURE_2D,
+                        0,
+                        0,
+                        0,
+                        imageSize_.width(),
+                        imageSize_.height(),
+                        GL_RGBA,
+                        GL_UNSIGNED_BYTE,
+                        rgbaData);
 
     }
+    free(rgbaData);
 
     glEnable(GL_TEXTURE_2D);
     glBegin(GL_POLYGON);
@@ -208,15 +231,6 @@ void GL_Image::paintGL()
     glVertex2d(vertexPos_[Right_Bottom_X], vertexPos_[Right_Bottom_Y]);
     glEnd();
     glDisable(GL_TEXTURE_2D);
-
-    // free(yData);
-    // free(uData);
-    // free(vData);
-    free(rgbaData);
-    delete m_frame;
-    m_frame = nullptr;
-    return ;
-
 }
 
 void GL_Image::resizeGL(int w, int h)
