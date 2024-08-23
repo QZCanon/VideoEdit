@@ -1,10 +1,15 @@
 
 #include "VideoRenderer/videorenderer.h"
 #include "Logger/logger.h"
+#include "core/utils.h"
 
 
 int width = 1920;
 int height = 1080;
+
+#define WIGTH 1920
+#define HEIGHT 1080
+
 GL_Image::GL_Image(QWidget* parent):
     QOpenGLWidget(parent)
 {
@@ -45,57 +50,13 @@ void GL_Image::initializeGL()
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 }
 
-// Clip function to ensure values are in the range [0, 255]
-static inline uint8_t clip(int value) {
-    return (uint8_t)(value < 0 ? 0 : (value > 255 ? 255 : value));
-}
-
-// Convert p010le to RGBA
-uint8_t * convert_p010le_to_rgba(const uint8_t *y_plane, const uint8_t *uv_plane, int width, int height) {
-    int uv_width = width / 2;
-    int uv_height = height / 2;
-    int stride = width * 4; // RGBA stride
-
-    uint8_t *rgba_data = (uint8_t *)malloc(width * height * 4);
-
-    for (int y = 0; y < height; ++y) {
-        for (int x = 0; x < width; ++x) {
-            int y_index = y * width + x;
-            int uv_index = (y / 2) * uv_width + (x / 2) * 4; // 4 bytes per UV pair (U and V)
-
-            // Convert 10-bit to 8-bit
-            int y_val = (y_plane[y_index * 2] <<  2)   | (y_plane[y_index * 2 + 1] >> 6);
-            int u_val = ((uv_plane[uv_index] << 2)     | (uv_plane[uv_index + 1] >> 6)) - 128;
-            int v_val = ((uv_plane[uv_index + 2] << 2) | (uv_plane[uv_index + 3] >> 6)) - 128;
-
-            // YUV to RGB conversion
-            int r = y_val + 1.402 * v_val;
-            int g = y_val - 0.344136 * u_val - 0.714136 * v_val;
-            int b = y_val + 1.772 * u_val;
-
-            // Clip values to the range [0, 255]
-            r = clip(r);
-            g = clip(g);
-            b = clip(b);
-
-            // Store the RGBA values
-            int rgba_index = y * stride + x * 4;
-            rgba_data[rgba_index]     = r;   // R
-            rgba_data[rgba_index + 1] = g;   // G
-            rgba_data[rgba_index + 2] = b;   // B
-            rgba_data[rgba_index + 3] = 255; // A (alpha)
-        }
-    }
-    return rgba_data;
-}
-
 // 窗口绘制函数
 void GL_Image::paintGL()
 {
     if (frameList.size() <= 0) {
         return;
     }
-    static int idx = 0;
+    static size_t idx = 0;
     m_frame = frameList[idx++];
     if (idx >= frameList.size()) {
         idx = 0;
@@ -108,9 +69,30 @@ void GL_Image::paintGL()
     if(m_frame == nullptr){
         return;
     }
+    // LOG_DEBUG() << "w : " << m_frame->width << ", h: " << m_frame->height;
+    // LOG_DEBUG() << "linesize[0] : " << m_frame->linesize[0]
+    //                << ", linesize[1]: " << m_frame->linesize[1];
+    // uint8_t *yData = (uint8_t*)malloc(sizeof(uint8_t) * (m_frame->linesize[0] / 2));
+    // uint8_t *uData = (uint8_t*)malloc(sizeof(uint8_t) * (m_frame->linesize[1] / 4));
+    // uint8_t *vData = (uint8_t*)malloc(sizeof(uint8_t) * (m_frame->linesize[1] / 4));
+    uint8_t *rgbaData = (uint8_t*)malloc(m_frame->width * m_frame->height * 4);
 
-    uint8_t *rgbaData = convert_p010le_to_rgba(m_frame->data[0], m_frame->data[1],
-                                               m_frame->width,   m_frame->height);
+    // 转换 P010LE 到 8 位 YUV
+    // if (m_frame->data[0] && m_frame->data[1]) {
+    //      convertP010LETo8bit(m_frame->data[0],
+    //                          m_frame->linesize[0],
+    //                          m_frame->data[1],
+    //                          m_frame->linesize[1],
+    //                          yData,
+    //                          uData,
+    //                          vData);
+    // }
+
+    // 转换 8 位 YUV 到 RGBAs
+    // convertYUVToRGBA(yData, uData, vData, rgbaData, m_frame->width, HEIGHT);
+    
+    convertP010LEToRGBA(m_frame->data[0], m_frame->data[1], rgbaData, m_frame->width, m_frame->height);
+
 
     if (rgbaData == nullptr) {
         LOG_DEBUG() << "rgbaData is null";
@@ -202,8 +184,14 @@ void GL_Image::paintGL()
     glVertex2d(vertexPos_[Right_Bottom_X], vertexPos_[Right_Bottom_Y]);
     glEnd();
     glDisable(GL_TEXTURE_2D);
-    // 交换前后缓冲区
-    // swapBuffers();
+
+    // free(yData);
+    // free(uData);
+    // free(vData);
+    free(rgbaData);
+
+    return ;
+
 }
 
 void GL_Image::resizeGL(int w, int h)

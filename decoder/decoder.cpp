@@ -109,7 +109,12 @@ int Decoder::DecodeWrite(AVCodecContext *avctx, AVPacket *packet)
         //     LOG_DEBUG() << "linesize[" << i << "] size: " << tmp_frame->linesize[i];
         // }
 
-        emit DecoderSendAVFrame(tmp_frame);
+        // LOG_DEBUG() << "y bytes: " << tmp_frame->linesize[0] << ", uv bytes: " << tmp_frame->linesize[1];
+        static bool key = true;
+        if (key) {
+            // key = false;
+            emit DecoderSendAVFrame(tmp_frame);
+        }
 
         // LOG_DEBUG()  << "format:" << av_get_pix_fmt_name((AVPixelFormat)tmp_frame->format)
         //             << " w: " << tmp_frame->width

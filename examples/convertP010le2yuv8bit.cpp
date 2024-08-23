@@ -1,40 +1,61 @@
-#include <cstdint>
-#include <cstring>
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
 
-// Convert p010le to nv12
-void convert_p010le_to_nv12(const uint8_t *y_plane, const uint8_t *uv_plane, uint8_t *nv12_data, int width, int height) {
-    int uv_width = width / 2;
-    int uv_height = height / 2;
+void convertP010LEToRGBA(uint8_t* yData, uint8_t* uvData, uint8_t* rgbaData,
+                         int width, int height)
+{
+    int uvWidth = width / 2;
 
-    // Allocate space for the NV12 data
-    uint8_t *nv12_y = nv12_data;
-    uint8_t *nv12_uv = nv12_data + width * height; // Start of UV plane
-
-    // Copy Y plane directly, but convert from 10-bit to 8-bit
     for (int y = 0; y < height; ++y) {
         for (int x = 0; x < width; ++x) {
-            int y_index = y * width + x;
-            int nv12_y_index = y * width + x;
+            int yIndex = y * width * 2 + x * 2; // 2 bytes per Y value
+            int uvIndex = (y * uvWidth + (x / 2)) * 4; // 2 bytes per U and V
 
-            // Convert 10-bit to 8-bit
-            uint8_t y_val = (y_plane[y_index * 2] << 2) | (y_plane[y_index * 2 + 1] >> 6);
-            nv12_y[nv12_y_index] = y_val;
+            uint16_t yValue = (yData[yIndex] | (yData[yIndex + 1] << 8)) >> 6; // 10 bits Y
+            uint16_t uValue = (uvData[uvIndex] | (uvData[uvIndex + 1] << 8)) >> 6; // 10 bits U
+            uint16_t vValue = (uvData[uvIndex + 2] | (uvData[uvIndex + 3] << 8)) >> 6; // 10 bits V
+
+            // YUV 转 RGB
+            int r = (int)(yValue + 1.402 * (vValue - 128));
+            int g = (int)(yValue - 0.344136 * (uValue - 128) - 0.714136 * (vValue - 128));
+            int b = (int)(yValue + 1.772 * (uValue - 128));
+
+            // Clip RGB 值到 [0, 255] 范围
+            r = r < 0 ? 0 : (r > 255 ? 255 : r);
+            g = g < 0 ? 0 : (g > 255 ? 255 : g);
+            b = b < 0 ? 0 : (b > 255 ? 255 : b);
+
+            // 存储 RGBA 数据
+            int rgbaIndex = (y * width + x) * 4;
+            rgbaData[rgbaIndex]     = (uint8_t)r;   // R
+            rgbaData[rgbaIndex + 1] = (uint8_t)g;   // G
+            rgbaData[rgbaIndex + 2] = (uint8_t)b;   // B
+            rgbaData[rgbaIndex + 3] = 255;           // A (完全不透明)
         }
     }
+}
 
-    // Copy UV plane, converting from 10-bit to 8-bit and interleave
-    for (int y = 0; y < uv_height; ++y) {
-        for (int x = 0; x < uv_width; ++x) {
-            int uv_index = y * uv_width + x * 4; // 4 bytes per UV pair (U and V)
-            int nv12_uv_index = (y * uv_width + x) * 2;
+int main() {
+    int width = 640;
+    int height = 480;
 
-            // Convert 10-bit to 8-bit
-            uint8_t u_val = (uv_plane[uv_index] << 2) | (uv_plane[uv_index + 1] >> 6);
-            uint8_t v_val = (uv_plane[uv_index + 2] << 2) | (uv_plane[uv_index + 3] >> 6);
+    // 分配 YUV 数据和 RGBA 数据内存
+    uint8_t *yData = (uint8_t*)malloc(width * height * 2);
+    uint8_t *uvData = (uint8_t*)malloc((width / 2) * height * 4); // U and V interleaved
+    uint8_t *rgbaData = (uint8_t*)malloc(width * height * 4);
 
-            // Interleave U and V
-            nv12_uv[nv12_uv_index] = u_val;
-            nv12_uv[nv12_uv_index + 1] = v_val;
-        }
-    }
+    // 填充 YUV 数据的示例代码...
+
+    // 转换
+    convertP010LEToRGBA(yData, uvData, rgbaData, width, height);
+
+    // 使用 rgbaData...
+
+    // 释放内存
+    free(yData);
+    free(uvData);
+    free(rgbaData);
+
+    return 0;
 }
