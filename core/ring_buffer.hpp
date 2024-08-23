@@ -45,10 +45,12 @@ public:
     }
 
     bool Full() {
-            return (m_writePosition  == m_readPosition);
+        return (Next(m_writePosition.load())  == m_readPosition);
     }
 
-    bool Empty() { return m_writePosition == m_readPosition; }
+    bool Empty() {
+        return m_writePosition == m_readPosition;
+    }
 
     void Clear()
     {
@@ -71,15 +73,15 @@ public:
     void PushBack(T &&x)
     {
         Loc guard{m_mutex};
-        LOG_DEBUG() << "m_isStopped: " << m_isStopped;
+        // LOG_DEBUG() << "m_isStopped: " << m_isStopped;
         while (Full() && !m_isStopped.load()) {
-            LOG_DEBUG() << "wait...";
+            // LOG_DEBUG() << "wait...";
             m_full.wait(guard);
         }
         if (m_isStopped.load()) {
             return;
         }
-        LOG_DEBUG() << "push...";
+        // LOG_DEBUG() << "push...";
         auto wp =  m_writePosition.load();
         m_buffer[wp] = std::move(x);
         m_writePosition = Next(wp);
@@ -94,9 +96,9 @@ public:
         auto rp = m_readPosition.load();
         T t = m_buffer[rp];
         m_readPosition = Next(rp);
-        // if (rp == Next(m_writePosition.load())) {
+        if (rp == Next(m_writePosition.load())) {
             m_full.notify_all();
-        // }
+        }
         return t;
     }
 

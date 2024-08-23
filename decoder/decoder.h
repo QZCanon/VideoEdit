@@ -33,6 +33,10 @@ public:
         return m_frameList.FrontAndPop();
     }
 
+    bool BufferIsEmpty() {
+        return m_frameList.Empty();
+    }
+
 signals:
     void DecoderSendAVFrame(AVFrame*);
     void DecoderIsFinish();

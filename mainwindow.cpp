@@ -51,6 +51,9 @@ void MainWindow::Decodered()
 // 主界面开启定时器，在界面循环显示4个方向的图片
 void MainWindow::slotTimeOut()
 {
+    if (decoder->BufferIsEmpty()) {
+        return;
+    }
     glImage->SetFrame(decoder->GetFrame());
     glImage->repaint(); //窗口重绘，repaint会调用paintEvent函数，paintEvent会调用paintGL函数实现重绘
 
