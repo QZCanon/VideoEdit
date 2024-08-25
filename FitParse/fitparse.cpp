@@ -6,6 +6,21 @@ FitParse::FitParse(QObject *parent) : QObject(parent)
     listener.SetFitMessageCallback(std::bind(&FitParse::MessageCallback,
                                              this,
                                              std::placeholders::_1));
+
+    th = std::thread(&FitParse::DoWork, this);
+}
+
+void FitParse::DoWork()
+{
+    while(1) {
+        {
+            std::unique_lock<std::mutex> lck(mutex_);
+            while (isStart == false) {
+                cond_.wait(lck);
+            }
+        }
+        ReadFitFile(fitFileName);
+    }
 }
 
 void FitParse::ReadFitFile(const std::string& fileName)
@@ -46,5 +61,6 @@ void FitParse::MessageCallback(Canon::StopWatchMessage &msg)
     {
         std::unique_lock<std::mutex> lock(mutex);
         stopWatchMsgList.push_back(msg);
+        LOG_DEBUG() << ", list size: " << stopWatchMsgList.size();
     }
 }

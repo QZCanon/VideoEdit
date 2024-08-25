@@ -235,6 +235,7 @@ void GL_Image::paintGL()
 
 void GL_Image::resizeGL(int w, int h)
 {
+    LOG_DEBUG() << w << " * " << h;
     // 传入的w，h时widget控件的尺寸
     Ortho2DSize_.setWidth(w);
     Ortho2DSize_.setHeight(h);
@@ -243,6 +244,7 @@ void GL_Image::resizeGL(int w, int h)
     glLoadIdentity();
     glOrtho(0, Ortho2DSize_.width(), Ortho2DSize_.height(), 0, -1, 1);
     glMatrixMode(GL_MODELVIEW);
+    paintGL();
 }
 
 // 鼠标滚轮实现图片倍率缩放,缩放间隔为0.1，调整绘制位置的偏移，调用paintGL重绘

@@ -5,6 +5,7 @@
 #include <QObject>
 #include <fstream>
 #include <mutex>
+#include <thread>
 
 #include "FitSDK/fit_decode.hpp"
 #include "FitSDK/fit_mesg_broadcaster.hpp"
@@ -30,9 +31,16 @@ private:
     fit::Decode          decode;
     fit::MesgBroadcaster mesgBroadcaster;
     Listener             listener;
+    bool isStart = false;
+    std::string fitFileName;
+
+    std::thread th;
+    std::condition_variable cond_;
+    std::mutex mutex_;
 
     std::mutex           mutex;
     Canon::StopWatchList stopWatchMsgList;
+    void DoWork();
 };
 
 
