@@ -4,6 +4,7 @@
 #include <cstddef>
 #include <functional>
 #include <mutex>
+#include <condition_variable>
 
 #include "Logger/logger.h"
 

@@ -6,6 +6,7 @@
 #include <fstream>
 #include <mutex>
 #include <thread>
+#include <condition_variable>
 
 #include "FitSDK/fit_decode.hpp"
 #include "FitSDK/fit_mesg_broadcaster.hpp"

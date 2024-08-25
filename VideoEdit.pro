@@ -3,7 +3,6 @@ QT       += core gui
 
 #---opengl----------------------------
 QT       +=opengl
-QT       += core gui
 QT	 += multimedia
 QT += multimediawidgets
 QT += openglwidgets
@@ -107,26 +106,16 @@ contains(QMAKE_HOST.arch, aarch64){
         message("win32")
         QMAKE_CXXFLAGS += "-Wa,-mbig-obj"
 
-        win32:CONFIG(release, debug|release): LIBS += -LE:/install/ffmpeg-6.1.1/lib/ \
-                                                        -lavformat \
-                                                        -lavcodec \
-                                                        -lavdevice \
-                                                        -lavfilter \
-                                                        -lavutil \
-                                                        -lpostproc \
-                                                        -lswresample \
-                                                        -lswscale
-        # else:win32:CONFIG(debug, debug|release): LIBS += -LE:/install/ffmpeg-6.1.1/lib/ \
-        #                                                 -lavformat \
-        #                                                 -lavcodec \
-        #                                                 -lavdevice \
-        #                                                 -lavfilter \
-        #                                                 -lavutil \
-        #                                                 -lpostproc \
-        #                                                 -lswresample \
-        #                                                 -lswscale
+        win32: LIBS += -LE:/install/ffmpeg-6.1.1/lib/ -lavcodec    \
+                                                      -lavformat   \
+                                                      -lavdevice   \
+                                                      -lavfilter   \
+                                                      -lavutil     \
+                                                      -lpostproc   \
+                                                      -lswresample \
+                                                      -lswscale
 
-        # LIBS += -LE:\install\ffmpeg-6.1.1\bin -lavcodec-60
+        LIBS += -lopengl32  -lGLU32
 
         INCLUDEPATH += E:/install/ffmpeg-6.1.1/include
         DEPENDPATH += E:/install/ffmpeg-6.1.1/include
@@ -149,5 +138,3 @@ contains(QMAKE_HOST.arch, aarch64){
             /usr/local/ffmpeg/lib/libswscale.8.dylib
     }
 }
-
-
