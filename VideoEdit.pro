@@ -51,6 +51,7 @@ SOURCES += \
     FitSDK/fit_protocol_validator.cpp \
     FitSDK/fit_unicode.cpp \
     VideoRenderer/videorenderer.cpp \
+    core/time.cpp \
     core/utils.cpp \
     dashboard/dashboard.cpp \
     decoder/decoder.cpp \
@@ -65,8 +66,10 @@ HEADERS += \
     Logger/logger.h \
     VideoPlayer/VideoPlayer.h \
     VideoRenderer/videorenderer.h \
+    core/atomic_vector.hpp \
     core/defines.h \
     core/ring_buffer.hpp \
+    core/time.hpp \
     core/types.h \
     core/utils.h \
     dashboard/dashboard.h \

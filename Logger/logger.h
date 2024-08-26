@@ -2,6 +2,7 @@
 #define LOGGER_H
 
 #include <QDebug>
+#include "core/time.hpp"
 
 enum LogLevel {
     DEBUG,
@@ -36,10 +37,10 @@ private:
 
 #if defined(Q_OS_MAC)
     #define LOG_DEBUG() ( \
-            qDebug() << "[DEBUG][" <<  __FILE_NAME__ << "][line:" << __LINE__ << "][" << __FUNCTION__ << "()|")
+            qDebug() << "[" << Canon::Time::now().c_str() << "]"  << "[DEBUG][" <<  __FILE_NAME__ << ":" << __LINE__ << "][" << __FUNCTION__ << "()|")
 #elif defined(Q_OS_WIN)
     #define LOG_DEBUG() ( \
-            qDebug() << "[DEBUG][" <<  __FILE__ << "][line:" << __LINE__ << "][" << __FUNCTION__ << "()|")
+            qDebug() << "[" << Canon::Time::now().c_str() << "]"  << "[DEBUG][" <<  __FILE__ << ":" << __LINE__ << "][" << __FUNCTION__ << "()|")
 #endif
 
 #endif // LOGGER_H

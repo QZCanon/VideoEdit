@@ -205,3 +205,5 @@ void saveRGBAtoBMP(const char* filename, uint8_t* rgbaData, int width, int heigh
 
     fclose(fp);
 }
+
+

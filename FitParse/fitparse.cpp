@@ -57,10 +57,11 @@ void FitParse::ReadFitFile(const std::string& fileName)
 
 void FitParse::MessageCallback(Canon::StopWatchMessage &msg)
 {
-    LOG_DEBUG() << "msg fit is rec";
+    // LOG_DEBUG() << "msg fit is rec";
     {
         std::unique_lock<std::mutex> lock(mutex);
         stopWatchMsgList.push_back(msg);
-        LOG_DEBUG() << ", list size: " << stopWatchMsgList.size();
+        // PRINT_MSGS(msg);
+        // LOG_DEBUG() << ", list size: " << stopWatchMsgList.size();
     }
 }

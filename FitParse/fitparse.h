@@ -23,6 +23,14 @@ public:
 
     void ReadFitFile(const std::string& fileName);
 
+    size_t Size() {
+        return stopWatchMsgList.size();
+    }
+
+    auto& at(int i) {
+        return stopWatchMsgList.at(i);
+    }
+
 private:
     void MessageCallback(Canon::StopWatchMessage& fitMsg);
 

@@ -4,6 +4,8 @@
 
 #include <QFileDialog>
 #include <QTime>
+#include "core/types.h"
+#include "core/time.hpp"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -26,6 +28,13 @@ void MainWindow::InitFitParse()
 {
     fitParse = new FitParse;
     fitParse->ReadFitFile("/Users/qinzhou/workspace/qt/VideoEdit_test/MAGENE_C416_2024-08-11_194425_907388_1723381873.fit");
+
+    auto size = fitParse->Size();
+    LOG_DEBUG() << "list size: " << size;
+
+    // for (size_t i = 0; i < fitParse->Size(); ++i) {
+    //     PRINT_MSGS(fitParse->at(i));
+    // }
 }
 
 void MainWindow::InitComponent()

@@ -9,6 +9,8 @@
 
 #include "core/defines.h"
 #include "core/types.h"
+#include "Logger/logger.h"
+#include "core/utils.h"
 
 class Listener
     : public fit::FileIdMesgListener
@@ -24,29 +26,32 @@ public:
 
     void OnMesg(fit::Mesg& mesg) override
     {
-        printf("On Mesg:\n");
-        qDebug() << L"   New Mesg: " << mesg.GetName().c_str() << L".  It has " << mesg.GetNumFields() << L" field(s) and " << mesg.GetNumDevFields() << " developer field(s).\n";
+        // printf("On Mesg:\n");
+        // fflush(stdout);
+        // std::cout << "   New Mesg: " << mesg.GetName().c_str() << ".  It has " << mesg.GetNumFields() << L" field(s) and " << mesg.GetNumDevFields() << " developer field(s).\n";
 
+        Canon::StopWatchMessage fitMsg;
         for (FIT_UINT16 i = 0; i < (FIT_UINT16)mesg.GetNumFields(); i++) {
-            Canon::StopWatchMessage fitMsg;
 
             fit::Field* field = mesg.GetFieldByIndex(i);
             GetFitMsg(fitMsg, field);
 
-            qDebug() << L"   Field" << i << " (" << field->GetName().c_str() << ") has " << field->GetNumValues() << L" value(s)\n";
-            PrintValues(*field);
-            if (!fitMsg.isValid) {
-                qWarning() << "fitMsg is invalid!";
-                continue;
-            }
-            if (fitMessage_cb) { fitMessage_cb(fitMsg); }
-            else { qErrnoWarning("fit message is nil!"); }
+            // std::cout << "   Field" << i << " (" << field->GetName().c_str() << ") has " << (int)field->GetNumValues() << " value(s)\n";
+            // PrintValues(*field);
         }
+        if (IsZero(fitMsg.position_lat) || IsZero(fitMsg.position_long)) { // 根据经纬度判断数据是否有效
+            // qWarning() << "fitMsg is invalid! " << "position_lat: " << fitMsg.position_lat << " position_lat:" << fitMsg.position_lat;
+            return;
+        }
+        if (fitMessage_cb) { fitMessage_cb(fitMsg); }
+        else { qErrnoWarning("fit message is nil!"); }
 
-        for (auto devField : mesg.GetDeveloperFields()) {
-            qDebug() << L"   Developer Field(" << devField.GetName().c_str() << ") has " << devField.GetNumValues() << L" value(s)\n";
-            PrintValues(devField);
-        }
+        PRINT_MSGS(fitMsg);
+
+        // for (auto devField : mesg.GetDeveloperFields()) {
+        //     qDebug() << L"   Developer Field(" << devField.GetName().c_str() << ") has " << devField.GetNumValues() << L" value(s)\n";
+        //     PrintValues(devField);
+        // }
     }
 
     void OnMesg(fit::FileIdMesg& mesg) override
@@ -150,11 +155,11 @@ public:
 
     void OnMesg( fit::RecordMesg& record ) override
     {
-        printf( "Record:\n" );
-        PrintOverrideValues( record, fit::RecordMesg::FieldDefNum::HeartRate);
-        PrintOverrideValues( record, fit::RecordMesg::FieldDefNum::Cadence );
-        PrintOverrideValues( record, fit::RecordMesg::FieldDefNum::Distance );
-        PrintOverrideValues( record, fit::RecordMesg::FieldDefNum::Speed );
+        // printf( "Record:\n" );
+        // PrintOverrideValues( record, fit::RecordMesg::FieldDefNum::HeartRate);
+        // PrintOverrideValues( record, fit::RecordMesg::FieldDefNum::Cadence );
+        // PrintOverrideValues( record, fit::RecordMesg::FieldDefNum::Distance );
+        // PrintOverrideValues( record, fit::RecordMesg::FieldDefNum::Speed );
     }
 
     void OnDeveloperFieldDescription( const fit::DeveloperFieldDescription& desc ) override
@@ -167,7 +172,6 @@ public:
     void GetFitMsg(Canon::StopWatchMessage& fitMsg, const fit::FieldBase* field) {
         const auto& name  = field->GetName();
         for (FIT_UINT8 j = 0; j < (FIT_UINT8)field->GetNumValues(); ++j) {
-            fitMsg.isValid = true;
             switch (field->GetType()) {
                 case FIT_BASE_TYPE_ENUM:
                 case FIT_BASE_TYPE_BYTE:
@@ -188,12 +192,12 @@ public:
                 {
                     FIT_FLOAT64 ret = field->GetFLOAT64Value(j);
                     if      (name == "timestamp")           { fitMsg.timeStamp     = static_cast<uint64_t>(ret); }
-                    else if (name == "speed")               { fitMsg.speed         = static_cast<uint16_t>(ret); }
-                    else if (name == "temperature")         { fitMsg.temperature   = static_cast<uint16_t>(ret); }
-                    else if (name == "distance")            { fitMsg.distance      = static_cast<uint32_t>(ret); }
-                    else if (name == "grade")               { fitMsg.grade         = ret;                        }
-                    else if (name == "position_lat")        { fitMsg.position_lat  = ret;                        }
-                    else if (name == "position_long")       { fitMsg.position_long = ret;                        }
+                    else if (name == "speed")               { fitMsg.speed         = static_cast<double>(ret); }
+                    else if (name == "temperature")         { fitMsg.temperature   = static_cast<double>(ret); }
+                    else if (name == "distance")            { fitMsg.distance      = static_cast<double>(ret); }
+                    else if (name == "grade")               { fitMsg.grade         = static_cast<double>(ret); }
+                    else if (name == "position_lat")        { fitMsg.position_lat  = static_cast<double>(ret);}
+                    else if (name == "position_long")       { fitMsg.position_long = static_cast<double>(ret); }
                     else if (name == "enhanced_speed")      {}
                     else if (name == "enhanced_altitude")   {}
                     else if (name == "altitude")            {}
@@ -209,7 +213,7 @@ public:
     {
        for (FIT_UINT8 j=0; j< (FIT_UINT8)field.GetNumValues(); j++)
        {
-           qDebug() << L"       Val" << j << L": ";
+           std::cout << "       Val" << (int)j << ": ";
            switch (field.GetType())
            {
            // Get float 64 values for numeric types to receive values that have
@@ -230,15 +234,15 @@ public:
                case FIT_BASE_TYPE_UINT64Z:
                case FIT_BASE_TYPE_FLOAT32:
                case FIT_BASE_TYPE_FLOAT64:
-                   qDebug() << field.GetFLOAT64Value(j);
+                   std::cout << (double)field.GetFLOAT64Value(j);
                    break;
                case FIT_BASE_TYPE_STRING:
-                   qDebug() << field.GetSTRINGValue(j).c_str();
+                   std::cout << field.GetSTRINGValue(j).c_str();
                    break;
                default:
                    break;
            }
-           qDebug() << L" " << field.GetUnits().c_str() << L"\n";;
+           std::cout << " " << field.GetUnits() << "\n";;
        }
     }
 
@@ -298,6 +302,9 @@ public:
        }
     }
 
+    bool IsZero(double value, double epsilon = 1e-9) {
+        return std::abs(value) < epsilon;
+    }
 private:
     StopWatchMessageCallback fitMessage_cb;
 };
