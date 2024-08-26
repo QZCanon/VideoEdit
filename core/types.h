@@ -33,16 +33,15 @@ typedef struct StopWatchMessage_ {
 
 using StopWatchList = std::vector<Canon::StopWatchMessage>;
 
-
 }
 
-#define PRINT_MSGS(MSGS) \
-    LOG_DEBUG() << "speed: "          << MSGS.speed \
-                << " temprature: "    << MSGS.temperature \
-                << " position_lat: "  << MSGS.position_lat \
-                << " position_long: " << MSGS.position_long \
-                << " grade: "         << MSGS.grade \
-                << " distance: "      << MSGS.distance\
-                << " timeStamp: "     << MSGS.timeStamp
+#define PRINT_MSGS(MSGS)                                     \
+    LOG_DEBUG() << "speed: "          << MSGS.speed           \
+                << "m/s, temprature: "    << MSGS.temperature \
+                << ", position_lat: "  << MSGS.position_lat   \
+                << ", position_long: " << MSGS.position_long  \
+                << ", grade: "         << MSGS.grade          \
+                << ", distance: "      << MSGS.distance       \
+                << "m, timeStamp: "     << MSGS.timeStamp
 
 #endif // TYPES_H

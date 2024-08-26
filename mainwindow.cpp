@@ -27,7 +27,11 @@ MainWindow::~MainWindow()
 void MainWindow::InitFitParse()
 {
     fitParse = new FitParse;
+#if defined(Q_OS_MAC)
     fitParse->ReadFitFile("/Users/qinzhou/workspace/qt/VideoEdit_test/MAGENE_C416_2024-08-11_194425_907388_1723381873.fit");
+#elif defined(Q_OS_WIN)
+    fitParse->ReadFitFile("F:/MAGENE_C416_2024-08-11_194425_907388_1723381873.fit");
+#endif
 
     auto size = fitParse->Size();
     LOG_DEBUG() << "list size: " << size;
@@ -44,13 +48,7 @@ void MainWindow::InitComponent()
     paintWinSize    = {this->size().width(), this->size().height() - MENU_BAR_HEIGHT - STATUS_BAR_HEIGHT};
     statusBarSize   = {this->size().width(), STATUS_BAR_HEIGHT};
     dashBoardSize   = {dashBoardwidth, dashBoardHeight};
-
-
     qRegisterMetaType<AVFrame*>("AVFrame*");//注册类型
-
-    softwareWinSize = this->size();
-
-
     paintPlane = new QWidget(this);
     paintPlane->setGeometry(0,
                             MENU_BAR_HEIGHT,
@@ -58,16 +56,10 @@ void MainWindow::InitComponent()
                             softwareWinSize.height() - MENU_BAR_HEIGHT - STATUS_BAR_HEIGHT);
     paintPlane->setStyleSheet("background-color: black;");
 
-
-
     glImage = new GL_Image(paintPlane);
     glImage->setFixedSize(paintWinSize);
-
     decoder = new Decoder;
 
-    connect(decoder, SIGNAL(DecoderSendAVFrame(AVFrame*)),
-            glImage, SLOT(AVFrameSlot(AVFrame*)), Qt::BlockingQueuedConnection);
-    connect(decoder, SIGNAL(DecoderIsFinish()), this, SLOT(Decodered()));
     decoder->Init();
 
     connect(&timer, SIGNAL(timeout()), this, SLOT(slotTimeOut()));
@@ -101,11 +93,6 @@ void MainWindow::RepaintComponent(const QSize& size)
                                dashBoardSize.width(),
                                dashBoardSize.height());
     }
-}
-
-void MainWindow::Decodered()
-{
-    // timer.start(10);
 }
 
 void MainWindow::resizeEvent(QResizeEvent *e)

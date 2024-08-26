@@ -37,15 +37,10 @@ public:
     GL_Image(QWidget* parent = nullptr);
     ~GL_Image();
 
-    void Start();
-
     void SetFrame(AVFrame *frame);
 private:
-    void DoWork();
-    void RepaintGL();
 
 public slots:
-    void AVFrameSlot(AVFrame *);
 
 protected:
     // 重写QGLWidget类的接口
@@ -73,13 +68,6 @@ private:
     float scaleVal_;             //缩放倍率
 
     AVFrame* m_frame{nullptr};
-    std::thread m_repaintThread;
-    bool isExitThread = false;
-
-    std::mutex m_mutex;
-    std::condition_variable cond;//条件变量
-    std::queue<AVFrame*> frameList;
-    RingBuffer<AVFrame*, 3> avframeList;
 };
 
 #endif // VIDEORENDERER_H

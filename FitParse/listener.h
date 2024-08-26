@@ -205,8 +205,6 @@ public:
                 }
             }
         }
-
-
     }
 
     static void PrintValues(const fit::FieldBase& field)

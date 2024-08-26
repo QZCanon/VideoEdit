@@ -40,7 +40,7 @@ private:
             qDebug() << "[" << Canon::Time::now().c_str() << "]"  << "[DEBUG][" <<  __FILE_NAME__ << ":" << __LINE__ << "][" << __FUNCTION__ << "()|")
 #elif defined(Q_OS_WIN)
     #define LOG_DEBUG() ( \
-            qDebug() << "[" << Canon::Time::now().c_str() << "]"  << "[DEBUG][" <<  __FILE__ << ":" << __LINE__ << "][" << __FUNCTION__ << "()|")
+            qDebug().nospace() << "[" << Canon::Time::now().c_str() << "]"  << "[DEBUG][" <<  __FILE__ << ":" << __LINE__ << "][" << __FUNCTION__ << "()|")
 #endif
 
 #endif // LOGGER_H

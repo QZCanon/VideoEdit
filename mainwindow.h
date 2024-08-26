@@ -2,7 +2,6 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
-#include <memory>
 #include <QWidget>
 #include <QMediaPlayer>
 #include <QVideoWidget>
@@ -37,8 +36,6 @@ private:
 
 private slots:
 
-    void Decodered();
-
 protected:
      void resizeEvent(QResizeEvent* e) override;
 
@@ -50,12 +47,12 @@ private:
     Ui::MainWindow *ui;
     QWidget* paintPlane{nullptr};
 
-    Decoder* decoder = nullptr;
-    GL_Image* glImage = nullptr;
-    DashBoard* dashBoard = nullptr;
-    QTimer timer;
-    FitParse* fitParse = nullptr;
-    Listener* fitListener = nullptr;
+    Decoder*    decoder     = nullptr;
+    GL_Image*   glImage     = nullptr;
+    DashBoard*  dashBoard   = nullptr;
+    QTimer      timer;
+    FitParse*   fitParse    = nullptr;
+    Listener*   fitListener = nullptr;
 
     QSize softwareWinSize;  // 窗口大小
     QSize menuBarSize;      // 菜单栏大小

@@ -38,8 +38,6 @@ public:
     }
 
 signals:
-    void DecoderSendAVFrame(AVFrame*);
-    void DecoderIsFinish();
 
 private:
     int DecodeWrite(AVCodecContext *avctx, AVPacket *packet);

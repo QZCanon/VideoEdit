@@ -14,81 +14,9 @@ GL_Image::GL_Image(QWidget* parent):
 
 GL_Image::~GL_Image()
 {
-    // isExitThread = true;
-    // if (m_repaintThread.joinable()) {
-    //     m_repaintThread.join();
-    // }
+
 }
 
-void GL_Image::Start()
-{
-    // isExitThread = false;
-    // m_repaintThread = std::thread(&GL_Image::DoWork, this);
-}
-
-void GL_Image::DoWork()
-{
-    while (1) {
-        if (isExitThread) {
-            break;
-        }
-        AVFrame* frame = nullptr;
-        {
-            std::unique_lock<std::mutex> lck(m_mutex);
-            while(frameList.empty()) {
-                cond.wait(lck);
-            }
-            frame = frameList.front();
-        }
-        // if (frame)
-        //     RepaintGL(frame);
-    }
-}
-
-void GL_Image::AVFrameSlot(AVFrame* src_frame)
-{
-    if (src_frame) {
-        // LOG_DEBUG() << src_frame->height << "*" << src_frame->width;
-        // AVFrame* dst_frame = nullptr;
-
-        // 检查源帧是否有效
-        if (!src_frame || !src_frame->data[0]) {
-            LOG_DEBUG() << "Invalid source frame\n";
-            return;
-        }
-
-
-            // std::unique_lock<std::mutex> lck(m_mutex);
-            // 分配目标帧
-            AVFrame* frame = av_frame_alloc();
-            if (!frame) {
-                LOG_DEBUG() << "Could not allocate destination frame\n";
-                return;
-            }
-
-            // 设置目标帧参数
-            (frame)->width = src_frame->width;
-            (frame)->height = src_frame->height;
-            (frame)->format = src_frame->format;
-
-            // 分配目标帧的数据缓冲区
-            if (av_frame_get_buffer(frame, 32) < 0) {
-                LOG_DEBUG() << "Could not allocate the frame data\n";
-                av_frame_free(&frame);
-                return;
-            }
-
-            // 执行数据拷贝
-            if (av_frame_copy(frame, src_frame) < 0) {
-                LOG_DEBUG() << "Could not copy frame data\n";
-                av_frame_free(&frame);
-                return;
-            }
-
-            // frameList.push(frame);
-            avframeList.PushBack(std::move(frame));
-    }
-}
 
 void GL_Image::initializeGL()
 {
