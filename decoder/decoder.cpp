@@ -122,7 +122,6 @@ int Decoder::Init()
 
 void Decoder::Start()
 {
-
 }
 
 int Decoder::HwDecoderInit(AVCodecContext *ctx, const enum AVHWDeviceType type)
@@ -224,6 +223,5 @@ int Decoder::DoWork()
         }
     }
     LOG_DEBUG() << "ret: " << ret << ", exit thread";
-    // emit DecoderIsFinish();
     return 0;
 }

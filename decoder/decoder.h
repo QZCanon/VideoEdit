@@ -27,21 +27,16 @@ public:
     ~Decoder();
     int Init();
     void Start();
-    int DoWork();
     auto GetFileFPS() const { return m_fps; }
-    AVFrame* GetFrame() {
-        return m_frameList.FrontAndPop();
-    }
-
-    bool BufferIsEmpty() {
-        return m_frameList.Empty();
-    }
+    AVFrame* GetFrame() { return m_frameList.FrontAndPop(); }
+    bool BufferIsEmpty() { return m_frameList.Empty(); }
 
 signals:
 
 private:
     int DecodeWrite(AVCodecContext *avctx, AVPacket *packet);
     int HwDecoderInit(AVCodecContext *ctx, const AVHWDeviceType type);
+    int DoWork();
 
 private:
     AVFormatContext *input_ctx = NULL;

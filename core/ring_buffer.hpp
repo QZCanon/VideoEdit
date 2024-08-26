@@ -74,15 +74,12 @@ public:
     void PushBack(T &&x)
     {
         Loc guard{m_mutex};
-        // LOG_DEBUG() << "m_isStopped: " << m_isStopped;
         while (Full() && !m_isStopped.load()) {
-            // LOG_DEBUG() << "wait...";
             m_full.wait(guard);
         }
         if (m_isStopped.load()) {
             return;
         }
-        // LOG_DEBUG() << "push...";
         auto wp =  m_writePosition.load();
         m_buffer[wp] = std::move(x);
         m_writePosition = Next(wp);
