@@ -7,20 +7,6 @@ FitParse::FitParse(QObject *parent) : QObject(parent)
                                              this,
                                              std::placeholders::_1));
 
-    th = std::thread(&FitParse::DoWork, this);
-}
-
-void FitParse::DoWork()
-{
-    while(1) {
-        {
-            std::unique_lock<std::mutex> lck(mutex_);
-            while (isStart == false) {
-                cond_.wait(lck);
-            }
-        }
-        ReadFitFile(fitFileName);
-    }
 }
 
 void FitParse::ReadFitFile(const std::string& fileName)

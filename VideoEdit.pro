@@ -50,6 +50,7 @@ SOURCES += \
     FitSDK/fit_profile.cpp \
     FitSDK/fit_protocol_validator.cpp \
     FitSDK/fit_unicode.cpp \
+    SyncData/syncdata.cpp \
     VideoRenderer/videorenderer.cpp \
     core/time.cpp \
     core/utils.cpp \
@@ -64,18 +65,23 @@ HEADERS += \
     FitParse/listener.h \
     FitSDK/*.hpp \
     Logger/logger.h \
+    SyncData/syncdata.h \
     VideoPlayer/VideoPlayer.h \
     VideoRenderer/videorenderer.h \
     core/atomic_vector.hpp \
     core/defines.h \
     core/ring_buffer.hpp \
+    core/sync_queue.h \
     core/time.hpp \
     core/types.h \
     core/utils.h \
     dashboard/dashboard.h \
     decoder/decoder.h \
     mainwindow.h \
-    myslide/myslide.h
+    myslide/myslide.h \
+    task_runner/task.hpp \
+    task_runner/task_runner.hpp \
+    task_runner/thread.hpp
 
 FORMS += \
     dashboard/dashboard.ui \
