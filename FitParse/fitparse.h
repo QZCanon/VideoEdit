@@ -31,6 +31,7 @@ private:
     void MessageCallback(Canon::StopWatchMessage& fitMsg);
 
 signals:
+    void SendStopWatchMsg(Canon::StopWatchMessage&);
 
 private:
     fit::Decode          decode;

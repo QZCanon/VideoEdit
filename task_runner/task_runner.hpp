@@ -17,6 +17,12 @@ const int THREAD_POOL_MAX_SIZE = 10;
 class TaskRunner
 {
 public:
+    using TaskRSPtr = TaskRunner*;
+    static TaskRSPtr GetInstance() {
+        static TaskRunner runner;
+        return &runner;
+    }
+public:
     explicit TaskRunner()
     {
         runners.reserve(THREAD_POOL_MAX_SIZE);
@@ -50,7 +56,7 @@ private:
     void Start()
     {
         for (int i = 0; i < THREAD_POOL_MAX_SIZE; i++) {
-            runners[i]->start(); // use base class
+            runners[i]->start();
         }
     }
 
@@ -58,31 +64,30 @@ private:
     class BaseRunner : public Thread
     {
     public:
-        explicit BaseRunner(TaskRunner* run) : runner(run) {}
+        explicit BaseRunner(TaskRunner* run) : m_runner(run) {}
 
     protected:
         void run() override
         {
-            bool exitCurrentTask = true;
+            bool endCurrentTask = true;
             TaskSPtr t;
             while (loop()) {
-                if (exitCurrentTask == true) {
-                    exitCurrentTask = false;
-                    runner->taskQueue.Take(t);
+                if (endCurrentTask) {
+                    endCurrentTask = false;
+                    m_runner->taskQueue.Take(t);
                     std::call_once(m_flag, [&] { t->Init(); });
                 }
                 if (t->IsActive()) {
                     (*t)();
                 } else {
                     t = nullptr;
-                    exitCurrentTask = true;
+                    endCurrentTask = true;
                 }
-                // std::this_thread::sleep_for(std::chrono::microseconds(50));
             }
         }
 
     private:
-        TaskRunner* runner{nullptr};
+        TaskRunner* m_runner{nullptr};
         std::once_flag m_flag;
     };
 

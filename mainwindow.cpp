@@ -14,8 +14,13 @@ MainWindow::MainWindow(QWidget *parent)
 {
     ui->setupUi(this);
 
-    runner = new TaskRunner;
+    fitParse = new FitParse;
+    syncData = new SyncData;
 
+    connect(fitParse, SIGNAL(SendStopWatchMsg(Canon::StopWatchMessage&)),
+            syncData, SLOT(AcceptStopWatchData(Canon::StopWatchMessage&)));
+    fitParse->ReadFitFile("/Users/qinzhou/workspace/qt/VideoEdit_test/MAGENE_C416_2024-08-11_194425_907388_1723381873.fit");
+    // runner = new TaskRunner;
     // InitFitParse();
     // InitComponent();
 }
@@ -36,13 +41,6 @@ void MainWindow::InitFitParse()
 #elif defined(Q_OS_WIN)
     fitParse->ReadFitFile("F:/MAGENE_C416_2024-08-11_194425_907388_1723381873.fit");
 #endif
-
-    auto size = fitParse->Size();
-    LOG_DEBUG() << "list size: " << size;
-
-    // for (size_t i = 0; i < fitParse->Size(); ++i) {
-    //     PRINT_MSGS(fitParse->at(i));
-    // }
 }
 
 void MainWindow::InitComponent()
@@ -126,25 +124,25 @@ void testinit()
 
 void test()
 {
-    LOG_DEBUG() << "run task";
+    // LOG_DEBUG() << "run task";
 }
 
 void MainWindow::on_add_task_clicked()
 {
-    if (!t) {
-        t = std::make_shared<Task>();
-    }
-    printf("data addr: %p\n", &t);
-    fflush(stdout);
-    t->SetInitfunc(testinit);
-    t->SetTaskFunc(test);
-    runner->AddTask(t);
+    // if (!t) {
+    //     t = CREATE_TASK_OCJECT();
+    // }
+    // printf("data addr: %p\n", &t);
+    // fflush(stdout);
+    // t->SetInitfunc(testinit);
+    // t->SetTaskFunc(test);
+    // runner->AddTask(t);
 }
 
 
 void MainWindow::on_cancle_task_clicked()
 {
-    LOG_DEBUG() << "click";
-    t->CancleTask();
+    // LOG_DEBUG() << "click";
+    // t->CancleTask();
 }
 

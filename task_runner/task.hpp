@@ -5,13 +5,13 @@
 #include <atomic>
 #include <memory>
 
-#include "Logger/logger.h"
-
 class Task;
 
 using TaskFunc = std::function<void()>;
 using InitFunc = std::function<void()>;
 using TaskSPtr = std::shared_ptr<Task>;
+
+#define CREATE_TASK_OCJECT() std::make_shared<Task>()
 
 class Task
 {

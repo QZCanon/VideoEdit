@@ -18,6 +18,7 @@
 #include "VideoRenderer/videorenderer.h"
 #include "decoder/decoder.h"
 #include "FitParse/listener.h"
+#include "SyncData/syncdata.h"
 
 #include "task_runner/task_runner.hpp"
 
@@ -54,7 +55,6 @@ private:
     QWidget* paintPlane{nullptr};
 
     TaskRunner* runner{nullptr};
-
     TaskSPtr t;
 
     Decoder*    decoder     = nullptr;
@@ -63,6 +63,7 @@ private:
     QTimer      timer;
     FitParse*   fitParse    = nullptr;
     Listener*   fitListener = nullptr;
+    SyncData*   syncData;
 
     QSize softwareWinSize;  // 窗口大小
     QSize menuBarSize;      // 菜单栏大小
