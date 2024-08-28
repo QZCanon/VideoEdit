@@ -12,6 +12,10 @@ DashBoard::DashBoard(QWidget *parent) :
     ui(new Ui::DashBoard)
 {
     ui->setupUi(this);
+
+    this->setAttribute(Qt::WA_TranslucentBackground);
+    this->setWindowFlags(Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint);
+    this->installEventFilter(this);
 }
 
 DashBoard::~DashBoard()
@@ -73,6 +77,7 @@ void DashBoard::paintEvent(QPaintEvent *)
     drawNum(&paint);
     drawPointer(&paint);
     drawCurrentVelocity(&paint);
+
 }
 
 void DashBoard::drawDashBoard(QPainter *paint)

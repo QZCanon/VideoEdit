@@ -2,21 +2,25 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
-#include <memory>
-
+#include <QWidget>
+#include <QMediaPlayer>
+#include <QVideoWidget>
+#include <QAudioOutput>
+#include <QPushButton>
+#include <QSlider>
+#include <QHBoxLayout>
 #include <QLabel>
-#include <QTimer>
-#include <QImage>
-#include <QPixmap>
+#include <QTime>
+#include <QMenuBar>
 
 #include "FitParse/fitparse.h"
-#include "VideoPlayer/VideoPlayer.h"
+#include "dashboard/dashboard.h"
+#include "VideoRenderer/videorenderer.h"
+#include "decoder/decoder.h"
+#include "FitParse/listener.h"
+#include "SyncData/syncdata.h"
 
-extern "C" {
-#include <libavformat/avformat.h>
-#include <libavcodec/avcodec.h>
-#include <libswscale/swscale.h>
-}
+#include "task_runner/task_runner.hpp"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -30,14 +34,49 @@ public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 
+private:
+    void RepaintComponent(const QSize& size);
+
 private slots:
-    void on_pushButton_clicked();
+
+    void on_add_task_clicked();
+
+    void on_cancle_task_clicked();
+
+protected:
+     void resizeEvent(QResizeEvent* e) override;
+
+public slots:
+    void slotTimeOut();
+
 
 private:
     Ui::MainWindow *ui;
+    QWidget* paintPlane{nullptr};
 
-    std::shared_ptr<FitParse> fitParse{nullptr};
+    TaskRunner* runner{nullptr};
+    TaskSPtr t;
 
-    VideoPlayer *player{nullptr};
+    Decoder*    decoder     = nullptr;
+    GL_Image*   glImage     = nullptr;
+    DashBoard*  dashBoard   = nullptr;
+    QTimer      timer;
+    FitParse*   fitParse    = nullptr;
+    Listener*   fitListener = nullptr;
+    SyncData*   syncData;
+
+    QSize softwareWinSize;  // 窗口大小
+    QSize menuBarSize;      // 菜单栏大小
+    QSize paintWinSize;     // 渲染窗口大小
+    QSize statusBarSize;    // 状态栏大小
+    QSize dashBoardSize = {200, 200};
+
+    const uint16_t MENU_BAR_HEIGHT   = 20;
+    const uint16_t STATUS_BAR_HEIGHT = 20;
+    uint16_t dashBoardwidth          = 200;
+    uint16_t dashBoardHeight         = 200;
+
+    void InitComponent();
+    void InitFitParse();
 };
 #endif // MAINWINDOW_H

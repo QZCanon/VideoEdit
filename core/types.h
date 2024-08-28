@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include <vector>
+#include "Logger/logger.h"
 
 namespace Canon {
 
@@ -21,17 +22,26 @@ typedef struct StopWatchMessage_ {
       , timeStamp(0)
     {}
     bool isValid;
-    uint16_t speed;
-    uint16_t temperature;
+    double speed; // m/s
+    double temperature;
     double position_lat;
     double position_long;
     double grade;
-    uint32_t distance;
+    double distance; // m
     uint64_t timeStamp;
 } StopWatchMessage;
 
 using StopWatchList = std::vector<Canon::StopWatchMessage>;
 
 }
+
+#define PRINT_MSGS(MSGS)                                     \
+    LOG_DEBUG() << "speed: "          << MSGS.speed           \
+                << "m/s, temprature: "    << MSGS.temperature \
+                << ", position_lat: "  << MSGS.position_lat   \
+                << ", position_long: " << MSGS.position_long  \
+                << ", grade: "         << MSGS.grade          \
+                << ", distance: "      << MSGS.distance       \
+                << "m, timeStamp: "     << MSGS.timeStamp
 
 #endif // TYPES_H

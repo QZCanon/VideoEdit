@@ -8,10 +8,8 @@
 
 #include "FitSDK/fit_decode.hpp"
 #include "FitSDK/fit_mesg_broadcaster.hpp"
-#include "FitSDK/fit_developer_field_description.hpp"
 #include "FitParse/listener.h"
 #include "core/types.h"
-#include "core/defines.h"
 
 class FitParse : public QObject
 {
@@ -21,10 +19,19 @@ public:
 
     void ReadFitFile(const std::string& fileName);
 
+    size_t Size() {
+        return stopWatchMsgList.size();
+    }
+
+    auto& at(int i) {
+        return stopWatchMsgList.at(i);
+    }
+
 private:
     void MessageCallback(Canon::StopWatchMessage& fitMsg);
 
 signals:
+    void SendStopWatchMsg(Canon::StopWatchMessage&);
 
 private:
     fit::Decode          decode;

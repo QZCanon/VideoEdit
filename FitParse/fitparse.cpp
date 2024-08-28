@@ -6,6 +6,7 @@ FitParse::FitParse(QObject *parent) : QObject(parent)
     listener.SetFitMessageCallback(std::bind(&FitParse::MessageCallback,
                                              this,
                                              std::placeholders::_1));
+
 }
 
 void FitParse::ReadFitFile(const std::string& fileName)
@@ -42,9 +43,12 @@ void FitParse::ReadFitFile(const std::string& fileName)
 
 void FitParse::MessageCallback(Canon::StopWatchMessage &msg)
 {
-    LOG_DEBUG() << "msg fit is rec";
-    {
-        std::unique_lock<std::mutex> lock(mutex);
-        stopWatchMsgList.push_back(msg);
-    }
+    emit SendStopWatchMsg(msg);
+    // LOG_DEBUG() << "msg fit is rec";
+    // {
+    //     std::unique_lock<std::mutex> lock(mutex);
+    //     stopWatchMsgList.push_back(msg);
+        // PRINT_MSGS(msg);
+        // LOG_DEBUG() << ", list size: " << stopWatchMsgList.size();
+    // }
 }

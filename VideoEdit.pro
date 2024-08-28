@@ -3,7 +3,9 @@ QT       += core gui
 
 #---opengl----------------------------
 QT       +=opengl
-QT       += core gui openglwidgets
+QT	 += multimedia
+QT += multimediawidgets
+QT += openglwidgets
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -48,7 +50,12 @@ SOURCES += \
     FitSDK/fit_profile.cpp \
     FitSDK/fit_protocol_validator.cpp \
     FitSDK/fit_unicode.cpp \
+    SyncData/syncdata.cpp \
+    VideoRenderer/videorenderer.cpp \
+    core/time.cpp \
+    core/utils.cpp \
     dashboard/dashboard.cpp \
+    decoder/decoder.cpp \
     main.cpp \
     mainwindow.cpp \
     myslide/myslide.cpp
@@ -58,12 +65,24 @@ HEADERS += \
     FitParse/listener.h \
     FitSDK/*.hpp \
     Logger/logger.h \
+    SyncData/syncdata.h \
     VideoPlayer/VideoPlayer.h \
+    VideoRenderer/videorenderer.h \
+    core/InstanceManager.h \
+    core/atomic_vector.hpp \
     core/defines.h \
+    core/ring_buffer.hpp \
+    core/sync_queue.h \
+    core/time.hpp \
     core/types.h \
+    core/utils.h \
     dashboard/dashboard.h \
+    decoder/decoder.h \
     mainwindow.h \
-    myslide/myslide.h
+    myslide/myslide.h \
+    task_runner/task.hpp \
+    task_runner/task_runner.hpp \
+    task_runner/thread.hpp
 
 FORMS += \
     dashboard/dashboard.ui \
@@ -76,9 +95,11 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
 
 DISTFILES += \
-    nootbook.txt
+    nootbook.txt \
+    shader/fragmentshader.frag \
+    shader/vertexshader.vert
 
-DEFINES += QT_DEPRECATED_WARNINGS
+
 
 #arm64 的编译宏
 contains(QMAKE_HOST.arch, aarch64){
@@ -95,26 +116,16 @@ contains(QMAKE_HOST.arch, aarch64){
         message("win32")
         QMAKE_CXXFLAGS += "-Wa,-mbig-obj"
 
-        win32:CONFIG(release, debug|release): LIBS += -LE:/install/ffmpeg-6.1.1/lib/ \
-                                                        -lavformat \
-                                                        -lavcodec \
-                                                        -lavdevice \
-                                                        -lavfilter \
-                                                        -lavutil \
-                                                        -lpostproc \
-                                                        -lswresample \
-                                                        -lswscale
-        else:win32:CONFIG(debug, debug|release): LIBS += -LE:/install/ffmpeg-6.1.1/lib/ \
-                                                        -lavformat \
-                                                        -lavcodec \
-                                                        -lavdevice \
-                                                        -lavfilter \
-                                                        -lavutil \
-                                                        -lpostproc \
-                                                        -lswresample \
-                                                        -lswscale
+        win32: LIBS += -LE:/install/ffmpeg-6.1.1/lib/ -lavcodec    \
+                                                      -lavformat   \
+                                                      -lavdevice   \
+                                                      -lavfilter   \
+                                                      -lavutil     \
+                                                      -lpostproc   \
+                                                      -lswresample \
+                                                      -lswscale
 
-        LIBS += -LE:\install\ffmpeg-6.1.1\bin -lavcodec-60
+        LIBS += -lopengl32  -lGLU32
 
         INCLUDEPATH += E:/install/ffmpeg-6.1.1/include
         DEPENDPATH += E:/install/ffmpeg-6.1.1/include
@@ -137,5 +148,3 @@ contains(QMAKE_HOST.arch, aarch64){
             /usr/local/ffmpeg/lib/libswscale.8.dylib
     }
 }
-
-
