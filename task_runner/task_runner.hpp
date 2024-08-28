@@ -10,7 +10,6 @@
 #include "thread.hpp"
 #include "task.hpp"
 #include "Logger/logger.h"
-#include <chrono>
 
 const int THREAD_POOL_MAX_SIZE = 10;
 
@@ -75,9 +74,13 @@ private:
                 if (endCurrentTask) {
                     endCurrentTask = false;
                     m_runner->taskQueue.Take(t);
-                    std::call_once(m_flag, [&] { t->Init(); });
+                    std::call_once(m_flag, [&] {
+                        if (t) {
+                            t->Init();
+                        }
+                    });
                 }
-                if (t->IsActive()) {
+                if (t && t->IsActive()) {
                     (*t)();
                 } else {
                     t = nullptr;

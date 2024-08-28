@@ -13,16 +13,23 @@ MainWindow::MainWindow(QWidget *parent)
     , ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+//     if (!runner) {
+//         runner = new TaskRunner;
+//     }
+//     fitParse = new FitParse;
+//     syncData = new SyncData(runner);
 
-    fitParse = new FitParse;
-    syncData = new SyncData;
-
-    connect(fitParse, SIGNAL(SendStopWatchMsg(Canon::StopWatchMessage&)),
-            syncData, SLOT(AcceptStopWatchData(Canon::StopWatchMessage&)));
-    fitParse->ReadFitFile("/Users/qinzhou/workspace/qt/VideoEdit_test/MAGENE_C416_2024-08-11_194425_907388_1723381873.fit");
+//     connect(fitParse, SIGNAL(SendStopWatchMsg(Canon::StopWatchMessage&)),
+//             syncData, SLOT(AcceptStopWatchData(Canon::StopWatchMessage&)));
+// #if defined(Q_OS_MAC)
+//     fitParse->ReadFitFile("/Users/qinzhou/workspace/qt/VideoEdit_test/MAGENE_C416_2024-08-11_194425_907388_1723381873.fit");
+// #elif defined(Q_OS_WIN)
+//     fitParse->ReadFitFile("F:/MAGENE_C416_2024-08-11_194425_907388_1723381873.fit");
+// #endif
     // runner = new TaskRunner;
     // InitFitParse();
-    // InitComponent();
+    InitComponent();
+
 }
 
 MainWindow::~MainWindow()
@@ -111,7 +118,11 @@ void MainWindow::slotTimeOut()
         return;
     }
     if (glImage) {
-        glImage->SetFrame(decoder->GetFrame());
+        auto* frame = decoder->GetFrame();
+        LOG_DEBUG() << "base pts: " << frame->pts;
+        LOG_DEBUG() << "base pts111: " << AV_NOPTS_VALUE;
+
+        glImage->SetFrame(frame);
         glImage->repaint(); //窗口重绘，repaint会调用paintEvent函数，paintEvent会调用paintGL函数实现重绘
     }
 

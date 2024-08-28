@@ -109,6 +109,7 @@ int Decoder::Init()
     int frames = video->nb_frames;
     LOG_DEBUG() << "frames: " << frames;
     LOG_DEBUG() << "duration: " << input_ctx->duration / AV_TIME_BASE;
+    LOG_DEBUG() << "start time: " << input_ctx.star
 
     if (avcodec_parameters_to_context(decoder_ctx, video->codecpar) < 0)
         return -1;

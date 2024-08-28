@@ -19,7 +19,6 @@
 #include "decoder/decoder.h"
 #include "FitParse/listener.h"
 #include "SyncData/syncdata.h"
-
 #include "task_runner/task_runner.hpp"
 
 QT_BEGIN_NAMESPACE
@@ -65,6 +64,7 @@ private:
     Listener*   fitListener = nullptr;
     SyncData*   syncData;
 
+
     QSize softwareWinSize;  // 窗口大小
     QSize menuBarSize;      // 菜单栏大小
     QSize paintWinSize;     // 渲染窗口大小
@@ -78,5 +78,6 @@ private:
 
     void InitComponent();
     void InitFitParse();
+
 };
 #endif // MAINWINDOW_H

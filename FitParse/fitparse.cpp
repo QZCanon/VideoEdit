@@ -11,7 +11,7 @@ FitParse::FitParse(QObject *parent) : QObject(parent)
 
 void FitParse::ReadFitFile(const std::string& fileName)
 {
-    stopWatchMsgList.clear(); // 先清空队列
+    // stopWatchMsgList.clear(); // 先清空队列
 
     std::fstream file;
     file.open(fileName, std::ios::in | std::ios::binary);

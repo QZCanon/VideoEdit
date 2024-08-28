@@ -15,7 +15,7 @@ class FitParse : public QObject
 {
     Q_OBJECT
 public:
-    explicit FitParse(QObject *parent = nullptr);
+    explicit FitParse( QObject *parent = nullptr);
 
     void ReadFitFile(const std::string& fileName);
 
