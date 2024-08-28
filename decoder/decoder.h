@@ -6,6 +6,7 @@
 #include <thread>
 
 #include "core/ring_buffer.hpp"
+#include "task_runner/task_runner.hpp"
 
 extern "C" {
 #include <libavcodec/avcodec.h>
@@ -36,7 +37,7 @@ signals:
 private:
     int DecodeWrite(AVCodecContext *avctx, AVPacket *packet);
     int HwDecoderInit(AVCodecContext *ctx, const AVHWDeviceType type);
-    int DoWork();
+    void DoWork();
 
 private:
     AVFormatContext *input_ctx = NULL;
@@ -52,6 +53,9 @@ private:
     uint8_t m_fps = 0;
 
     bool isExitDecode = false;
+
+    Task task;
+    TaskRunner *runner{nullptr};
 
     RingBuffer<AVFrame*, 3> m_frameList;
 

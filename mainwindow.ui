@@ -6,15 +6,40 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>824</width>
-    <height>599</height>
+    <width>409</width>
+    <height>295</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>MainWindow</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <layout class="QGridLayout" name="gridLayout"/>
+   <widget class="QPushButton" name="add_task">
+    <property name="geometry">
+     <rect>
+      <x>150</x>
+      <y>60</y>
+      <width>111</width>
+      <height>41</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>add task</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="cancle_task">
+    <property name="geometry">
+     <rect>
+      <x>150</x>
+      <y>160</y>
+      <width>111</width>
+      <height>41</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>cancle task</string>
+    </property>
+   </widget>
   </widget>
  </widget>
  <resources/>

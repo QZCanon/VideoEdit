@@ -68,6 +68,7 @@ HEADERS += \
     SyncData/syncdata.h \
     VideoPlayer/VideoPlayer.h \
     VideoRenderer/videorenderer.h \
+    core/InstanceManager.h \
     core/atomic_vector.hpp \
     core/defines.h \
     core/ring_buffer.hpp \

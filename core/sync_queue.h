@@ -15,7 +15,7 @@ class SyncQueue
 {
 public:
     explicit SyncQueue() : m_maxSize(maxSize), m_needStop(false) {}
-    void Put(const T& x) { Add((T&&)x); }
+    void Put(const T& x) { Add(x); }
 
     void Put(T&& x) { Add(std::forward<T>(x)); }
 
@@ -41,6 +41,7 @@ public:
         m_queue.pop_front();
         m_notFull.notify_one();
     }
+
 
     void Stop()
     {
@@ -80,30 +81,30 @@ private:
     {
         bool empty = m_queue.empty();
         if (empty) {
-            LOG_DEBUG() << "缓冲区空了。需要等待，异步层的线程ID ："
-                        << std::this_thread::get_id() << std::endl;
+            // LOG_DEBUG() << "缓冲区空了。需要等待，异步层的线程ID ："
+            //             << std::this_thread::get_id() << std::endl;
         }
         return !empty;
     }
-
-    void Add(T&& x)
+    template<class U>
+    void Add(U&& x)
     {
         std::unique_lock<std::mutex> locker(m_mutex);
         m_notFull.wait(locker, [this] { return m_needStop || NotFull(); });
         if (m_needStop) {
             return;
         }
-        m_queue.push_back(std::forward<T>(x));
+        m_queue.push_back(std::forward<U>(x));
         m_notEmpty.notify_one();
     }
 
 private:
-    std::list<T> m_queue;
-    std::mutex m_mutex;
+    std::list<T>            m_queue;
+    std::mutex              m_mutex;
     std::condition_variable m_notEmpty; // 不为空的条件变量
     std::condition_variable m_notFull;  // 没有满的条件变量
-    int m_maxSize;
-    bool m_needStop;
+    int                     m_maxSize;
+    bool                    m_needStop;
 };
 
 #endif // SYNCQUEUE_H

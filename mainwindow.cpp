@@ -7,20 +7,24 @@
 #include "core/types.h"
 #include "core/time.hpp"
 
+
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
 
-    InitFitParse();
+    runner = new TaskRunner;
+
+    // InitFitParse();
+    // InitComponent();
 }
 
 MainWindow::~MainWindow()
 {
-    if (paintPlane) delete paintPlane;
-    if (glImage)    delete glImage;
-    if (dashBoard)  delete dashBoard;
+    // if (paintPlane) delete paintPlane;
+    // if (glImage)    delete glImage;
+    // if (dashBoard)  delete dashBoard;
     delete ui;
 }
 
@@ -115,4 +119,32 @@ void MainWindow::slotTimeOut()
 
 }
 
+void testinit()
+{
+    // LOG_DEBUG() << "init task";
+}
+
+void test()
+{
+    LOG_DEBUG() << "run task";
+}
+
+void MainWindow::on_add_task_clicked()
+{
+    if (!t) {
+        t = std::make_shared<Task>();
+    }
+    printf("data addr: %p\n", &t);
+    fflush(stdout);
+    t->SetInitfunc(testinit);
+    t->SetTaskFunc(test);
+    runner->AddTask(t);
+}
+
+
+void MainWindow::on_cancle_task_clicked()
+{
+    LOG_DEBUG() << "click";
+    t->CancleTask();
+}
 

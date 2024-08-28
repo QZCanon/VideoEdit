@@ -15,9 +15,9 @@ public:
         if (mIsStart) {
             return true;
         }
-        mThreadId = std::thread(&Thread::threadRun, this);
         mIsStart = true;
         isRun = true;
+        mThreadId = std::thread(&Thread::threadRun, this);
         return true;
     }
 

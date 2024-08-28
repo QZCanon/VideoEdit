@@ -1,6 +1,8 @@
 #include "decoder.h"
 #include "Logger/logger.h"
 
+#include "core/InstanceManager.h"
+
 enum AVPixelFormat hw_pix_fmt;
 
 static enum AVPixelFormat GetHwFormat(AVCodecContext *,
@@ -20,6 +22,13 @@ static enum AVPixelFormat GetHwFormat(AVCodecContext *,
 Decoder::Decoder(QObject *parent)
     : QObject{parent}
 {
+    // task.SetInitfunc(std::bind(&Decoder::Init, this));
+    // task.SetTaskFunc(std::bind(&Decoder::DoWork, this));
+
+    // runner = Instance<TaskRunner>::GetInstance();
+    // if (runner) {
+    //     runner->AddTask(task);
+    // }
 }
 
 Decoder::~Decoder()
@@ -198,12 +207,12 @@ int Decoder::DecodeWrite(AVCodecContext *avctx, AVPacket *packet)
     return 0;
 }
 
-int Decoder::DoWork()
+void Decoder::DoWork()
 {
     /* actual decoding and dump the raw data */
     while (1) {
         if (isExitDecode) {
-            LOG_DEBUG() << "ret: " << ret << ", exit thread";
+            LOG_DEBUG() << "isExitDecode: " << isExitDecode << ", exit thread";
             break;
         }
         if (ret >= 0) {
@@ -222,6 +231,4 @@ int Decoder::DoWork()
             break;
         }
     }
-    LOG_DEBUG() << "ret: " << ret << ", exit thread";
-    return 0;
 }

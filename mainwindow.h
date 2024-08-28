@@ -19,6 +19,8 @@
 #include "decoder/decoder.h"
 #include "FitParse/listener.h"
 
+#include "task_runner/task_runner.hpp"
+
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
@@ -36,6 +38,10 @@ private:
 
 private slots:
 
+    void on_add_task_clicked();
+
+    void on_cancle_task_clicked();
+
 protected:
      void resizeEvent(QResizeEvent* e) override;
 
@@ -46,6 +52,10 @@ public slots:
 private:
     Ui::MainWindow *ui;
     QWidget* paintPlane{nullptr};
+
+    TaskRunner* runner{nullptr};
+
+    TaskSPtr t;
 
     Decoder*    decoder     = nullptr;
     GL_Image*   glImage     = nullptr;
