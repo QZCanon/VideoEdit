@@ -66,7 +66,6 @@ HEADERS += \
     FitSDK/*.hpp \
     Logger/logger.h \
     SyncData/syncdata.h \
-    VideoPlayer/VideoPlayer.h \
     VideoRenderer/videorenderer.h \
     core/InstanceManager.h \
     core/atomic_vector.hpp \

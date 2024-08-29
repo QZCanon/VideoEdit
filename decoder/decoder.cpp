@@ -106,11 +106,6 @@ int Decoder::Init()
     m_fps = rate.num / rate.den;
     LOG_DEBUG() << "fps: " << m_fps;
 
-    int frames = video->nb_frames;
-    LOG_DEBUG() << "frames: " << frames;
-    LOG_DEBUG() << "duration: " << input_ctx->duration / AV_TIME_BASE;
-    LOG_DEBUG() << "start time: " << input_ctx.star
-
     if (avcodec_parameters_to_context(decoder_ctx, video->codecpar) < 0)
         return -1;
     //填入回调函数 通过这个函数 编解码器能够知道显卡支持的像素格式
