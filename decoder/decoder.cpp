@@ -101,9 +101,22 @@ int Decoder::Init()
     if (!(decoder_ctx = avcodec_alloc_context3(decoder)))
         return AVERROR(ENOMEM);
 
+    if (input_ctx->metadata) {
+        auto* time_ = av_dict_get(input_ctx->metadata, "creation_time", nullptr, 0);
+        if (time_) {
+            LOG_DEBUG() << "create time: " << time_->value;
+        } else {
+            LOG_DEBUG() << "time is null, from the api [av_dict_get]";
+        }
+    } else {
+        LOG_DEBUG() << "metadata is null";
+    }
+
+
+
     video = input_ctx->streams[video_stream];
     AVRational rate = video->avg_frame_rate;
-    m_fps = rate.num / rate.den;
+    m_fps = rate.num / rate.den + 0.5;
     LOG_DEBUG() << "fps: " << m_fps;
 
     if (avcodec_parameters_to_context(decoder_ctx, video->codecpar) < 0)
@@ -144,8 +157,6 @@ int Decoder::HwDecoderInit(AVCodecContext *ctx, const enum AVHWDeviceType type)
     return err;
 }
 
-
-
 int Decoder::DecodeWrite(AVCodecContext *avctx, AVPacket *packet)
 {
     int ret = 0;
@@ -156,7 +167,6 @@ int Decoder::DecodeWrite(AVCodecContext *avctx, AVPacket *packet)
         LOG_DEBUG() << "Error during decoding\n";
         return ret;
     }
-
     while (1) {
         AVFrame *frame = NULL, *sw_frame = NULL;
         AVFrame *tmp_frame = NULL;
@@ -181,6 +191,7 @@ int Decoder::DecodeWrite(AVCodecContext *avctx, AVPacket *packet)
             if (ret < 0)
                 return ret;
         }
+        AVRational time_base = input_ctx->streams[video_stream]->time_base;
         if (frame->format == hw_pix_fmt) {
             /* retrieve data from GPU to CPU */
             if ((ret = av_hwframe_transfer_data(sw_frame, frame, 0)) < 0) {
@@ -190,7 +201,13 @@ int Decoder::DecodeWrite(AVCodecContext *avctx, AVPacket *packet)
                 if (ret < 0)
                     return ret;
             }
-            tmp_frame = sw_frame;
+            sw_frame->width     = frame->width;
+            sw_frame->height    = frame->height;
+            sw_frame->pts       = frame->pts;
+            sw_frame->pkt_dts   = frame->pkt_dts;
+            sw_frame->pict_type = frame->pict_type;
+            sw_frame->time_base = time_base;
+            tmp_frame           = sw_frame;
             av_frame_free(&frame);
         } else {
             tmp_frame = frame;

@@ -119,11 +119,19 @@ void MainWindow::slotTimeOut()
     }
     if (glImage) {
         auto* frame = decoder->GetFrame();
-        LOG_DEBUG() << "base pts: " << frame->pts;
-        LOG_DEBUG() << "base pts111: " << AV_NOPTS_VALUE;
 
-        glImage->SetFrame(frame);
-        glImage->repaint(); //窗口重绘，repaint会调用paintEvent函数，paintEvent会调用paintGL函数实现重绘
+        if (frame) {
+            printf("----------\n");
+            fflush(stdout);
+            LOG_DEBUG() << "pts: " << frame->pts;
+            LOG_DEBUG() << "dts: " << frame->pkt_dts;
+            LOG_DEBUG() << "base time  den: " << frame->time_base.den
+                        << ", num: " << frame->time_base.num;
+            glImage->SetFrame(frame);
+            glImage->repaint(); //窗口重绘，repaint会调用paintEvent函数，
+                                //paintEvent会调用paintGL函数实现重绘
+        }
+
     }
 
 }
