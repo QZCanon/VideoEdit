@@ -37,10 +37,11 @@ void SyncData::Sync()
 
     if (data.timeStamp == m_videoTimestamp.load()) {
         if (m_task) {
-            m_task->CancleTask(); // 同步上，退出task
-            m_taskIsAdded = true;
+            ExitTask();
         }
-        LOG_DEBUG() << "current speed: " << data.speed;
+        int speed = (int)(data.speed * 3600 / 1000);
+        // LOG_DEBUG() << "current speed: " << (int)(data.speed * 3600 / 1000) << " km/h";
+        emit SpeedSignal(speed);
     } else {
         m_currentIndex++;
     }

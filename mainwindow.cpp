@@ -16,8 +16,8 @@ MainWindow::MainWindow(QWidget *parent)
 
     runner = new TaskRunner;
 
-    InitFitParse();
     InitComponent();
+    InitFitParse();
 }
 
 MainWindow::~MainWindow()
@@ -36,11 +36,12 @@ void MainWindow::InitFitParse()
     // 创建对象之后，先连接信号槽，当前fit文件解析是在主线程
     connect(fitParse, SIGNAL(SendStopWatchMsg(Canon::StopWatchMessage&)),
             syncData, SLOT(AcceptStopWatchData(Canon::StopWatchMessage&)));
+    connect(syncData, SIGNAL(SpeedSignal(int)), this, SLOT(SpeedCallback(int)), Qt::ConnectionType::BlockingQueuedConnection);
 
 #if defined(Q_OS_MAC)
     fitParse->ReadFitFile("/Users/qinzhou/workspace/qt/VideoEdit_test/MAGENE_C416_2024-08-11_194425_907388_1723381873.fit");
 #elif defined(Q_OS_WIN)
-    fitParse->ReadFitFile("F:/MAGENE_C416_2024-08-11_194425_907388_1723381873.fit");
+    fitParse->ReadFitFile("F:/0830/0830.fit");
 #endif
 
 }
@@ -74,6 +75,7 @@ void MainWindow::InitComponent()
     timer.start(time);
 
     dashBoard = new DashBoard(paintPlane);
+    dashBoard->setMaxValue(50);
     int ww = paintPlane->width();
     int wh = paintPlane->height();
     int w = 200, h = 200;
@@ -136,5 +138,13 @@ void MainWindow::on_add_task_clicked()
 
 void MainWindow::on_cancle_task_clicked()
 {
+}
+
+void MainWindow::SpeedCallback(int speed)
+{
+    // LOG_DEBUG() << "speed : " << speed;
+    if (dashBoard) {
+        dashBoard->setValue(speed);
+    }
 }
 

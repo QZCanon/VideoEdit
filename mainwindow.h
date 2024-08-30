@@ -37,10 +37,9 @@ private:
     void RepaintComponent(const QSize& size);
 
 private slots:
-
     void on_add_task_clicked();
-
     void on_cancle_task_clicked();
+    void SpeedCallback(int);
 
 protected:
      void resizeEvent(QResizeEvent* e) override;

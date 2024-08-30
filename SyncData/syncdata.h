@@ -27,6 +27,8 @@ public:
         if (m_task && m_runner && false == m_taskIsAdded.load()) {
             m_taskIsAdded.store(true);
             m_runner->AddTask(m_task);
+        } else {
+            LOG_DEBUG() << " add task is fail.";
         }
     }
 
@@ -41,6 +43,7 @@ private:
     }
 
 signals:
+    void SpeedSignal(int speed);
 
 public slots:
     void AcceptStopWatchData(Canon::StopWatchMessage& msg) {
