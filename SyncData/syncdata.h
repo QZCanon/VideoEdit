@@ -24,20 +24,28 @@ public:
     }
 
     void Start() {
-        if (m_task && m_runner) {
+        if (m_task && m_runner && false == m_taskIsAdded.load()) {
+            m_taskIsAdded.store(true);
             m_runner->AddTask(m_task);
         }
     }
 
 private:
     void Sync();
+    void ExitTask()
+    {
+        if (m_task) {
+            m_task->CancleTask();
+        }
+        m_taskIsAdded.store(false);
+    }
 
 signals:
 
 public slots:
     void AcceptStopWatchData(Canon::StopWatchMessage& msg) {
         m_stopWatchMsgList.push_back(msg);
-        PRINT_MSGS(msg);
+        // PRINT_MSGS(msg);
     }
 
 private:
@@ -47,6 +55,7 @@ private:
     TaskSPtr              m_task{nullptr};
     Canon::StopWatchList  m_stopWatchMsgList;
     uint64_t              m_currentIndex = 0;
+    std::atomic<bool>     m_taskIsAdded{false};
 
 };
 

@@ -13,21 +13,10 @@ MainWindow::MainWindow(QWidget *parent)
     , ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
-//     if (!runner) {
-//         runner = new TaskRunner;
-//     }
-//     fitParse = new FitParse;
-//     syncData = new SyncData(runner);
 
-//     connect(fitParse, SIGNAL(SendStopWatchMsg(Canon::StopWatchMessage&)),
-//             syncData, SLOT(AcceptStopWatchData(Canon::StopWatchMessage&)));
-// #if defined(Q_OS_MAC)
-//     fitParse->ReadFitFile("/Users/qinzhou/workspace/qt/VideoEdit_test/MAGENE_C416_2024-08-11_194425_907388_1723381873.fit");
-// #elif defined(Q_OS_WIN)
-//     fitParse->ReadFitFile("F:/MAGENE_C416_2024-08-11_194425_907388_1723381873.fit");
-// #endif
-    // runner = new TaskRunner;
-    // InitFitParse();
+    runner = new TaskRunner;
+
+    InitFitParse();
     InitComponent();
 
 }
@@ -42,12 +31,19 @@ MainWindow::~MainWindow()
 
 void MainWindow::InitFitParse()
 {
+    syncData = new SyncData(runner);
     fitParse = new FitParse;
+
+    // 创建对象之后，先连接信号槽，当前fit文件解析是在主线程
+    connect(fitParse, SIGNAL(SendStopWatchMsg(Canon::StopWatchMessage&)),
+            syncData, SLOT(AcceptStopWatchData(Canon::StopWatchMessage&)));
+
 #if defined(Q_OS_MAC)
     fitParse->ReadFitFile("/Users/qinzhou/workspace/qt/VideoEdit_test/MAGENE_C416_2024-08-11_194425_907388_1723381873.fit");
 #elif defined(Q_OS_WIN)
     fitParse->ReadFitFile("F:/MAGENE_C416_2024-08-11_194425_907388_1723381873.fit");
 #endif
+
 }
 
 void MainWindow::InitComponent()
@@ -117,51 +113,32 @@ void MainWindow::slotTimeOut()
     if (decoder->BufferIsEmpty()) {
         return;
     }
-    if (glImage) {
+    if (glImage &&  !glImage->BePainting()) {
         auto* frame = decoder->GetFrame();
 
-        if (frame) {
-            printf("----------\n");
-            fflush(stdout);
-            LOG_DEBUG() << "pts: " << frame->pts;
-            LOG_DEBUG() << "dts: " << frame->pkt_dts;
-            LOG_DEBUG() << "base time  den: " << frame->time_base.den
-                        << ", num: " << frame->time_base.num;
-            glImage->SetFrame(frame);
-            glImage->repaint(); //窗口重绘，repaint会调用paintEvent函数，
-                                //paintEvent会调用paintGL函数实现重绘
-        }
-
+        // LOG_DEBUG() << "pts: " << frame->pts;
+        // LOG_DEBUG() << "dts: " << frame->pkt_dts;
+        // LOG_DEBUG() << "base time  den: " << frame->time_base.den
+        //             << ", num: " << frame->time_base.num;
+        // int64_t pts_in_us = frame->pts; // 假设这是原始的 PTS 值，单位是微秒
+        // double pts_in_seconds = av_q2d(frame->time_base) * pts_in_us; // 转换为秒
+        // // LOG_DEBUG() << "pts_in_seconds: " << (int)pts_in_seconds;
+        // if (syncData) {
+        //     syncData->SetImageTimestame((uint64_t)pts_in_seconds);
+        //     // syncData->Start();
+        // }
+        glImage->SetFrame(frame);
+        glImage->repaint();
     }
-
 }
 
-void testinit()
-{
-    // LOG_DEBUG() << "init task";
-}
-
-void test()
-{
-    // LOG_DEBUG() << "run task";
-}
 
 void MainWindow::on_add_task_clicked()
 {
-    // if (!t) {
-    //     t = CREATE_TASK_OCJECT();
-    // }
-    // printf("data addr: %p\n", &t);
-    // fflush(stdout);
-    // t->SetInitfunc(testinit);
-    // t->SetTaskFunc(test);
-    // runner->AddTask(t);
 }
 
 
 void MainWindow::on_cancle_task_clicked()
 {
-    // LOG_DEBUG() << "click";
-    // t->CancleTask();
 }
 

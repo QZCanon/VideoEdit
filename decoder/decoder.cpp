@@ -215,6 +215,8 @@ int Decoder::DecodeWrite(AVCodecContext *avctx, AVPacket *packet)
         }
 
         m_frameList.PushBack(std::move(tmp_frame));
+
+        // av_frame_free(&tmp_frame);
     }
 
     return 0;

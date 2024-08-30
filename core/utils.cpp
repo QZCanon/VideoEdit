@@ -213,11 +213,11 @@ uint64_t C416TimeConvert(uint64_t t)
     time.tm_year = 1989 - 1900; //tm中的年份比实际年份小1900，需要减掉
     time.tm_mon = 12 - 1; //tm中的月份从0开始，需要减1
     time.tm_mday = 31;
-    time.tm_hour = 0 + 8; // 时区差八小时
+    time.tm_hour = 0;
     time.tm_min = 0;
     time.tm_sec = 0;
     time_t ltime_new = mktime(&time);
-    return t + ltime_new;
+    return t + ltime_new + 8 * 60 * 60;// 时区差八小时, 换算成秒
 }
 
 

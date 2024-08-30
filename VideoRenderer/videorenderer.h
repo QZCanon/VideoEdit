@@ -10,12 +10,6 @@ extern "C" {
 #include <QOpenGLWidget>
 #include <QTimer>
 
-#include <queue>
-#include <mutex>
-#include <thread>
-
-#include "core/ring_buffer.hpp"
-
 class GL_Image : public QOpenGLWidget
 {
     Q_OBJECT
@@ -38,6 +32,8 @@ public:
     ~GL_Image();
 
     void SetFrame(AVFrame *frame);
+
+    bool BePainting() { return m_painting; }
 private:
 
 public slots:
@@ -68,6 +64,7 @@ private:
     float scaleVal_;             //缩放倍率
 
     AVFrame* m_frame{nullptr};
+    bool m_painting{false};
 };
 
 #endif // VIDEORENDERER_H

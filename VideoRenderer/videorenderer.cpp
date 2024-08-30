@@ -31,7 +31,10 @@ void GL_Image::initializeGL()
 
 void GL_Image::SetFrame(AVFrame* frame)
 {
-    m_frame = frame;
+    if (!m_painting) {
+        m_painting = true;
+        m_frame = frame;
+    }
 }
 
 // 窗口绘制函数
@@ -42,12 +45,12 @@ void GL_Image::paintGL()
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     if(m_frame == nullptr){
+        m_painting = false;
         LOG_DEBUG() << "frame is null";
         return;
     }
 
     uint8_t *rgbaData = (uint8_t*)malloc(m_frame->width * m_frame->height * 4);
-
     convert_hardware_yuv_to_rgba(m_frame->data[0],
                                  m_frame->data[1],
                                  rgbaData,
@@ -62,6 +65,7 @@ void GL_Image::paintGL()
     av_frame_free(&m_frame);
 
     if (rgbaData == nullptr) {
+        m_painting = false;
         LOG_DEBUG() << "rgbaData is null";
         return;
     }
@@ -159,6 +163,7 @@ void GL_Image::paintGL()
     glVertex2d(vertexPos_[Right_Bottom_X], vertexPos_[Right_Bottom_Y]);
     glEnd();
     glDisable(GL_TEXTURE_2D);
+    m_painting = false;
 }
 
 void GL_Image::resizeGL(int w, int h)

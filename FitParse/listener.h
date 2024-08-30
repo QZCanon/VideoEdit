@@ -47,8 +47,6 @@ public:
         if (fitMessage_cb) { fitMessage_cb(fitMsg); }
         else { qErrnoWarning("fit message is nil!"); }
 
-        // PRINT_MSGS(fitMsg);
-
         // for (auto devField : mesg.GetDeveloperFields()) {
         //     qDebug() << L"   Developer Field(" << devField.GetName().c_str() << ") has " << devField.GetNumValues() << L" value(s)\n";
         //     PrintValues(devField);
