@@ -18,7 +18,6 @@ MainWindow::MainWindow(QWidget *parent)
 
     InitFitParse();
     InitComponent();
-
 }
 
 MainWindow::~MainWindow()
@@ -115,18 +114,15 @@ void MainWindow::slotTimeOut()
     }
     if (glImage &&  !glImage->BePainting()) {
         auto* frame = decoder->GetFrame();
-
-        // LOG_DEBUG() << "pts: " << frame->pts;
-        // LOG_DEBUG() << "dts: " << frame->pkt_dts;
-        // LOG_DEBUG() << "base time  den: " << frame->time_base.den
-        //             << ", num: " << frame->time_base.num;
-        // int64_t pts_in_us = frame->pts; // 假设这是原始的 PTS 值，单位是微秒
-        // double pts_in_seconds = av_q2d(frame->time_base) * pts_in_us; // 转换为秒
-        // // LOG_DEBUG() << "pts_in_seconds: " << (int)pts_in_seconds;
-        // if (syncData) {
-        //     syncData->SetImageTimestame((uint64_t)pts_in_seconds);
-        //     // syncData->Start();
-        // }
+        if (!frame) {
+            return;
+        }
+        int64_t pts_in_us = frame->pts; // 假设这是原始的 PTS 值，单位是微秒
+        double pts_in_seconds = av_q2d(frame->time_base) * pts_in_us; // 转换为秒
+        if (syncData) {
+            syncData->SetImageTimestame((uint64_t)pts_in_seconds + decoder->GetCreateTime());
+            syncData->Start();
+        }
         glImage->SetFrame(frame);
         glImage->repaint();
     }

@@ -1,5 +1,6 @@
 #include "decoder.h"
 #include "Logger/logger.h"
+#include "core/utils.h"
 
 #include "core/InstanceManager.h"
 
@@ -104,7 +105,8 @@ int Decoder::Init()
     if (input_ctx->metadata) {
         auto* time_ = av_dict_get(input_ctx->metadata, "creation_time", nullptr, 0);
         if (time_) {
-            LOG_DEBUG() << "create time: " << time_->value;
+            m_createTime = DJIVideoCreateTimeConvert(time_->value);
+            LOG_DEBUG() << "create time: " << time_->value << ", convert[+8h]: " << m_createTime;
         } else {
             LOG_DEBUG() << "time is null, from the api [av_dict_get]";
         }

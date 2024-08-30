@@ -31,6 +31,7 @@ public:
     auto GetFileFPS() const { return m_fps; }
     AVFrame* GetFrame()     { return m_frameList.FrontAndPop(); }
     bool BufferIsEmpty()    { return m_frameList.Empty(); }
+    auto GetCreateTime()    { return m_createTime; }
 
 signals:
 
@@ -51,6 +52,7 @@ private:
     AVBufferRef *hw_device_ctx = NULL;
     std::thread th;
     uint8_t m_fps = 0;
+    uint64_t m_createTime = -1;
 
     bool isExitDecode = false;
 

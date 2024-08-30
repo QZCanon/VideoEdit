@@ -1,5 +1,6 @@
 #include "utils.h"
 #include <iostream>
+#include <string>
 #include "Logger/logger.h"
 
 
@@ -218,6 +219,42 @@ uint64_t C416TimeConvert(uint64_t t)
     time.tm_sec = 0;
     time_t ltime_new = mktime(&time);
     return t + ltime_new + 8 * 60 * 60;// 时区差八小时, 换算成秒
+}
+
+/*
+ * 2024-08-20T11:40:32.000000Z
+ */
+uint64_t DJIVideoCreateTimeConvert(const char* s)
+{
+    std::string str = std::string(s);
+    std::string time_str;
+    for (char c : str) {
+        if (c == '.') {
+            break;
+        }
+        if (c >= '0' && c <= '9') {
+            time_str.push_back(c);
+        }
+    }
+    int year = std::stoi(time_str.substr(0, 4));
+    int month = std::stoi(time_str.substr(4, 2));
+    int day = std::stoi(time_str.substr(6, 2));
+    int hour = std::stoi(time_str.substr(8, 2));
+    int min = std::stoi(time_str.substr(10, 2));
+    int sec = std::stoi(time_str.substr(12, 2));
+
+    struct tm time;
+    time.tm_year = year - 1900; //tm中的年份比实际年份小1900，需要减掉
+    time.tm_mon = month - 1; //tm中的月份从0开始，需要减1
+    time.tm_mday = day;
+    time.tm_hour = hour;
+    time.tm_min = min;
+    time.tm_sec = sec;
+    time.tm_isdst = -1;         // 不确定是否为夏令时
+    std::time_t time_t = std::mktime(&time);
+    const long long timestamp = static_cast<long long>(time_t) + 8 * 60 * 60;
+
+    return timestamp;
 }
 
 

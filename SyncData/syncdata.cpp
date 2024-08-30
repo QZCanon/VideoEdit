@@ -16,6 +16,7 @@ SyncData::~SyncData()
 
 void SyncData::Sync()
 {
+    // LOG_DEBUG() << "sync, video time: " << m_videoTimestamp << ", stopWatch time: " << m_stopWatchMsgList[m_currentIndex].timeStamp;
     if (m_update.load() == false) {
         ExitTask();
         return;
