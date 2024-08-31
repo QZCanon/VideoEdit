@@ -46,7 +46,7 @@ void GL_Image::paintGL()
 
     if(m_frame == nullptr){
         m_painting = false;
-        LOG_DEBUG() << "frame is null";
+        // LOG_DEBUG() << "frame is null";
         return;
     }
 

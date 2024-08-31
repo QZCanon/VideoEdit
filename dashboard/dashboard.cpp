@@ -132,7 +132,7 @@ void DashBoard::drawDashBoard(QPainter *paint)
                       CENTER_WIIDTH, CENTER_WIIDTH);
     paint->setPen(pen);
     paint->drawEllipse(rectangle);
-
+    paint->restore();
 }
 
 void DashBoard::drawDivideRule(QPainter *paint)
@@ -161,6 +161,7 @@ void DashBoard::drawDivideRule(QPainter *paint)
                             getCoordinates(formWidth/2-(OUTERMOST_WIIDTH+SCALE_WIIDTH)+2+SCALE_WIIDTH/5, angle));// +2 ，偏移量
         }
     }
+    paint->restore();
 }
 
 void DashBoard::drawNum(QPainter *paint)
@@ -185,6 +186,7 @@ void DashBoard::drawNum(QPainter *paint)
                             QString("%1").arg( maxValue / largeScaleNum * (i/smallScaleNum)));
         }
     }
+    paint->restore();
 }
 
 void DashBoard::drawPointer(QPainter *paint)
@@ -228,6 +230,7 @@ void DashBoard::drawPointer(QPainter *paint)
                       WHITE_WIDTH, WHITE_WIDTH);
     paint->setPen(pen);
     paint->drawEllipse(rectangle);
+    paint->restore();
 }
 
 void DashBoard::drawCurrentVelocity(QPainter *paint)
@@ -254,6 +257,7 @@ void DashBoard::drawCurrentVelocity(QPainter *paint)
     paint->setPen(pen);
     rect.setRect(pointX-FW/2, pointY - FH/2, FW, FH);
     paint->drawText(rect, Qt::AlignCenter, QString("%1").arg(value));
+    paint->restore();
 }
 
 QPoint DashBoard::getCoordinates(int r, double angle)

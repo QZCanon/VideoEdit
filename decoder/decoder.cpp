@@ -194,6 +194,7 @@ int Decoder::DecodeWrite(AVCodecContext *avctx, AVPacket *packet)
                 return ret;
         }
         AVRational time_base = input_ctx->streams[video_stream]->time_base;
+        // LOG_DEBUG() << "hw_pix_fmt: " << av_get_pix_fmt_name((AVPixelFormat)hw_pix_fmt);
         if (frame->format == hw_pix_fmt) {
             /* retrieve data from GPU to CPU */
             if ((ret = av_hwframe_transfer_data(sw_frame, frame, 0)) < 0) {
@@ -216,6 +217,7 @@ int Decoder::DecodeWrite(AVCodecContext *avctx, AVPacket *packet)
             av_frame_free(&sw_frame);
         }
 
+        // LOG_DEBUG() << "format: " << av_get_pix_fmt_name((AVPixelFormat)tmp_frame->format);
         m_frameList.PushBack(std::move(tmp_frame));
 
         // av_frame_free(&tmp_frame);
