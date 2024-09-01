@@ -7,7 +7,6 @@
 #include "core/types.h"
 #include "core/time.hpp"
 
-
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
@@ -15,9 +14,11 @@ MainWindow::MainWindow(QWidget *parent)
     ui->setupUi(this);
 
     runner = new TaskRunner;
+    audioDecoer = new AudioDecoder;
+    audioDecoer->Init();
 
-    InitComponent();
-    InitFitParse();
+    // InitComponent();
+    // InitFitParse();
 }
 
 MainWindow::~MainWindow()
@@ -63,7 +64,7 @@ void MainWindow::InitComponent()
 
     glImage = new GL_Image(paintPlane);
     glImage->setFixedSize(paintWinSize);
-    decoder = new Decoder;
+    decoder = new HwDecoder;
 
     decoder->Init();
 

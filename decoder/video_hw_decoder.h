@@ -1,5 +1,5 @@
-#ifndef DECODER_H
-#define DECODER_H
+#ifndef VIDEO_HW_DECODER_H
+#define VIDEO_HW_DECODER_H
 
 #include <QObject>
 
@@ -20,12 +20,12 @@ extern "C" {
 }
 
 
-class Decoder : public QObject
+class HwDecoder : public QObject
 {
     Q_OBJECT
 public:
-    explicit Decoder(QObject *parent = nullptr);
-    ~Decoder();
+    explicit HwDecoder(QObject *parent = nullptr);
+    ~HwDecoder();
     int Init();
     void Start();
     auto GetFileFPS() const { return m_fps; }
@@ -42,7 +42,7 @@ private:
 
 private:
     AVFormatContext *input_ctx = NULL;
-    int video_stream, ret;
+    int video_stream, video_ret;
     AVStream *video = NULL;
     AVCodecContext *decoder_ctx = NULL;
     AVCodec *decoder = NULL;
@@ -72,4 +72,4 @@ private:
 
 };
 
-#endif // DECODER_H
+#endif // VIDEO_HW_DECODER_H

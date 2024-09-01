@@ -16,10 +16,11 @@
 #include "FitParse/fitparse.h"
 #include "dashboard/dashboard.h"
 #include "VideoRenderer/videorenderer.h"
-#include "decoder/decoder.h"
+#include "decoder/video_hw_decoder.h"
 #include "FitParse/listener.h"
 #include "SyncData/syncdata.h"
 #include "task_runner/task_runner.hpp"
+#include "decoder/audio_decoder.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -47,6 +48,9 @@ protected:
 public slots:
     void slotTimeOut();
 
+private:
+
+    AudioDecoder *audioDecoer = nullptr;
 
 private:
     Ui::MainWindow *ui;
@@ -55,7 +59,7 @@ private:
     TaskRunner* runner{nullptr};
     TaskSPtr t;
 
-    Decoder*    decoder     = nullptr;
+    HwDecoder*    decoder     = nullptr;
     GL_Image*   glImage     = nullptr;
     DashBoard*  dashBoard   = nullptr;
     QTimer      timer;

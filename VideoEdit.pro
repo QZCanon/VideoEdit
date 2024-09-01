@@ -55,7 +55,8 @@ SOURCES += \
     core/time.cpp \
     core/utils.cpp \
     dashboard/dashboard.cpp \
-    decoder/decoder.cpp \
+    decoder/audio_decoder.cpp \
+    decoder/video_hw_decoder.cpp \
     main.cpp \
     mainwindow.cpp \
     myslide/myslide.cpp
@@ -76,7 +77,8 @@ HEADERS += \
     core/types.h \
     core/utils.h \
     dashboard/dashboard.h \
-    decoder/decoder.h \
+    decoder/audio_decoder.h \
+    decoder/video_hw_decoder.h \
     mainwindow.h \
     myslide/myslide.h \
     task_runner/task.hpp \

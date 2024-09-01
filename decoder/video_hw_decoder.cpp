@@ -1,4 +1,4 @@
-#include "decoder.h"
+#include "video_hw_decoder.h"
 #include "Logger/logger.h"
 #include "core/utils.h"
 
@@ -20,7 +20,7 @@ static enum AVPixelFormat GetHwFormat(AVCodecContext *,
     return AV_PIX_FMT_NONE;
 }
 
-Decoder::Decoder(QObject *parent)
+HwDecoder::HwDecoder(QObject *parent)
     : QObject{parent}
 {
     // task.SetInitfunc(std::bind(&Decoder::Init, this));
@@ -32,7 +32,7 @@ Decoder::Decoder(QObject *parent)
     // }
 }
 
-Decoder::~Decoder()
+HwDecoder::~HwDecoder()
 {
     /* flush the decoder */
     isExitDecode = true;
@@ -42,7 +42,7 @@ Decoder::~Decoder()
     }
     packet.data = NULL;
     packet.size = 0;
-    ret = DecodeWrite(decoder_ctx, &packet);
+    video_ret = DecodeWrite(decoder_ctx, &packet);
     av_packet_unref(&packet);
 
     avcodec_free_context(&decoder_ctx);
@@ -50,7 +50,7 @@ Decoder::~Decoder()
     av_buffer_unref(&hw_device_ctx);
 }
 
-int Decoder::Init()
+int HwDecoder::Init()
 {
     //通过你传入的名字来找到对应的硬件解码类型
     type = av_hwdevice_find_type_by_name(hwdevice.c_str());
@@ -76,12 +76,12 @@ int Decoder::Init()
     }
 
     /* find the video stream information */
-    ret = av_find_best_stream(input_ctx, AVMEDIA_TYPE_VIDEO, -1, -1, (const struct AVCodec **)(&decoder), 0);
-    if (ret < 0) {
+    video_ret = av_find_best_stream(input_ctx, AVMEDIA_TYPE_VIDEO, -1, -1, (const struct AVCodec **)(&decoder), 0);
+    if (video_ret < 0) {
         fprintf(stderr, "Cannot find a video stream in the input file\n");
         return -1;
     }
-    video_stream = ret;
+    video_stream = video_ret;
     //去遍历所有编解码器支持的硬件解码配置 如果和之前你指定的是一样的 那么就可以继续执行了 不然就找不到
     int i = 0;
     while (1) {
@@ -129,22 +129,22 @@ int Decoder::Init()
     if (HwDecoderInit(decoder_ctx, type) < 0)
         return -1;
    //绑定完成后 打开编解码器
-    if ((ret = avcodec_open2(decoder_ctx, decoder, NULL)) < 0) {
+    if ((video_ret = avcodec_open2(decoder_ctx, decoder, NULL)) < 0) {
         fprintf(stderr, "Failed to open codec for stream #%u\n", video_stream);
         return -1;
     }
 
     isExitDecode = false;
-    th = std::thread(&Decoder::DoWork, this);
+    th = std::thread(&HwDecoder::DoWork, this);
 
     return 0;
 }
 
-void Decoder::Start()
+void HwDecoder::Start()
 {
 }
 
-int Decoder::HwDecoderInit(AVCodecContext *ctx, const enum AVHWDeviceType type)
+int HwDecoder::HwDecoderInit(AVCodecContext *ctx, const enum AVHWDeviceType type)
 {
     int err = 0;
     //创建硬件设备信息上下文
@@ -159,7 +159,7 @@ int Decoder::HwDecoderInit(AVCodecContext *ctx, const enum AVHWDeviceType type)
     return err;
 }
 
-int Decoder::DecodeWrite(AVCodecContext *avctx, AVPacket *packet)
+int HwDecoder::DecodeWrite(AVCodecContext *avctx, AVPacket *packet)
 {
     int ret = 0;
     std::string name;
@@ -226,7 +226,7 @@ int Decoder::DecodeWrite(AVCodecContext *avctx, AVPacket *packet)
     return 0;
 }
 
-void Decoder::DoWork()
+void HwDecoder::DoWork()
 {
     /* actual decoding and dump the raw data */
     while (1) {
@@ -234,19 +234,19 @@ void Decoder::DoWork()
             LOG_DEBUG() << "isExitDecode: " << isExitDecode << ", exit thread";
             break;
         }
-        if (ret >= 0) {
-            if ((ret = av_read_frame(input_ctx, &packet)) < 0)
+        if (video_ret >= 0) {
+            if ((video_ret = av_read_frame(input_ctx, &packet)) < 0)
             {
-                LOG_DEBUG() << "ret: " << ret << ", exit thread";
+                LOG_DEBUG() << "ret: " << video_ret << ", exit thread";
                 break;
             }
 
             if (video_stream == packet.stream_index) {
-                ret = DecodeWrite(decoder_ctx, &packet);
+                video_ret = DecodeWrite(decoder_ctx, &packet);
             }
             av_packet_unref(&packet);
         } else {
-            LOG_DEBUG() << "ret: " << ret << ", exit thread";
+            LOG_DEBUG() << "ret: " << video_ret << ", exit thread";
             break;
         }
     }

@@ -5,6 +5,10 @@
 #include <vector>
 #include "Logger/logger.h"
 
+extern "C" {
+#include <libavformat/avformat.h>
+}
+
 namespace Canon {
 
 /*
@@ -43,5 +47,16 @@ using StopWatchList = std::vector<Canon::StopWatchMessage>;
                 << ", grade: "         << MSGS.grade          \
                 << ", distance: "      << MSGS.distance       \
                 << "m, timeStamp: "     << MSGS.timeStamp
+
+typedef struct FrameInfo_ {
+    FrameInfo_()
+        : frame(nullptr)
+        , stream_index(0)
+        , packet_index(0)
+    {}
+    AVFrame *frame;
+    int stream_index;
+    int packet_index;
+} FrameInfo;
 
 #endif // TYPES_H
