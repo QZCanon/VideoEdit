@@ -147,5 +147,9 @@ contains(QMAKE_HOST.arch, aarch64){
             /usr/local/ffmpeg/lib/libpostproc.58.dylib \
             /usr/local/ffmpeg/lib/libswresample.5.dylib \
             /usr/local/ffmpeg/lib/libswscale.8.dylib
+
+
+        LIBS += /opt/homebrew/Cellar/sdl2/2.30.6/lib/libSDL2.dylib
+	INCLUDEPATH += /opt/homebrew/Cellar/sdl2/2.30.6/include
     }
 }

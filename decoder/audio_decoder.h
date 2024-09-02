@@ -7,13 +7,14 @@
 #include <stdlib.h>
 #include <string.h>
 #include <thread>
+#include <QThread>
 
 // #include "task_runner/task_runner.hpp"
 
 extern "C" {
+// ffmpeg
 #include <libavutil/frame.h>
 #include <libavutil/mem.h>
-
 #include <libavcodec/avcodec.h>
 #include <libavformat/avformat.h>
 #include <libavutil/pixdesc.h>
@@ -22,9 +23,12 @@ extern "C" {
 #include <libavutil/avassert.h>
 #include <libavutil/imgutils.h>
 #include <libswscale/swscale.h>
+
+// SDL
+// #include "SDL2/SDL.h"
 }
 
-class AudioDecoder : public QObject
+class AudioDecoder : public QThread
 {
     Q_OBJECT
 public:
@@ -35,17 +39,29 @@ public:
 
     void DoWork();
 
+    void run() override;
+
+public:
+    bool m_isRun = false;
+    AVCodecContext *codecCtx = NULL;
+
 signals:
+    void AudioSignal(AVFrame*);
+
+public slots:
+    void RecAudio(AVFrame*);
 
 private:
+#ifdef Q_OS_WIN
     // const std::string filename = "F:/大疆/拍摄/0830/DJI_20240830191244_0060_D.MP4";
     const std::string filename = "F:/test.mp4";
-    std::thread m_thread;
-    bool m_isRun = false;
-
-private:
     std::string outfilename = "F:/out2.mp3";
-    AVCodecContext *codecCtx = NULL;
+#elif defined(Q_OS_MAC)
+    std::string filename = "/Users/qinzhou/workspace/test/DJI_20240820194031_0041_D.MP4";
+    std::string outfilename = "/Users/qinzhou/workspace/test/out3.mp3";
+#endif
+    std::thread m_thread;
+private:
     AVFormatContext *fmt_ctx = NULL;
     int stream_index = -1;
 };
