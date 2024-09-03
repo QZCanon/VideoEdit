@@ -10,6 +10,7 @@
 #include <QThread>
 
 // #include "task_runner/task_runner.hpp"
+#include "audioplayer.h"
 
 extern "C" {
 // ffmpeg
@@ -64,6 +65,7 @@ private:
 private:
     AVFormatContext *fmt_ctx = NULL;
     int stream_index = -1;
+    AudioPlayer* m_audioPlayer;
 };
 
 #endif // AUDIO_DECODER_H

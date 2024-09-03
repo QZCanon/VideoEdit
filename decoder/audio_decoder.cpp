@@ -13,7 +13,9 @@
 
 AudioDecoder::AudioDecoder(QObject *parent)
     : QThread(parent)
-{}
+{
+    m_audioPlayer = new AudioPlayer;
+}
 
 AudioDecoder::~AudioDecoder()
 {
@@ -52,7 +54,7 @@ static int get_format_from_sample_fmt(const char **fmt,
 
 
 static void decode(AVCodecContext *dec_ctx, AVPacket *pkt, AVFrame *frame,
-                   FILE *outfile)
+                   FILE *outfile, AudioPlayer* palyer)
 {
     int i, ch;
     int ret, data_size;
@@ -73,33 +75,10 @@ static void decode(AVCodecContext *dec_ctx, AVPacket *pkt, AVFrame *frame,
             LOG_DEBUG() << "Error during decoding";
             return;
         }
-        // emit AudioSignal(frame);
-        // 创建一个QBuffer和QByteArray来存储解码后的音频数据
-        QBuffer buffer;
-        buffer.open(QIODevice::ReadWrite);
-        // 将AVFrame中的数据转换为QByteArray
-        QByteArray audioData;
-        audioData.append((const char*)frame->data[0], frame->linesize[0]);
-        if (dec_ctx->ch_layout.nb_channels > 1) {
-            audioData.append((const char*)frame->data[1], frame->linesize[1]);
-        }
 
-        // 设置音频格式
-        QAudioFormat format;
-        format.setSampleRate(dec_ctx->sample_rate);
-        format.setChannelCount(dec_ctx->ch_layout.nb_channels); // 使用AVCodecContext的channels成员
-        format.setSampleFormat(QAudioFormat::Int16);
+        palyer->decodeAndPlay(dec_ctx, frame);
 
-        // 选择音频输出设备
-        QAudioDevice defaultDevice = QMediaDevices::defaultAudioOutput();
-        QAudioSink audioSink(defaultDevice, format);
-        audioSink.setVolume(0.5);
-        // 开始播放
-        audioSink.start(&buffer);
-        audioSink.stop();
-
-
-        // LOG_DEBUG() << "frame: " << av_get_pix_fmt_name((AVPixelFormat)frame->format);
+        LOG_DEBUG() << "frame: " << av_get_sample_fmt_name((AVSampleFormat)frame->format);
         // AVSampleFormat frame_sample_fmt = (AVSampleFormat)frame->format;
         // int frame_sample_rate = frame->sample_rate;
         // LOG_DEBUG() << "Frame Sample Format: " << av_get_sample_fmt_name(frame_sample_fmt);
@@ -127,57 +106,6 @@ static void decode(AVCodecContext *dec_ctx, AVPacket *pkt, AVFrame *frame,
 void AudioDecoder::RecAudio(AVFrame*)
 {
 
-}
-
-
-// 假设 audioBuffer 是一个包含音频样本的缓冲区
-// Uint8* audioBuffer;
-// int audioBufferSize;
-
-// 音量级别，范围从0.0到1.0
-float volume = 0.1f;
-
-// 在播放音频之前调整音量
-void AdjustVolume(Uint8* buffer, int bufferSize) {
-    // 计算每个样本的音量调整值
-    int volumeScale = static_cast<int>(volume * 128);
-
-    // 遍历缓冲区，调整每个样本的音量
-    for (int i = 0; i < bufferSize; ++i) {
-        // 对于16位音频，每个样本是2字节
-        if (buffer[i] & 0x80) {
-            buffer[i] = (buffer[i] * volumeScale) / 128;
-        }
-    }
-}
-
-static void AudioCallback(void* userdata, Uint8* stream, int len)
-{
-    AudioDecoder* self = static_cast<AudioDecoder*>(userdata);
-    AVFrame* frame = av_frame_alloc();
-        // 解码一帧音频数据
-    if (!self || !self->codecCtx) {
-        return;
-    }
-
-    AdjustVolume(stream, len);
-
-    while (len > 0 && self->m_isRun) {
-        int ret = avcodec_receive_frame(self->codecCtx, frame);
-        if (ret != 0) {
-            // LOG_DEBUG() << "Error during decoding";
-            break;
-        }
-        LOG_DEBUG() << "write...";
-        // 将解码后的音频数据写入SDL音频缓冲区
-        // int bytesPerSample = av_get_bytes_per_sample(self->codecCtx->sample_fmt);
-        // int samplesToCopy = std::min(len / bytesPerSample, frame->nb_samples);
-        // memcpy(stream, frame->data[0], samplesToCopy * bytesPerSample);
-        // stream += samplesToCopy * bytesPerSample;
-        // len -= samplesToCopy * bytesPerSample;
-    }
-
-    av_frame_free(&frame);
 }
 
 int AudioDecoder::Init()
@@ -254,7 +182,6 @@ int AudioDecoder::Init()
 
 void AudioDecoder::run()
 {
-    LOG_DEBUG();
     DoWork();
 }
 
@@ -281,13 +208,13 @@ void AudioDecoder::DoWork()
             break;
         }
         if (pkt->stream_index == stream_index) {
-            decode(codecCtx, pkt, decoded_frame, outfile);
+            decode(codecCtx, pkt, decoded_frame, outfile, m_audioPlayer);
         }
         av_packet_unref(pkt);
     }
 
     /* Flush the decoder */
-    decode(codecCtx, pkt, decoded_frame, outfile);
+    decode(codecCtx, pkt, decoded_frame, outfile, m_audioPlayer);
 
 #if SAVE_AUDIO
     /* Print output PCM information */
