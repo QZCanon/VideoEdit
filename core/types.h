@@ -3,6 +3,8 @@
 
 #include <stdint.h>
 #include <vector>
+#include <QByteArray>
+
 #include "Logger/logger.h"
 
 extern "C" {
@@ -58,5 +60,10 @@ typedef struct FrameInfo_ {
     int stream_index;
     int packet_index;
 } FrameInfo;
+
+typedef struct AudioData_ {
+    uint64_t timestamp;
+    QByteArray data;
+} AudioData;
 
 #endif // TYPES_H

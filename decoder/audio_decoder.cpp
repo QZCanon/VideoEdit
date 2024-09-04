@@ -8,6 +8,7 @@
 #include <QAudioSink>
 #include <QMediaPlayer>
 #include <QMediaDevices>
+#include "core/utils.h"
 
 #define SAVE_AUDIO 0
 
@@ -52,7 +53,7 @@ static int get_format_from_sample_fmt(const char **fmt,
 }
 
 
-static void decode(AVCodecContext *dec_ctx, AVPacket *pkt, AVFrame *frame,
+static void decode(AVCodecContext *dec_ctx, AVFormatContext* fmtCtx, AVPacket *pkt, AVFrame *frame,
                    FILE *outfile, AudioPlayer* player)
 {
     int i, ch;
@@ -81,7 +82,8 @@ static void decode(AVCodecContext *dec_ctx, AVPacket *pkt, AVFrame *frame,
             LOG_DEBUG() << "Failed to calculate data size";
             return;
         }
-
+        AVRational time_base = fmtCtx->streams[pkt->stream_index]->time_base;
+        frame->time_base = time_base;
         player->Decode(dec_ctx, frame, data_size);
 
         // LOG_DEBUG() << "frame: " << av_get_sample_fmt_name((AVSampleFormat)frame->format);
@@ -168,6 +170,20 @@ int AudioDecoder::Init()
         return -1;
     }
 
+    if (fmt_ctx->metadata) {
+        auto* time_ = av_dict_get(fmt_ctx->metadata, "creation_time", nullptr, 0);
+        if (time_) {
+            m_createTime = DJIVideoCreateTimeConvert(time_->value);
+            LOG_DEBUG() << "create time: " << time_->value << ", convert[+8h]: " << m_createTime;
+        } else {
+            LOG_DEBUG() << "time is null, from the api [av_dict_get]";
+        }
+    } else {
+        LOG_DEBUG() << "metadata is null";
+    }
+
+    m_audioPlayer->SetCreateTime(m_createTime);
+
     // m_isRun = true;
     // m_thread = std::thread(&AudioDecoder::DoWork, this);
     // return 1;
@@ -208,14 +224,14 @@ void AudioDecoder::DoWork()
             break;
         }
         if (pkt->stream_index == stream_index) {
-            decode(codecCtx, pkt, decoded_frame, outfile, m_audioPlayer);
+            decode(codecCtx, fmt_ctx, pkt, decoded_frame, outfile, m_audioPlayer);
         }
         // m_audioPlayer->Decode(codecCtx, decoded_frame, 0);
         av_packet_unref(pkt);
     }
 
     /* Flush the decoder */
-    decode(codecCtx, pkt, decoded_frame, outfile, m_audioPlayer);
+    decode(codecCtx, fmt_ctx, pkt, decoded_frame, outfile, m_audioPlayer);
 
 #if SAVE_AUDIO
     /* Print output PCM information */

@@ -58,8 +58,8 @@ private:
     const std::string filename = "F:/test.mp4";
     std::string outfilename = "F:/out2.mp3";
 #elif defined(Q_OS_MAC)
-    // std::string filename = "/Users/qinzhou/workspace/test/input_file.mp4";
-    std::string filename = "/Users/qinzhou/workspace/test/dage.mp4";
+    std::string filename = "/Users/qinzhou/workspace/test/input_file.mp4";
+    // std::string filename = "/Users/qinzhou/workspace/test/dage.mp4";
     std::string outfilename = "/Users/qinzhou/workspace/test/out11.mp3";
 #endif
     std::thread m_thread;
@@ -69,6 +69,8 @@ private:
     AudioPlayer* m_audioPlayer;
 
     QBuffer *buffer;
+    uint64_t m_createTime = -1;
+
     void stopAudioOutput();
 };
 
