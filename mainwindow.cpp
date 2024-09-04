@@ -17,8 +17,8 @@ MainWindow::MainWindow(QWidget *parent)
     audioDecoer = new AudioDecoder;
     audioDecoer->Init();
 
-    // InitComponent();
-    // InitFitParse();
+    InitComponent();
+    InitFitParse();
 }
 
 MainWindow::~MainWindow()
@@ -119,6 +119,11 @@ void MainWindow::slotTimeOut()
         auto* frame = decoder->GetFrame();
         if (!frame) {
             return;
+        }
+        static bool key = true;
+        if (key) {
+            key = false;
+            audioDecoer->PlayAudio();
         }
         int64_t pts_in_us = frame->pts; // 假设这是原始的 PTS 值，单位是微秒
         double pts_in_seconds = av_q2d(frame->time_base) * pts_in_us; // 转换为秒

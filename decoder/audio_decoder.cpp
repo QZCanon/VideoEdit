@@ -190,9 +190,6 @@ int AudioDecoder::Init()
     m_isRun = true;
     // this->start();
     DoWork();
-
-    m_audioPlayer->Play();
-
     return 1;
 }
 

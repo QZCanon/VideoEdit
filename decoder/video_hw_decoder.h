@@ -67,7 +67,7 @@ private:
     std::string inputName = "/Users/qinzhou/workspace/test/DJI_20240820194031_0041_D.MP4";
 #elif defined(Q_OS_WIN)
     std::string hwdevice  = "dxva2";
-    std::string inputName = "F:/大疆/拍摄/0830/DJI_20240830191244_0060_D.MP4";
+    std::string inputName = "F:/DJI_20240811194553_0002_D.MP4";
 #endif
 
 };

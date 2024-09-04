@@ -33,7 +33,7 @@ public:
         }
 
         audioSink = new QAudioSink(audioFormat, this);
-        audioSink->setVolume(0.1);
+        audioSink->setVolume(0.5);
 
         connect(this, &AudioPlayer::frameDecoded, this, &AudioPlayer::playFrame);
         connect(audioSink, &QAudioSink::stateChanged,

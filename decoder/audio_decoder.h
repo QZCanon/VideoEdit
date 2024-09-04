@@ -39,6 +39,13 @@ public:
 
     int Init();
 
+    void PlayAudio() {
+        m_audioPlayer->Play();
+    }
+
+private:
+
+
     void DoWork();
 
     void run() override;
@@ -54,8 +61,8 @@ public slots:
 
 private:
 #ifdef Q_OS_WIN
-    // const std::string filename = "F:/大疆/拍摄/0830/DJI_20240830191244_0060_D.MP4";
-    const std::string filename = "F:/test.mp4";
+    const std::string filename = "F:/DJI_20240811194553_0002_D.MP4";
+    // const std::string filename = "F:/test.mp4";
     std::string outfilename = "F:/out2.mp3";
 #elif defined(Q_OS_MAC)
     std::string filename = "/Users/qinzhou/workspace/test/input_file.mp4";
