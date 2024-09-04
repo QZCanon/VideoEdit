@@ -8,6 +8,8 @@
 #include <QThread>
 #include <QMediaFormat>
 #include <QMediaDevices>
+#include <QFile>
+
 extern "C" {
 #include "libavutil/frame.h"
 #include <libavcodec/avcodec.h>
@@ -17,57 +19,67 @@ class AudioPlayer : public QObject {
     Q_OBJECT
 public:
     AudioPlayer(QObject *parent = nullptr) : QObject(parent) {
-        // 初始化音频格式
-        audioFormat.setSampleRate(48000); // 以44100Hz为例，根据实际情况调整
-        audioFormat.setChannelCount(2); // 假设是双声道
+        audioFormat.setSampleRate(44100);
+        audioFormat.setChannelCount(1);
         audioFormat.setSampleFormat(QAudioFormat::Float);
 
-        // 检查格式是否被支持
         QAudioDevice info = QMediaDevices::defaultAudioOutput();
         if (!info.isFormatSupported(audioFormat)) {
             qWarning() << "Default format not supported, trying to find a supported format.";
-            // 如果默认格式不被支持，尝试修改参数直到找到一个支持的格式
-            audioFormat.setSampleRate(48000); // 尝试使用48000Hz
             if (!info.isFormatSupported(audioFormat)) {
                 qWarning() << "No supported format found.";
-                // 如果还是找不到支持的格式，可能需要停止程序或通知用户
             }
         }
-        // 创建缓冲区和音频设备
-        buffer.open(QIODevice::ReadWrite);
-        audioSink = new QAudioSink(audioFormat, this);
-        audioSink->setVolume(0.5);
 
-        // 开始播放
+        audioSink = new QAudioSink(audioFormat, this);
+        audioSink->setVolume(0.1);
+
         connect(this, &AudioPlayer::frameDecoded, this, &AudioPlayer::playFrame);
+        connect(audioSink, &QAudioSink::stateChanged,
+                this,      &AudioPlayer::AudioStateChanged);
+
+         sourceFile.setFileName("/Users/qinzhou/workspace/test/out11.mp3");
+         sourceFile.open(QIODevice::ReadOnly);
+         // audioSink->start(&sourceFile);
     }
 
-public slots:
+private:
     void playFrame(QByteArray frameData) {
+        buffer.open(QIODevice::ReadWrite);
         buffer.write(frameData);
         buffer.seek(0);
         audioSink->start(&buffer);
     }
+public slots:
+    void AudioStateChanged(QtAudio::State state)
+    {
+        Q_UNUSED(state);
+    }
 
 signals:
-    void frameDecoded(QByteArray frameData); // 定义信号
+    void frameDecoded(QByteArray frameData);
 
 public:
-    void decodeAndPlay(AVCodecContext* ctx, AVFrame *frame) {
-        // 将AVFrame数据转换为QByteArray
-        QByteArray frameData;
-        frameData.append((const char*)frame->data[0], frame->linesize[0]);
-        if (ctx->ch_layout.nb_channels > 1) {
-            frameData.append((const char*)frame->data[1], frame->linesize[1]);
+    void Decode(AVCodecContext* ctx, AVFrame *frame, int data_size) {
+        qDebug() << "append size: " << frame->nb_samples * ctx->ch_layout.nb_channels;
+        for (int i = 0; i < frame->nb_samples; i++) {
+            for (int ch = 0; ch < ctx->ch_layout.nb_channels; ch++) {
+                m_audioBuffer.append((const char*)(frame->data[ch] + data_size * i), data_size);
+            }
         }
+    }
 
-        // 发送信号，通知播放器播放解码后的帧
-        emit frameDecoded(frameData);
+    void Play()
+    {
+        playFrame(m_audioBuffer);
     }
 
 private:
     QAudioFormat audioFormat;
+    QAudioSink *audioSink{nullptr};
     QBuffer buffer;
-    QAudioSink *audioSink;
+    QByteArray m_audioBuffer;
+    int m_playIdx = 0;
+    QFile sourceFile;
 };
 #endif // AUDIOPLAYER_H

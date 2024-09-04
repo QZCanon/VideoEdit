@@ -8,6 +8,7 @@
 #include <string.h>
 #include <thread>
 #include <QThread>
+#include <QFile>
 
 // #include "task_runner/task_runner.hpp"
 #include "audioplayer.h"
@@ -50,7 +51,6 @@ signals:
     void AudioSignal(AVFrame*);
 
 public slots:
-    void RecAudio(AVFrame*);
 
 private:
 #ifdef Q_OS_WIN
@@ -58,14 +58,18 @@ private:
     const std::string filename = "F:/test.mp4";
     std::string outfilename = "F:/out2.mp3";
 #elif defined(Q_OS_MAC)
-    std::string filename = "/Users/qinzhou/workspace/test/DJI_20240820194031_0041_D.MP4";
-    std::string outfilename = "/Users/qinzhou/workspace/test/out3.mp3";
+    // std::string filename = "/Users/qinzhou/workspace/test/input_file.mp4";
+    std::string filename = "/Users/qinzhou/workspace/test/dage.mp4";
+    std::string outfilename = "/Users/qinzhou/workspace/test/out11.mp3";
 #endif
     std::thread m_thread;
 private:
     AVFormatContext *fmt_ctx = NULL;
     int stream_index = -1;
     AudioPlayer* m_audioPlayer;
+
+    QBuffer *buffer;
+    void stopAudioOutput();
 };
 
 #endif // AUDIO_DECODER_H
