@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <cstdlib>
 #include <cassert>
+#include <time.h>
 
 extern "C" {
 #include <libavformat/avformat.h>
@@ -27,5 +28,13 @@ void convertP010LETo8bit(uint8_t* p010leY,  const size_t ySize,
 
 void convertYUVToRGBA(uint8_t* yData, uint8_t* uData, uint8_t* vData,
                       uint8_t* rgbaData, int width, int height);
+
+uint64_t C416TimeConvert(uint64_t t);
+
+uint64_t DJIVideoCreateTimeConvert(const char* s);
+// void DJIAction4TimeConvert()
+// {
+
+// }
 
 #endif // UTILS_H

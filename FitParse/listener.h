@@ -43,10 +43,9 @@ public:
             // qWarning() << "fitMsg is invalid! " << "position_lat: " << fitMsg.position_lat << " position_lat:" << fitMsg.position_lat;
             return;
         }
+        fitMsg.timeStamp = C416TimeConvert(fitMsg.timeStamp);
         if (fitMessage_cb) { fitMessage_cb(fitMsg); }
         else { qErrnoWarning("fit message is nil!"); }
-
-        // PRINT_MSGS(fitMsg);
 
         // for (auto devField : mesg.GetDeveloperFields()) {
         //     qDebug() << L"   Developer Field(" << devField.GetName().c_str() << ") has " << devField.GetNumValues() << L" value(s)\n";
@@ -56,17 +55,18 @@ public:
 
     void OnMesg(fit::FileIdMesg& mesg) override
     {
-      printf("File ID:\n");
-      if (mesg.IsTypeValid())
-         printf("   Type: %d\n", mesg.GetType());
-      if (mesg.IsManufacturerValid())
-         printf("   Manufacturer: %d\n", mesg.GetManufacturer());
-      if (mesg.IsProductValid())
-         printf("   Product: %d\n", mesg.GetProduct());
-      if (mesg.IsSerialNumberValid())
-         printf("   Serial Number: %u\n", mesg.GetSerialNumber());
-      if (mesg.IsNumberValid())
-         printf("   Number: %d\n", mesg.GetNumber());
+        Q_UNUSED(mesg);
+      // printf("File ID:\n");
+      // if (mesg.IsTypeValid())
+      //    printf("   Type: %d\n", mesg.GetType());
+      // if (mesg.IsManufacturerValid())
+      //    printf("   Manufacturer: %d\n", mesg.GetManufacturer());
+      // if (mesg.IsProductValid())
+      //    printf("   Product: %d\n", mesg.GetProduct());
+      // if (mesg.IsSerialNumberValid())
+      //    printf("   Serial Number: %u\n", mesg.GetSerialNumber());
+      // if (mesg.IsNumberValid())
+      //    printf("   Number: %d\n", mesg.GetNumber());
     }
 
     void OnMesg(fit::UserProfileMesg& mesg) override
@@ -155,6 +155,7 @@ public:
 
     void OnMesg( fit::RecordMesg& record ) override
     {
+        Q_UNUSED(record);
         // printf( "Record:\n" );
         // PrintOverrideValues( record, fit::RecordMesg::FieldDefNum::HeartRate);
         // PrintOverrideValues( record, fit::RecordMesg::FieldDefNum::Cadence );

@@ -1,5 +1,5 @@
-#ifndef DECODER_H
-#define DECODER_H
+#ifndef VIDEO_HW_DECODER_H
+#define VIDEO_HW_DECODER_H
 
 #include <QObject>
 
@@ -20,17 +20,18 @@ extern "C" {
 }
 
 
-class Decoder : public QObject
+class HwDecoder : public QObject
 {
     Q_OBJECT
 public:
-    explicit Decoder(QObject *parent = nullptr);
-    ~Decoder();
+    explicit HwDecoder(QObject *parent = nullptr);
+    ~HwDecoder();
     int Init();
     void Start();
     auto GetFileFPS() const { return m_fps; }
-    AVFrame* GetFrame() { return m_frameList.FrontAndPop(); }
-    bool BufferIsEmpty() { return m_frameList.Empty(); }
+    AVFrame* GetFrame()     { return m_frameList.FrontAndPop(); }
+    bool BufferIsEmpty()    { return m_frameList.Empty(); }
+    auto GetCreateTime()    { return m_createTime; }
 
 signals:
 
@@ -41,7 +42,7 @@ private:
 
 private:
     AVFormatContext *input_ctx = NULL;
-    int video_stream, ret;
+    int video_stream, video_ret;
     AVStream *video = NULL;
     AVCodecContext *decoder_ctx = NULL;
     AVCodec *decoder = NULL;
@@ -51,6 +52,7 @@ private:
     AVBufferRef *hw_device_ctx = NULL;
     std::thread th;
     uint8_t m_fps = 0;
+    uint64_t m_createTime = -1;
 
     bool isExitDecode = false;
 
@@ -61,13 +63,13 @@ private:
 
 #if defined(Q_OS_MAC)
     std::string hwdevice  = "videotoolbox";
-    std::string inputName = "/Users/qinzhou/workspace/test/input_file.mp4";
-    // std::string inputName = "/Users/qinzhou/workspace/test/DJI_20240820194031_0041_D.MP4";
+    // std::string inputName = "/Users/qinzhou/workspace/test/input_file.mp4";
+    std::string inputName = "/Users/qinzhou/workspace/test/DJI_20240820194031_0041_D.MP4";
 #elif defined(Q_OS_WIN)
     std::string hwdevice  = "dxva2";
-    std::string inputName = "F:/test.mp4";
+    std::string inputName = "F:/DJI_20240811194553_0002_D.MP4";
 #endif
 
 };
 
-#endif // DECODER_H
+#endif // VIDEO_HW_DECODER_H

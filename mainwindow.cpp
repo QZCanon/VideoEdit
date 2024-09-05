@@ -7,22 +7,20 @@
 #include "core/types.h"
 #include "core/time.hpp"
 
-
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
 
-    fitParse = new FitParse;
-    syncData = new SyncData;
+    runner = new TaskRunner;
+    // audioDecoer = new AudioDecoder;
+    // audioDecoer->Init();
 
-    connect(fitParse, SIGNAL(SendStopWatchMsg(Canon::StopWatchMessage&)),
-            syncData, SLOT(AcceptStopWatchData(Canon::StopWatchMessage&)));
-    fitParse->ReadFitFile("/Users/qinzhou/workspace/qt/VideoEdit_test/MAGENE_C416_2024-08-11_194425_907388_1723381873.fit");
-    // runner = new TaskRunner;
-    // InitFitParse();
+    m_audioPalyer = new AudioPlayer(m_fileName);
+
     // InitComponent();
+    // InitFitParse();
 }
 
 MainWindow::~MainWindow()
@@ -35,12 +33,20 @@ MainWindow::~MainWindow()
 
 void MainWindow::InitFitParse()
 {
+    syncData = new SyncData(runner);
     fitParse = new FitParse;
+
+    // 创建对象之后，先连接信号槽，当前fit文件解析是在主线程
+    connect(fitParse, SIGNAL(SendStopWatchMsg(Canon::StopWatchMessage&)),
+            syncData, SLOT(AcceptStopWatchData(Canon::StopWatchMessage&)));
+    connect(syncData, SIGNAL(SpeedSignal(int)), this, SLOT(SpeedCallback(int)), Qt::ConnectionType::BlockingQueuedConnection);
+
 #if defined(Q_OS_MAC)
     fitParse->ReadFitFile("/Users/qinzhou/workspace/qt/VideoEdit_test/MAGENE_C416_2024-08-11_194425_907388_1723381873.fit");
 #elif defined(Q_OS_WIN)
-    fitParse->ReadFitFile("F:/MAGENE_C416_2024-08-11_194425_907388_1723381873.fit");
+    fitParse->ReadFitFile("F:/0830/0830.fit");
 #endif
+
 }
 
 void MainWindow::InitComponent()
@@ -60,7 +66,7 @@ void MainWindow::InitComponent()
 
     glImage = new GL_Image(paintPlane);
     glImage->setFixedSize(paintWinSize);
-    decoder = new Decoder;
+    decoder = new HwDecoder;
 
     decoder->Init();
 
@@ -72,6 +78,7 @@ void MainWindow::InitComponent()
     timer.start(time);
 
     dashBoard = new DashBoard(paintPlane);
+    dashBoard->setMaxValue(50);
     int ww = paintPlane->width();
     int wh = paintPlane->height();
     int w = 200, h = 200;
@@ -110,39 +117,42 @@ void MainWindow::slotTimeOut()
     if (decoder->BufferIsEmpty()) {
         return;
     }
-    if (glImage) {
-        glImage->SetFrame(decoder->GetFrame());
-        glImage->repaint(); //窗口重绘，repaint会调用paintEvent函数，paintEvent会调用paintGL函数实现重绘
+    if (glImage &&  !glImage->BePainting()) {
+        auto* frame = decoder->GetFrame();
+        if (!frame) {
+            return;
+        }
+        static bool key = true;
+        if (key) {
+            key = false;
+            // audioDecoer->PlayAudio();
+        }
+        int64_t pts_in_us = frame->pts; // 假设这是原始的 PTS 值，单位是微秒
+        double pts_in_seconds = av_q2d(frame->time_base) * pts_in_us; // 转换为秒
+        if (syncData) {
+            syncData->SetImageTimestame((uint64_t)pts_in_seconds + decoder->GetCreateTime());
+            syncData->Start();
+        }
+        glImage->SetFrame(frame);
+        glImage->repaint();
     }
-
 }
 
-void testinit()
-{
-    // LOG_DEBUG() << "init task";
-}
-
-void test()
-{
-    // LOG_DEBUG() << "run task";
-}
 
 void MainWindow::on_add_task_clicked()
 {
-    // if (!t) {
-    //     t = CREATE_TASK_OCJECT();
-    // }
-    // printf("data addr: %p\n", &t);
-    // fflush(stdout);
-    // t->SetInitfunc(testinit);
-    // t->SetTaskFunc(test);
-    // runner->AddTask(t);
 }
 
 
 void MainWindow::on_cancle_task_clicked()
 {
-    // LOG_DEBUG() << "click";
-    // t->CancleTask();
+}
+
+void MainWindow::SpeedCallback(int speed)
+{
+    // LOG_DEBUG() << "speed : " << speed;
+    if (dashBoard) {
+        dashBoard->setValue(speed);
+    }
 }
 

@@ -16,11 +16,11 @@
 #include "FitParse/fitparse.h"
 #include "dashboard/dashboard.h"
 #include "VideoRenderer/videorenderer.h"
-#include "decoder/decoder.h"
+#include "decoder/video_hw_decoder.h"
 #include "FitParse/listener.h"
 #include "SyncData/syncdata.h"
-
 #include "task_runner/task_runner.hpp"
+#include "decoder/audioplayer.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -35,13 +35,14 @@ public:
     ~MainWindow();
 
 private:
+    void InitComponent();
+    void InitFitParse();
     void RepaintComponent(const QSize& size);
 
 private slots:
-
     void on_add_task_clicked();
-
     void on_cancle_task_clicked();
+    void SpeedCallback(int);
 
 protected:
      void resizeEvent(QResizeEvent* e) override;
@@ -49,6 +50,9 @@ protected:
 public slots:
     void slotTimeOut();
 
+private:
+
+    AudioDecoder *audioDecoer = nullptr;
 
 private:
     Ui::MainWindow *ui;
@@ -57,13 +61,15 @@ private:
     TaskRunner* runner{nullptr};
     TaskSPtr t;
 
-    Decoder*    decoder     = nullptr;
+    HwDecoder*    decoder     = nullptr;
     GL_Image*   glImage     = nullptr;
     DashBoard*  dashBoard   = nullptr;
     QTimer      timer;
     FitParse*   fitParse    = nullptr;
     Listener*   fitListener = nullptr;
     SyncData*   syncData;
+    AudioPlayer* m_audioPalyer{nullptr};
+
 
     QSize softwareWinSize;  // 窗口大小
     QSize menuBarSize;      // 菜单栏大小
@@ -76,7 +82,12 @@ private:
     uint16_t dashBoardwidth          = 200;
     uint16_t dashBoardHeight         = 200;
 
-    void InitComponent();
-    void InitFitParse();
+#if defined(Q_OS_MAC)
+    // std::string m_fileName = "/Users/qinzhou/workspace/test/input_file.mp4";
+    std::string m_fileName = "/Users/qinzhou/workspace/test/dage.mp4";
+#elif defined(Q_OS_WIN)
+    sstd::string m_fileName = "F:/DJI_20240811194553_0002_D.MP4";
+#endif
+
 };
 #endif // MAINWINDOW_H

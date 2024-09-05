@@ -55,7 +55,8 @@ SOURCES += \
     core/time.cpp \
     core/utils.cpp \
     dashboard/dashboard.cpp \
-    decoder/decoder.cpp \
+    decoder/audio_decoder.cpp \
+    decoder/video_hw_decoder.cpp \
     main.cpp \
     mainwindow.cpp \
     myslide/myslide.cpp
@@ -66,7 +67,6 @@ HEADERS += \
     FitSDK/*.hpp \
     Logger/logger.h \
     SyncData/syncdata.h \
-    VideoPlayer/VideoPlayer.h \
     VideoRenderer/videorenderer.h \
     core/InstanceManager.h \
     core/atomic_vector.hpp \
@@ -77,7 +77,9 @@ HEADERS += \
     core/types.h \
     core/utils.h \
     dashboard/dashboard.h \
-    decoder/decoder.h \
+    decoder/audio_decoder.h \
+    decoder/audioplayer.h \
+    decoder/video_hw_decoder.h \
     mainwindow.h \
     myslide/myslide.h \
     task_runner/task.hpp \
@@ -146,5 +148,9 @@ contains(QMAKE_HOST.arch, aarch64){
             /usr/local/ffmpeg/lib/libpostproc.58.dylib \
             /usr/local/ffmpeg/lib/libswresample.5.dylib \
             /usr/local/ffmpeg/lib/libswscale.8.dylib
+
+
+        LIBS += /opt/homebrew/Cellar/sdl2/2.30.6/lib/libSDL2.dylib
+	INCLUDEPATH += /opt/homebrew/Cellar/sdl2/2.30.6/include
     }
 }
