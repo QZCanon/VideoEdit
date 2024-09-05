@@ -20,7 +20,7 @@
 #include "FitParse/listener.h"
 #include "SyncData/syncdata.h"
 #include "task_runner/task_runner.hpp"
-#include "decoder/audio_decoder.h"
+#include "decoder/audioplayer.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -35,6 +35,8 @@ public:
     ~MainWindow();
 
 private:
+    void InitComponent();
+    void InitFitParse();
     void RepaintComponent(const QSize& size);
 
 private slots:
@@ -66,6 +68,7 @@ private:
     FitParse*   fitParse    = nullptr;
     Listener*   fitListener = nullptr;
     SyncData*   syncData;
+    AudioPlayer* m_audioPalyer{nullptr};
 
 
     QSize softwareWinSize;  // 窗口大小
@@ -79,8 +82,12 @@ private:
     uint16_t dashBoardwidth          = 200;
     uint16_t dashBoardHeight         = 200;
 
-    void InitComponent();
-    void InitFitParse();
+#if defined(Q_OS_MAC)
+    // std::string m_fileName = "/Users/qinzhou/workspace/test/input_file.mp4";
+    std::string m_fileName = "/Users/qinzhou/workspace/test/dage.mp4";
+#elif defined(Q_OS_WIN)
+    sstd::string m_fileName = "F:/DJI_20240811194553_0002_D.MP4";
+#endif
 
 };
 #endif // MAINWINDOW_H

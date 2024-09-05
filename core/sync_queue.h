@@ -70,7 +70,7 @@ public:
 private:
     bool NotFull() const
     {
-        bool full = m_queue.size() >= m_maxSize;
+        bool full = m_queue.size() >= static_cast<size_t>(m_maxSize);
         if (full) {
             LOG_DEBUG() << "缓冲区满了，需要等待\n";
         }

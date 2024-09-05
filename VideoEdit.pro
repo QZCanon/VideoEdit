@@ -56,7 +56,6 @@ SOURCES += \
     core/utils.cpp \
     dashboard/dashboard.cpp \
     decoder/audio_decoder.cpp \
-    decoder/audioplayer.cpp \
     decoder/video_hw_decoder.cpp \
     main.cpp \
     mainwindow.cpp \

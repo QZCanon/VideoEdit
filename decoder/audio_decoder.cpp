@@ -15,18 +15,16 @@
 AudioDecoder::AudioDecoder(QObject *parent)
     : QThread(parent)
 {
-    m_audioPlayer = new AudioPlayer;
+    // m_audioPlayer = new AudioPlayer;
 }
 
 AudioDecoder::~AudioDecoder()
 {
     m_isRun = false;
-    if (m_thread.joinable()) {
-        m_thread.join();
-    }
 }
-static int get_format_from_sample_fmt(const char **fmt,
-                                      enum AVSampleFormat sample_fmt)
+
+#if SAVE_AUDIO
+static int GetFormat(const char **fmt, enum AVSampleFormat sample_fmt)
 {
     struct sample_fmt_entry {
         enum AVSampleFormat sample_fmt; const char *fmt_be, *fmt_le;
@@ -51,16 +49,17 @@ static int get_format_from_sample_fmt(const char **fmt,
                 << " is not supported as output format";
     return -1;
 }
+#endif
 
 
-static void decode(AVCodecContext *dec_ctx, AVFormatContext* fmtCtx, AVPacket *pkt, AVFrame *frame,
-                   FILE *outfile, AudioPlayer* player)
+static void decode(AVCodecContext *dec_ctx,
+                   AVFormatContext* fmtCtx,
+                   AVPacket *pkt,
+                   FILE *outfile,
+                   AudioDecoder* decode)
 {
-    int i, ch;
-    int ret, data_size;
-
     /* send the packet with the compressed data to the decoder */
-    ret = avcodec_send_packet(dec_ctx, pkt);
+    int ret = avcodec_send_packet(dec_ctx, pkt);
     if (ret < 0) {
         LOG_DEBUG() << "Error submitting the packet to the decoder";
         return;
@@ -68,6 +67,7 @@ static void decode(AVCodecContext *dec_ctx, AVFormatContext* fmtCtx, AVPacket *p
 
     /* read all the output frames (in general there may be any number of them */
     while (ret >= 0) {
+        auto* frame = av_frame_alloc();
         ret = avcodec_receive_frame(dec_ctx, frame);
         if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF)
             return;
@@ -76,7 +76,7 @@ static void decode(AVCodecContext *dec_ctx, AVFormatContext* fmtCtx, AVPacket *p
             return;
         }
 
-        data_size = av_get_bytes_per_sample(dec_ctx->sample_fmt);
+        int data_size = av_get_bytes_per_sample(dec_ctx->sample_fmt);
         if (data_size < 0) {
             /* This should not occur, checking just for paranoia */
             LOG_DEBUG() << "Failed to calculate data size";
@@ -84,7 +84,24 @@ static void decode(AVCodecContext *dec_ctx, AVFormatContext* fmtCtx, AVPacket *p
         }
         AVRational time_base = fmtCtx->streams[pkt->stream_index]->time_base;
         frame->time_base = time_base;
-        player->Decode(dec_ctx, frame, data_size);
+        // player->Decode(dec_ctx, frame, data_size);
+
+        // QByteArray audioBuffer;
+
+        AudioData  audioData;
+        int64_t    pts_in_us      = frame->pts;
+        double     pts_in_seconds = av_q2d(frame->time_base) * pts_in_us;
+        audioData.timestamp       = (uint64_t)pts_in_seconds + decode->m_createTime;
+        for (int i = 0; i < frame->nb_samples; i++) {
+            for (int ch = 0; ch < dec_ctx->ch_layout.nb_channels; ch++) {
+               audioData.data.append((const char*)(frame->data[ch] + data_size * i), data_size);
+            }
+        }
+        av_frame_free(&frame);
+
+        if (decode->m_audioDataCB) {
+            decode->m_audioDataCB(decode->self, audioData);
+        }
 
         // LOG_DEBUG() << "frame: " << av_get_sample_fmt_name((AVSampleFormat)frame->format);
         // AVSampleFormat frame_sample_fmt = (AVSampleFormat)frame->format;
@@ -98,18 +115,20 @@ static void decode(AVCodecContext *dec_ctx, AVFormatContext* fmtCtx, AVPacket *p
         //     LOG_DEBUG() << "Decoded audio is not in 32-bit float format.";
         // }
 #if SAVE_AUDIO
-        for (i = 0; i < frame->nb_samples; i++)
-            for (ch = 0; ch < dec_ctx->ch_layout.nb_channels; ch++)
+        for (int i = 0; i < frame->nb_samples; i++)
+            for (int ch = 0; ch < dec_ctx->ch_layout.nb_channels; ch++)
                 fwrite(frame->data[ch] + data_size*i, 1, data_size, outfile);
+#else
+        Q_UNUSED(outfile);
 #endif
     }
 }
 
-int AudioDecoder::Init()
+int AudioDecoder::Init(const std::string& fileName)
 {
     /* Open input file, and retrieve the file's format */
-    if (avformat_open_input(&fmt_ctx, filename.c_str(), NULL, NULL) < 0) {
-        LOG_DEBUG() <<  "Could not open input file '%s'\n" << filename.c_str();
+    if (avformat_open_input(&fmt_ctx, fileName.c_str(), NULL, NULL) < 0) {
+        LOG_DEBUG() <<  "Could not open input file '%s'\n" << fileName.c_str();
         return -1;
     }
 
@@ -157,12 +176,14 @@ int AudioDecoder::Init()
     
     // 检查解码上下文的样本格式
     AVSampleFormat sample_fmt = codecCtx->sample_fmt;
-    int sample_rate = codecCtx->sample_rate;
-    int channels = codecCtx->ch_layout.nb_channels;
+    m_sampleFmt = std::string(av_get_sample_fmt_name(sample_fmt));
+    m_sampleRate = codecCtx->sample_rate;
+    m_channels = codecCtx->ch_layout.nb_channels;
 
-    LOG_DEBUG() << "Sample Format: " << av_get_sample_fmt_name(sample_fmt);
-    LOG_DEBUG() << "Sample Rate: " << sample_rate;
-    LOG_DEBUG() << "Channels: " << channels;
+
+    LOG_DEBUG() << "Sample Format: " << m_sampleFmt;
+    LOG_DEBUG() << "Sample Rate: " << m_sampleRate;
+    LOG_DEBUG() << "Channels: " << m_channels;
 
     /* Open codec */
     if (avcodec_open2(codecCtx, codec, NULL) < 0) {
@@ -181,21 +202,15 @@ int AudioDecoder::Init()
     } else {
         LOG_DEBUG() << "metadata is null";
     }
-
-    m_audioPlayer->SetCreateTime(m_createTime);
-
-    // m_isRun = true;
-    // m_thread = std::thread(&AudioDecoder::DoWork, this);
-    // return 1;
     m_isRun = true;
-    // this->start();
     DoWork();
+
     return 1;
 }
 
 void AudioDecoder::run()
 {
-    DoWork();
+    // DoWork();
 }
 
 void AudioDecoder::DoWork()
@@ -211,7 +226,7 @@ void AudioDecoder::DoWork()
     FILE *outfile = nullptr;
 #endif
     auto* pkt = av_packet_alloc();
-    auto* decoded_frame = av_frame_alloc();
+
     /* Decode until EOF */
     while (1) {
         if (!m_isRun) {
@@ -221,14 +236,13 @@ void AudioDecoder::DoWork()
             break;
         }
         if (pkt->stream_index == stream_index) {
-            decode(codecCtx, fmt_ctx, pkt, decoded_frame, outfile, m_audioPlayer);
+            decode(codecCtx, fmt_ctx, pkt, outfile, this);
         }
-        // m_audioPlayer->Decode(codecCtx, decoded_frame, 0);
         av_packet_unref(pkt);
     }
 
     /* Flush the decoder */
-    decode(codecCtx, fmt_ctx, pkt, decoded_frame, outfile, m_audioPlayer);
+    decode(codecCtx, fmt_ctx, pkt, outfile, this);
 
 #if SAVE_AUDIO
     /* Print output PCM information */
@@ -244,7 +258,7 @@ void AudioDecoder::DoWork()
 
     int n_channels = codecCtx->ch_layout.nb_channels;
     const char *fmt;
-    if (get_format_from_sample_fmt(&fmt, sfmt) < 0)
+    if (GetFormat(&fmt, sfmt) < 0)
         goto end;
 #if defined(Q_OS_WIN)
     printf("Play the output audio file with the command:\n"
@@ -262,7 +276,6 @@ end:
 #endif
 
     avcodec_free_context(&codecCtx);
-    av_frame_free(&decoded_frame);
     av_packet_free(&pkt);
     avformat_close_input(&fmt_ctx);
 }

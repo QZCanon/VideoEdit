@@ -2,19 +2,16 @@
 #define AUDIO_DECODER_H
 
 #include <QObject>
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include <thread>
 #include <QThread>
 #include <QFile>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
-// #include "task_runner/task_runner.hpp"
-#include "audioplayer.h"
+#include "core/types.h"
 
 extern "C" {
-// ffmpeg
 #include <libavutil/frame.h>
 #include <libavutil/mem.h>
 #include <libavcodec/avcodec.h>
@@ -25,10 +22,9 @@ extern "C" {
 #include <libavutil/avassert.h>
 #include <libavutil/imgutils.h>
 #include <libswscale/swscale.h>
-
-// SDL
-// #include "SDL2/SDL.h"
 }
+
+typedef void(*ADCallBack)(void*, AudioData);
 
 class AudioDecoder : public QThread
 {
@@ -37,48 +33,42 @@ public:
     explicit AudioDecoder(QObject *parent = nullptr);
     ~AudioDecoder();
 
-    int Init();
+    int Init(const std::string& fileName);
 
-    void PlayAudio() {
-        m_audioPlayer->Play();
+    std::string& GetSampltFormat() { return m_sampleFmt; }
+
+    int GetSampleRate() { return m_sampleRate; }
+
+    int GetChannels() { return m_channels; }
+
+    uint64_t GetFileCreateTime() { return m_createTime; }
+
+    void SetAudioDataCB(ADCallBack cb, void* user)
+    {
+        m_audioDataCB = cb;
+        self          = user;
     }
 
 private:
-
-
     void DoWork();
-
     void run() override;
 
 public:
     bool m_isRun = false;
     AVCodecContext *codecCtx = NULL;
 
-signals:
-    void AudioSignal(AVFrame*);
-
-public slots:
-
 private:
-#ifdef Q_OS_WIN
-    const std::string filename = "F:/DJI_20240811194553_0002_D.MP4";
-    // const std::string filename = "F:/test.mp4";
-    std::string outfilename = "F:/out2.mp3";
-#elif defined(Q_OS_MAC)
-    std::string filename = "/Users/qinzhou/workspace/test/input_file.mp4";
-    // std::string filename = "/Users/qinzhou/workspace/test/dage.mp4";
-    std::string outfilename = "/Users/qinzhou/workspace/test/out11.mp3";
-#endif
-    std::thread m_thread;
-private:
-    AVFormatContext *fmt_ctx = NULL;
-    int stream_index = -1;
-    AudioPlayer* m_audioPlayer;
+    AVFormatContext* fmt_ctx{nullptr};
+    int              stream_index{-1};
+    std::string      m_sampleFmt;
+    int              m_sampleRate{0};
+    int              m_channels{0};
 
-    QBuffer *buffer;
+// 内部static函数使用，所以定义为public
+public:
     uint64_t m_createTime = -1;
-
-    void stopAudioOutput();
+    ADCallBack m_audioDataCB{nullptr};
+    void* self;
 };
 
 #endif // AUDIO_DECODER_H

@@ -55,6 +55,7 @@ public:
 
     void OnMesg(fit::FileIdMesg& mesg) override
     {
+        Q_UNUSED(mesg);
       // printf("File ID:\n");
       // if (mesg.IsTypeValid())
       //    printf("   Type: %d\n", mesg.GetType());
@@ -154,6 +155,7 @@ public:
 
     void OnMesg( fit::RecordMesg& record ) override
     {
+        Q_UNUSED(record);
         // printf( "Record:\n" );
         // PrintOverrideValues( record, fit::RecordMesg::FieldDefNum::HeartRate);
         // PrintOverrideValues( record, fit::RecordMesg::FieldDefNum::Cadence );
