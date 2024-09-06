@@ -152,6 +152,7 @@ int HwDecoder::HwDecoderInit(AVCodecContext *ctx, const enum AVHWDeviceType type
 
 void HwDecoder::StateSwitching()
 {
+    LOG_DEBUG() << "m_keyFrameList size: " << m_keyFrameList.size();
     auto t = m_decodeType.load();
     switch (m_decodeType.load()) {
     case DecodeType::UNKNOWN:
@@ -216,6 +217,10 @@ int HwDecoder::DecodeWrite(AVCodecContext *avctx, AVPacket *packet)
 
     if (packet->flags & AV_PKT_FLAG_KEY && m_decodeType.load() == DecodeType::KEY_FRAME) {
         // LOG_DEBUG() << "find key frame, timestame: " << packet->dts << ", offset: " << packet->pos;
+        Canon::VideoKeyFrame keyFrame;
+        keyFrame.posOffset = packet->pos;
+        keyFrame.timestamp = packet->dts;
+        m_keyFrameList.push_back(keyFrame);
         return 1;
     }
     while (1) {

@@ -66,7 +66,7 @@ void MainWindow::InitComponent()
 
     glImage = new GL_Image(paintPlane);
     glImage->setFixedSize(paintWinSize);
-    // decoder = new HwDecoder;
+    decoder = new HwDecoder;
 
     decoder->Init();
 
