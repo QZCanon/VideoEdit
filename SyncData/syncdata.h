@@ -28,7 +28,7 @@ public:
             m_taskIsAdded.store(true);
             m_runner->AddTask(m_task);
         } else {
-            LOG_DEBUG() << " add task is fail.";
+            // LOG_DEBUG() << " add task is fail.";
         }
     }
 

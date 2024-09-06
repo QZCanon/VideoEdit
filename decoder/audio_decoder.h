@@ -24,7 +24,7 @@ extern "C" {
 #include <libswscale/swscale.h>
 }
 
-typedef void(*ADCallBack)(void*, AudioData);
+typedef void(*ADCallBack)(void*, Canon::AudioData);
 
 class AudioDecoder : public QThread
 {

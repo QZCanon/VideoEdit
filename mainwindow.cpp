@@ -17,10 +17,10 @@ MainWindow::MainWindow(QWidget *parent)
     // audioDecoer = new AudioDecoder;
     // audioDecoer->Init();
 
-    m_audioPalyer = new AudioPlayer(m_fileName);
+    // m_audioPalyer = new AudioPlayer(m_fileName);
 
-    // InitComponent();
-    // InitFitParse();
+    InitComponent();
+    InitFitParse();
 }
 
 MainWindow::~MainWindow()
@@ -66,7 +66,7 @@ void MainWindow::InitComponent()
 
     glImage = new GL_Image(paintPlane);
     glImage->setFixedSize(paintWinSize);
-    decoder = new HwDecoder;
+    // decoder = new HwDecoder;
 
     decoder->Init();
 

@@ -7,6 +7,8 @@
 
 #include "core/ring_buffer.hpp"
 #include "task_runner/task_runner.hpp"
+#include "core/types.h"
+#include "core/atomic_vector.hpp"
 
 extern "C" {
 #include <libavcodec/avcodec.h>
@@ -19,15 +21,23 @@ extern "C" {
 #include <libswscale/swscale.h>
 }
 
+enum class DecodeType {
+    INIT,
+    KEY_FRAME,
+    ALL_FRAME,
+    UNKNOWN,
+};
+
 
 class HwDecoder : public QObject
 {
     Q_OBJECT
 public:
-    explicit HwDecoder(QObject *parent = nullptr);
-    ~HwDecoder();
+    // HwDecoder() {}
+    explicit HwDecoder(QObject *parent = nullptr): QObject{parent}
+    {}
+    virtual ~HwDecoder();
     int Init();
-    void Start();
     auto GetFileFPS() const { return m_fps; }
     AVFrame* GetFrame()     { return m_frameList.FrontAndPop(); }
     bool BufferIsEmpty()    { return m_frameList.Empty(); }
@@ -39,6 +49,9 @@ private:
     int DecodeWrite(AVCodecContext *avctx, AVPacket *packet);
     int HwDecoderInit(AVCodecContext *ctx, const AVHWDeviceType type);
     void DoWork();
+    void StateSwitching();
+    int OpenCodec();
+    int StartThread();
 
 private:
     AVFormatContext *input_ctx = NULL;
@@ -55,6 +68,11 @@ private:
     uint64_t m_createTime = -1;
 
     bool isExitDecode = false;
+    std::atomic<DecodeType> m_decodeType{DecodeType::UNKNOWN};
+    std::condition_variable m_decodeCond;
+    std::mutex m_mutex;
+
+    AtomicVector<Canon::VideoKeyFrame> m_keyFrameList;
 
     Task task;
     TaskRunner *runner{nullptr};
@@ -63,8 +81,8 @@ private:
 
 #if defined(Q_OS_MAC)
     std::string hwdevice  = "videotoolbox";
-    // std::string inputName = "/Users/qinzhou/workspace/test/input_file.mp4";
-    std::string inputName = "/Users/qinzhou/workspace/test/DJI_20240820194031_0041_D.MP4";
+    std::string inputName = "/Users/qinzhou/workspace/test/input_file.mp4";
+    // std::string inputName = "/Users/qinzhou/workspace/test/DJI_20240820194031_0041_D.MP4";
 #elif defined(Q_OS_WIN)
     std::string hwdevice  = "dxva2";
     std::string inputName = "F:/DJI_20240811194553_0002_D.MP4";

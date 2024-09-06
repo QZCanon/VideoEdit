@@ -14,7 +14,7 @@ extern "C" {
 namespace Canon {
 
 /*
- * 当前每种数据只支持一个
+ * 码表数据，当前每种数据只支持一个
  */
 typedef struct StopWatchMessage_ {
     StopWatchMessage_()
@@ -39,9 +39,37 @@ typedef struct StopWatchMessage_ {
 
 using StopWatchList = std::vector<Canon::StopWatchMessage>;
 
+// 音频信息
+typedef struct AudioData_ {
+    uint64_t timestamp;
+    QByteArray data;
+} AudioData;
+
+// 视频帧完整信息
+typedef struct VideoFrameInfo_ {
+    VideoFrameInfo_()
+        : frame(nullptr)
+        , stream_index(0)
+        , packet_index(0)
+    {}
+    AVFrame *frame;
+    int stream_index;
+    int packet_index;
+} VideoFrameInfo;
+
+// 视频关键帧信息
+typedef struct VideoKeyFrame_ {
+    VideoKeyFrame_()
+        : timestamp(0)
+        , posOffset(0)
+    {}
+    uint64_t timestamp;
+    uint64_t posOffset;
+} VideoKeyFrame;
+
 }
 
-#define PRINT_MSGS(MSGS)                                     \
+#define PRINT_MSGS(MSGS)                                      \
     LOG_DEBUG() << "speed: "          << MSGS.speed           \
                 << "m/s, temprature: "    << MSGS.temperature \
                 << ", position_lat: "  << MSGS.position_lat   \
@@ -50,20 +78,5 @@ using StopWatchList = std::vector<Canon::StopWatchMessage>;
                 << ", distance: "      << MSGS.distance       \
                 << "m, timeStamp: "     << MSGS.timeStamp
 
-typedef struct FrameInfo_ {
-    FrameInfo_()
-        : frame(nullptr)
-        , stream_index(0)
-        , packet_index(0)
-    {}
-    AVFrame *frame;
-    int stream_index;
-    int packet_index;
-} FrameInfo;
-
-typedef struct AudioData_ {
-    uint64_t timestamp;
-    QByteArray data;
-} AudioData;
 
 #endif // TYPES_H

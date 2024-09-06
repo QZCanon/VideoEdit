@@ -20,18 +20,6 @@ static enum AVPixelFormat GetHwFormat(AVCodecContext *,
     return AV_PIX_FMT_NONE;
 }
 
-HwDecoder::HwDecoder(QObject *parent)
-    : QObject{parent}
-{
-    // task.SetInitfunc(std::bind(&Decoder::Init, this));
-    // task.SetTaskFunc(std::bind(&Decoder::DoWork, this));
-
-    // runner = Instance<TaskRunner>::GetInstance();
-    // if (runner) {
-    //     runner->AddTask(task);
-    // }
-}
-
 HwDecoder::~HwDecoder()
 {
     /* flush the decoder */
@@ -42,7 +30,6 @@ HwDecoder::~HwDecoder()
     }
     packet.data = NULL;
     packet.size = 0;
-    video_ret = DecodeWrite(decoder_ctx, &packet);
     av_packet_unref(&packet);
 
     avcodec_free_context(&decoder_ctx);
@@ -114,8 +101,6 @@ int HwDecoder::Init()
         LOG_DEBUG() << "metadata is null";
     }
 
-
-
     video = input_ctx->streams[video_stream];
     AVRational rate = video->avg_frame_rate;
     m_fps = rate.num / rate.den + 0.5;
@@ -128,20 +113,26 @@ int HwDecoder::Init()
 
     if (HwDecoderInit(decoder_ctx, type) < 0)
         return -1;
+
+    OpenCodec();
+    StartThread();
+    return 1;
+}
+
+int HwDecoder::OpenCodec() {
    //绑定完成后 打开编解码器
     if ((video_ret = avcodec_open2(decoder_ctx, decoder, NULL)) < 0) {
         fprintf(stderr, "Failed to open codec for stream #%u\n", video_stream);
         return -1;
     }
-
-    isExitDecode = false;
-    th = std::thread(&HwDecoder::DoWork, this);
-
-    return 0;
+    return 1;
 }
 
-void HwDecoder::Start()
-{
+int HwDecoder::StartThread() {
+    isExitDecode = false;
+    m_decodeType.store(DecodeType::KEY_FRAME);
+    th = std::thread(&HwDecoder::DoWork, this);
+    return 1;
 }
 
 int HwDecoder::HwDecoderInit(AVCodecContext *ctx, const enum AVHWDeviceType type)
@@ -159,6 +150,59 @@ int HwDecoder::HwDecoderInit(AVCodecContext *ctx, const enum AVHWDeviceType type
     return err;
 }
 
+void HwDecoder::StateSwitching()
+{
+    auto t = m_decodeType.load();
+    switch (m_decodeType.load()) {
+    case DecodeType::UNKNOWN:
+        m_decodeType.store(DecodeType::KEY_FRAME);
+        break;
+    case DecodeType::KEY_FRAME:
+        m_decodeType.store(DecodeType::ALL_FRAME);
+        break;
+    case DecodeType::ALL_FRAME:
+        m_decodeType.store(DecodeType::INIT);
+        break;
+    default:
+        break;
+    }
+     LOG_DEBUG() << "before: " << (int)t << ", after: " << (int)m_decodeType.load();
+}
+
+void HwDecoder::DoWork()
+{
+    /* actual decoding and dump the raw data */
+    while (1) {
+        if (m_decodeType.load() == DecodeType::INIT) {
+            std::unique_lock<std::mutex> lck(m_mutex);
+            LOG_DEBUG() << "wait...";
+            m_decodeCond.wait(lck);
+        }
+        if (isExitDecode) {
+            LOG_DEBUG() << "isExitDecode: " << isExitDecode << ", exit thread";
+            break;
+        }
+        if (video_ret >= 0) {
+            if ((video_ret = av_read_frame(input_ctx, &packet)) < 0) // 解码结束
+            {
+                video_ret = DecodeWrite(decoder_ctx, &packet);
+                // LOG_DEBUG() << "ret: " << video_ret << ", exit thread";
+                StateSwitching();
+            }
+
+            if (video_stream == packet.stream_index) {
+                video_ret = DecodeWrite(decoder_ctx, &packet);
+            }
+            av_packet_unref(&packet);
+        } else {
+            video_ret = DecodeWrite(decoder_ctx, &packet);
+            LOG_DEBUG() << "ret: " << video_ret << ", exit thread";
+            // break;
+            StateSwitching();
+        }
+    }
+}
+
 int HwDecoder::DecodeWrite(AVCodecContext *avctx, AVPacket *packet)
 {
     int ret = 0;
@@ -168,6 +212,11 @@ int HwDecoder::DecodeWrite(AVCodecContext *avctx, AVPacket *packet)
     if (ret < 0) {
         LOG_DEBUG() << "Error during decoding\n";
         return ret;
+    }
+
+    if (packet->flags & AV_PKT_FLAG_KEY && m_decodeType.load() == DecodeType::KEY_FRAME) {
+        // LOG_DEBUG() << "find key frame, timestame: " << packet->dts << ", offset: " << packet->pos;
+        return 1;
     }
     while (1) {
         AVFrame *frame = NULL, *sw_frame = NULL;
@@ -224,30 +273,4 @@ int HwDecoder::DecodeWrite(AVCodecContext *avctx, AVPacket *packet)
     }
 
     return 0;
-}
-
-void HwDecoder::DoWork()
-{
-    /* actual decoding and dump the raw data */
-    while (1) {
-        if (isExitDecode) {
-            LOG_DEBUG() << "isExitDecode: " << isExitDecode << ", exit thread";
-            break;
-        }
-        if (video_ret >= 0) {
-            if ((video_ret = av_read_frame(input_ctx, &packet)) < 0)
-            {
-                LOG_DEBUG() << "ret: " << video_ret << ", exit thread";
-                break;
-            }
-
-            if (video_stream == packet.stream_index) {
-                video_ret = DecodeWrite(decoder_ctx, &packet);
-            }
-            av_packet_unref(&packet);
-        } else {
-            LOG_DEBUG() << "ret: " << video_ret << ", exit thread";
-            break;
-        }
-    }
 }

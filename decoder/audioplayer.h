@@ -23,7 +23,7 @@ public:
     }
 
 private:
-    static void AudioDataCallBack(void* self, AudioData data)
+    static void AudioDataCallBack(void* self, Canon::AudioData data)
     {
         AudioPlayer* player = (AudioPlayer*)self;
         player->m_audioBuffer.append(data.data);
@@ -82,6 +82,6 @@ private:
     uint64_t     m_fileCreateTime;
 
     std::unique_ptr<AudioDecoder> m_audioDecoder{nullptr};
-    std::vector<AudioData>        m_bufList;
+    std::vector<Canon::AudioData>        m_bufList;
 };
 #endif // AUDIOPLAYER_H
