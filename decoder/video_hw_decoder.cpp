@@ -168,18 +168,34 @@ int HwDecoder::Start() {
 }
 
 void HwDecoder::StartFromKeyFrame(const Canon::VideoKeyFrame keyFrame) {
-    // ... 其他初始化代码 ...
+    // 先让线程处于wait
+    m_decodeType.store(DecodeType::INIT);
 
-    // 定位关键帧
-    // std::vector<int64_t> keyFrameTimestamps;
-    // auto it = std::find(keyFrameTimestamps.begin(), keyFrameTimestamps.end(), keyFrameTimestamp);
     auto it = m_keyFrameList.Find(keyFrame);
     if (it == m_keyFrameList.end()) {
-        // 关键帧时间戳未找到
         LOG_DEBUG() << "Key frame timestamp not found.";
         return;
     }
     int64_t keyFrameIndex = std::distance(m_keyFrameList.begin(), it);
+    LOG_DEBUG() << "find key frame, keyFrameIndex: " << keyFrameIndex;
+
+
+
+    // 清除之前的解码状态
+    avcodec_flush_buffers(decoder_ctx);
+    // OpenCodec();
+    // // 从关键帧开始解码
+    // m_decodeType.store(DecodeType::ALL_FRAME);
+
+    packet.data = NULL;
+    packet.size = 0;
+    av_packet_unref(&packet);
+
+    avcodec_free_context(&decoder_ctx);
+    avformat_close_input(&input_ctx);
+    av_buffer_unref(&hw_device_ctx);
+
+    Init();
 
     // 跳转到关键帧
     int ret = av_seek_frame(input_ctx, video_stream, keyFrameIndex, AVSEEK_FLAG_BACKWARD);
@@ -189,12 +205,8 @@ void HwDecoder::StartFromKeyFrame(const Canon::VideoKeyFrame keyFrame) {
         return;
     }
 
-    // 清除之前的解码状态
-    avcodec_flush_buffers(decoder_ctx);
-
-    LOG_DEBUG() << "find key frame";
-    // 从关键帧开始解码
-    // Start();
+    m_decodeType.store(DecodeType::ALL_FRAME);
+    m_decodeCond.notify_all();
 }
 
 void HwDecoder::StateSwitching()
@@ -264,6 +276,8 @@ int HwDecoder::DecodeWrite(AVCodecContext *avctx, AVPacket *packet)
             Canon::VideoKeyFrame keyFrame;
             keyFrame.posOffset = packet->pos;
             keyFrame.timestamp = packet->dts;
+            LOG_DEBUG() << "keyFrame.posOffset: " << keyFrame.posOffset
+                        << ", keyFrame.timestamp: " << keyFrame.timestamp;
             m_keyFrameList.push_back(keyFrame);
         }
         while(1) {

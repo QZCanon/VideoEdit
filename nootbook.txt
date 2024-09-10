@@ -55,3 +55,60 @@ Record:
     T1 与 T2 进行匹配
 
 
+测试关键帧
+[2024-09-10 22:48:17][DEBUG][..\..\decoder\video_hw_decoder.cpp:96][Init()| create time: 2024-08-11T11:45:55.000000Z, convert[+8h]: 1723376755
+[2024-09-10 22:48:17][DEBUG][..\..\decoder\video_hw_decoder.cpp:107][Init()| fps: 59
+[2024-09-10 22:48:17][DEBUG][..\..\mainwindow.cpp:77][InitComponent()| time: 16
+[2024-09-10 22:48:17][DEBUG][..\..\decoder\video_hw_decoder.cpp:264][DecodeWrite()| keyFrame.posOffset: 8710, keyFrame.timestamp: 0
+[2024-09-10 22:48:17][DEBUG][..\..\decoder\video_hw_decoder.cpp:264][DecodeWrite()| keyFrame.posOffset: 3416555, keyFrame.timestamp: 30030
+[2024-09-10 22:48:17][DEBUG][..\..\decoder\video_hw_decoder.cpp:264][DecodeWrite()| keyFrame.posOffset: 6787478, keyFrame.timestamp: 60060
+[2024-09-10 22:48:17][DEBUG][..\..\decoder\video_hw_decoder.cpp:264][DecodeWrite()| keyFrame.posOffset: 10168887, keyFrame.timestamp: 90090
+[2024-09-10 22:48:17][DEBUG][..\..\decoder\video_hw_decoder.cpp:264][DecodeWrite()| keyFrame.posOffset: 13549868, keyFrame.timestamp: 120120
+[2024-09-10 22:48:17][DEBUG][..\..\decoder\video_hw_decoder.cpp:264][DecodeWrite()| keyFrame.posOffset: 16899280, keyFrame.timestamp: 150150
+[2024-09-10 22:48:17][DEBUG][..\..\decoder\video_hw_decoder.cpp:264][DecodeWrite()| keyFrame.posOffset: 20282816, keyFrame.timestamp: 180180
+[2024-09-10 22:48:17][DEBUG][..\..\decoder\video_hw_decoder.cpp:264][DecodeWrite()| keyFrame.posOffset: 23635132, keyFrame.timestamp: 210210
+[2024-09-10 22:48:17][DEBUG][..\..\decoder\video_hw_decoder.cpp:264][DecodeWrite()| keyFrame.posOffset: 27002024, keyFrame.timestamp: 240240
+[2024-09-10 22:48:17][DEBUG][..\..\VideoRenderer\videorenderer.cpp:171][resizeGL()| 679 * 416
+[2024-09-10 22:48:17][DEBUG][..\..\decoder\video_hw_decoder.cpp:264][DecodeWrite()| keyFrame.posOffset: 30359587, keyFrame.timestamp: 270270
+[2024-09-10 22:48:17][DEBUG][..\..\decoder\video_hw_decoder.cpp:264][DecodeWrite()| keyFrame.posOffset: 33753247, keyFrame.timestamp: 300300
+[2024-09-10 22:48:17][DEBUG][..\..\decoder\video_hw_decoder.cpp:264][DecodeWrite()| keyFrame.posOffset: 37112583, keyFrame.timestamp: 330330
+[2024-09-10 22:48:17][DEBUG][..\..\decoder\video_hw_decoder.cpp:264][DecodeWrite()| keyFrame.posOffset: 40486139, keyFrame.timestamp: 360360
+[2024-09-10 22:48:17][DEBUG][..\..\decoder\video_hw_decoder.cpp:264][DecodeWrite()| keyFrame.posOffset: 43842676, keyFrame.timestamp: 390390
+[2024-09-10 22:48:17][DEBUG][..\..\decoder\video_hw_decoder.cpp:264][DecodeWrite()| keyFrame.posOffset: 47249740, keyFrame.timestamp: 420420
+[2024-09-10 22:48:18][DEBUG][..\..\decoder\video_hw_decoder.cpp:264][DecodeWrite()| keyFrame.posOffset: 50599395, keyFrame.timestamp: 450450
+[2024-09-10 22:48:18][DEBUG][..\..\decoder\video_hw_decoder.cpp:264][DecodeWrite()| keyFrame.posOffset: 53960390, keyFrame.timestamp: 480480
+[2024-09-10 22:48:18][DEBUG][..\..\decoder\video_hw_decoder.cpp:264][DecodeWrite()| keyFrame.posOffset: 57326000, keyFrame.timestamp: 510510
+[2024-09-10 22:48:18][DEBUG][..\..\decoder\video_hw_decoder.cpp:264][DecodeWrite()| keyFrame.posOffset: 60699709, keyFrame.timestamp: 540540
+[2024-09-10 22:48:18][DEBUG][..\..\decoder\video_hw_decoder.cpp:264][DecodeWrite()| keyFrame.posOffset: 64068102, keyFrame.timestamp: 570570
+[2024-09-10 22:48:18][DEBUG][..\..\decoder\video_hw_decoder.cpp:264][DecodeWrite()| keyFrame.posOffset: 67439165, keyFrame.timestamp: 600600
+[2024-09-10 22:48:18][DEBUG][..\..\decoder\video_hw_decoder.cpp:264][DecodeWrite()| keyFrame.posOffset: 70805634, keyFrame.timestamp: 630630
+[2024-09-10 22:48:18][DEBUG][..\..\decoder\video_hw_decoder.cpp:264][DecodeWrite()| keyFrame.posOffset: 74177357, keyFrame.timestamp: 660660
+[2024-09-10 22:48:18][DEBUG][..\..\decoder\video_hw_decoder.cpp:264][DecodeWrite()| keyFrame.posOffset: 77545273, keyFrame.timestamp: 690690
+[2024-09-10 22:48:18][DEBUG][..\..\decoder\video_hw_decoder.cpp:264][DecodeWrite()| keyFrame.posOffset: 80912388, keyFrame.timestamp: 720720
+[2024-09-10 22:48:18][DEBUG][..\..\decoder\video_hw_decoder.cpp:264][DecodeWrite()| keyFrame.posOffset: 84287260, keyFrame.timestamp: 750750
+[2024-09-10 22:48:18][DEBUG][..\..\decoder\video_hw_decoder.cpp:264][DecodeWrite()| keyFrame.posOffset: 87663570, keyFrame.timestamp: 780780
+[2024-09-10 22:48:18][DEBUG][..\..\decoder\video_hw_decoder.cpp:264][DecodeWrite()| keyFrame.posOffset: 91031267, keyFrame.timestamp: 810810
+[2024-09-10 22:48:18][DEBUG][..\..\decoder\video_hw_decoder.cpp:264][DecodeWrite()| keyFrame.posOffset: 94398105, keyFrame.timestamp: 840840
+[2024-09-10 22:48:18][DEBUG][..\..\decoder\video_hw_decoder.cpp:264][DecodeWrite()| keyFrame.posOffset: 97766345, keyFrame.timestamp: 870870
+[2024-09-10 22:48:18][DEBUG][..\..\decoder\video_hw_decoder.cpp:264][DecodeWrite()| keyFrame.posOffset: 101136866, keyFrame.timestamp: 900900
+[2024-09-10 22:48:18][DEBUG][..\..\decoder\video_hw_decoder.cpp:264][DecodeWrite()| keyFrame.posOffset: 104513069, keyFrame.timestamp: 930930
+[2024-09-10 22:48:18][DEBUG][..\..\decoder\video_hw_decoder.cpp:264][DecodeWrite()| keyFrame.posOffset: 107878488, keyFrame.timestamp: 960960
+[2024-09-10 22:48:18][DEBUG][..\..\decoder\video_hw_decoder.cpp:264][DecodeWrite()| keyFrame.posOffset: 111251487, keyFrame.timestamp: 990990
+[2024-09-10 22:48:18][DEBUG][..\..\decoder\video_hw_decoder.cpp:264][DecodeWrite()| keyFrame.posOffset: 114671033, keyFrame.timestamp: 1021020
+[2024-09-10 22:48:18][DEBUG][..\..\decoder\video_hw_decoder.cpp:264][DecodeWrite()| keyFrame.posOffset: 117998767, keyFrame.timestamp: 1051050
+[2024-09-10 22:48:18][DEBUG][..\..\decoder\video_hw_decoder.cpp:264][DecodeWrite()| keyFrame.posOffset: 121362711, keyFrame.timestamp: 1081080
+[2024-09-10 22:48:18][DEBUG][..\..\decoder\video_hw_decoder.cpp:264][DecodeWrite()| keyFrame.posOffset: 124734075, keyFrame.timestamp: 1111110
+[2024-09-10 22:48:18][DEBUG][..\..\decoder\video_hw_decoder.cpp:264][DecodeWrite()| keyFrame.posOffset: 128102149, keyFrame.timestamp: 1141140
+[2024-09-10 22:48:18][DEBUG][..\..\decoder\video_hw_decoder.cpp:264][DecodeWrite()| keyFrame.posOffset: 131472243, keyFrame.timestamp: 1171170
+[2024-09-10 22:48:18][DEBUG][..\..\decoder\video_hw_decoder.cpp:264][DecodeWrite()| keyFrame.posOffset: 134841745, keyFrame.timestamp: 1201200
+[2024-09-10 22:48:18][DEBUG][..\..\decoder\video_hw_decoder.cpp:264][DecodeWrite()| keyFrame.posOffset: 138216015, keyFrame.timestamp: 1231230
+[2024-09-10 22:48:18][DEBUG][..\..\decoder\video_hw_decoder.cpp:264][DecodeWrite()| keyFrame.posOffset: 141584976, keyFrame.timestamp: 1261260
+[2024-09-10 22:48:18][DEBUG][..\..\decoder\video_hw_decoder.cpp:264][DecodeWrite()| keyFrame.posOffset: 144960775, keyFrame.timestamp: 1291290
+[2024-09-10 22:48:18][DEBUG][..\..\decoder\video_hw_decoder.cpp:264][DecodeWrite()| keyFrame.posOffset: 148326899, keyFrame.timestamp: 1321320
+[2024-09-10 22:48:18][DEBUG][..\..\decoder\video_hw_decoder.cpp:264][DecodeWrite()| keyFrame.posOffset: 151692937, keyFrame.timestamp: 1351350
+[2024-09-10 22:48:19][DEBUG][..\..\decoder\video_hw_decoder.cpp:264][DecodeWrite()| keyFrame.posOffset: 155062779, keyFrame.timestamp: 1381380
+[2024-09-10 22:48:19][DEBUG][..\..\decoder\video_hw_decoder.cpp:264][DecodeWrite()| keyFrame.posOffset: 158434215, keyFrame.timestamp: 1411410
+[2024-09-10 22:48:19][DEBUG][..\..\decoder\video_hw_decoder.cpp:264][DecodeWrite()| keyFrame.posOffset: 161800902, keyFrame.timestamp: 1441440
+[2024-09-10 22:48:19][DEBUG][..\..\decoder\video_hw_decoder.cpp:264][DecodeWrite()| keyFrame.posOffset: 165163896, keyFrame.timestamp: 1471470
+
+
