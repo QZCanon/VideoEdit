@@ -118,6 +118,21 @@ int HwDecoder::Init()
     return 1;
 }
 
+int HwDecoder::HwDecoderInit(AVCodecContext *ctx, const enum AVHWDeviceType type)
+{
+    int err = 0;
+    //创建硬件设备信息上下文
+    if ((err = av_hwdevice_ctx_create(&hw_device_ctx, type,
+                                      NULL, NULL, 0)) < 0) {
+        fprintf(stderr, "Failed to create specified HW device.\n");
+        return err;
+    }
+    //绑定编解码器上下文和硬件设备信息上下文
+    ctx->hw_device_ctx = av_buffer_ref(hw_device_ctx);
+
+    return err;
+}
+
 int HwDecoder::OpenCodec() {
    //绑定完成后 打开编解码器
     if ((video_ret = avcodec_open2(decoder_ctx, decoder, NULL)) < 0) {
@@ -152,19 +167,34 @@ int HwDecoder::Start() {
     return 1;
 }
 
-int HwDecoder::HwDecoderInit(AVCodecContext *ctx, const enum AVHWDeviceType type)
-{
-    int err = 0;
-    //创建硬件设备信息上下文
-    if ((err = av_hwdevice_ctx_create(&hw_device_ctx, type,
-        NULL, NULL, 0)) < 0) {
-        fprintf(stderr, "Failed to create specified HW device.\n");
-        return err;
-    }
-    //绑定编解码器上下文和硬件设备信息上下文
-    ctx->hw_device_ctx = av_buffer_ref(hw_device_ctx);
+void HwDecoder::StartFromKeyFrame(const Canon::VideoKeyFrame keyFrame) {
+    // ... 其他初始化代码 ...
 
-    return err;
+    // 定位关键帧
+    // std::vector<int64_t> keyFrameTimestamps;
+    // auto it = std::find(keyFrameTimestamps.begin(), keyFrameTimestamps.end(), keyFrameTimestamp);
+    auto it = m_keyFrameList.Find(keyFrame);
+    if (it == m_keyFrameList.end()) {
+        // 关键帧时间戳未找到
+        LOG_DEBUG() << "Key frame timestamp not found.";
+        return;
+    }
+    int64_t keyFrameIndex = std::distance(m_keyFrameList.begin(), it);
+
+    // 跳转到关键帧
+    int ret = av_seek_frame(input_ctx, video_stream, keyFrameIndex, AVSEEK_FLAG_BACKWARD);
+    if (ret < 0) {
+        // 寻找关键帧失败
+        LOG_DEBUG() << "Failed to seek to key frame.";
+        return;
+    }
+
+    // 清除之前的解码状态
+    avcodec_flush_buffers(decoder_ctx);
+
+    LOG_DEBUG() << "find key frame";
+    // 从关键帧开始解码
+    // Start();
 }
 
 void HwDecoder::StateSwitching()

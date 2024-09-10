@@ -63,6 +63,12 @@ typedef struct VideoKeyFrame_ {
         : timestamp(0)
         , posOffset(0)
     {}
+
+    bool operator==(const VideoKeyFrame_& val) {
+        return (val.posOffset == this->posOffset &&
+                val.timestamp == this->timestamp);
+    }
+
     uint64_t timestamp;
     uint64_t posOffset;
 } VideoKeyFrame;

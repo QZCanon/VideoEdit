@@ -46,6 +46,7 @@ public:
     auto GetCreateTime()    { return m_createTime; }
     int Start();
     int Restart();
+    void StartFromKeyFrame(const Canon::VideoKeyFrame keyFrameTimestamp);
 
 signals:
 
