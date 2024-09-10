@@ -66,9 +66,9 @@ void MainWindow::InitComponent()
 
     glImage = new GL_Image(paintPlane);
     glImage->setFixedSize(paintWinSize);
-    decoder = new HwDecoder;
 
-    decoder->Init();
+    decoder = new HwDecoder;
+    decoder->Start();
 
     connect(&timer, SIGNAL(timeout()), this, SLOT(slotTimeOut()));
     timer.setTimerType(Qt::PreciseTimer);
@@ -154,5 +154,11 @@ void MainWindow::SpeedCallback(int speed)
     if (dashBoard) {
         dashBoard->setValue(speed);
     }
+}
+
+
+void MainWindow::on_restart_clicked()
+{
+    decoder->Restart();
 }
 

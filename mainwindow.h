@@ -44,6 +44,8 @@ private slots:
     void on_cancle_task_clicked();
     void SpeedCallback(int);
 
+    void on_restart_clicked();
+
 protected:
      void resizeEvent(QResizeEvent* e) override;
 

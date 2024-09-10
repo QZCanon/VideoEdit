@@ -115,7 +115,6 @@ int HwDecoder::Init()
         return -1;
 
     OpenCodec();
-    StartThread();
     return 1;
 }
 
@@ -128,9 +127,27 @@ int HwDecoder::OpenCodec() {
     return 1;
 }
 
-int HwDecoder::StartThread() {
-    isExitDecode = false;
+int HwDecoder::Restart() {
+    // init
+    packet.data = NULL;
+    packet.size = 0;
+    av_packet_unref(&packet);
+
+    avcodec_free_context(&decoder_ctx);
+    avformat_close_input(&input_ctx);
+    av_buffer_unref(&hw_device_ctx);
+
+    Init();
+
     m_decodeType.store(DecodeType::ALL_FRAME);
+    m_decodeCond.notify_all();
+
+    return 1;
+}
+
+int HwDecoder::Start() {
+    isExitDecode = false;
+    m_decodeType.store(DecodeType::KEY_FRAME);
     th = std::thread(&HwDecoder::DoWork, this);
     return 1;
 }

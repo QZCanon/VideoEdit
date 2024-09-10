@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>677</width>
-    <height>444</height>
+    <width>679</width>
+    <height>456</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -17,10 +17,10 @@
    <widget class="QPushButton" name="add_task">
     <property name="geometry">
      <rect>
-      <x>150</x>
-      <y>60</y>
-      <width>111</width>
-      <height>41</height>
+      <x>12</x>
+      <y>8</y>
+      <width>82</width>
+      <height>32</height>
      </rect>
     </property>
     <property name="text">
@@ -30,14 +30,27 @@
    <widget class="QPushButton" name="cancle_task">
     <property name="geometry">
      <rect>
-      <x>150</x>
-      <y>160</y>
-      <width>111</width>
-      <height>41</height>
+      <x>12</x>
+      <y>42</y>
+      <width>98</width>
+      <height>32</height>
      </rect>
     </property>
     <property name="text">
      <string>cancle task</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="restart">
+    <property name="geometry">
+     <rect>
+      <x>330</x>
+      <y>0</y>
+      <width>70</width>
+      <height>32</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>restart</string>
     </property>
    </widget>
   </widget>
