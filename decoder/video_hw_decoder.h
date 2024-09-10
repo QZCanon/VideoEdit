@@ -54,35 +54,36 @@ private:
     int StartThread();
 
 private:
-    AVFormatContext *input_ctx = NULL;
-    int video_stream, video_ret;
-    AVStream *video = NULL;
-    AVCodecContext *decoder_ctx = NULL;
-    AVCodec *decoder = NULL;
-    AVPacket packet;
+    AVFormatContext* input_ctx = NULL;
+    int              video_stream;
+    int              video_ret;
+    AVStream*        video = NULL;
+    AVCodecContext*  decoder_ctx = NULL;
+    AVCodec*         decoder = NULL;
+    AVPacket         packet;
     enum AVHWDeviceType type;
-    // int i;
-    AVBufferRef *hw_device_ctx = NULL;
-    std::thread th;
-    uint8_t m_fps = 0;
-    uint64_t m_createTime = -1;
 
-    bool isExitDecode = false;
+    AVBufferRef* hw_device_ctx = NULL;
+    std::thread  th;
+    uint8_t      m_fps = 0;
+    uint64_t     m_createTime = -1;
+
+    bool                    isExitDecode = false;
     std::atomic<DecodeType> m_decodeType{DecodeType::UNKNOWN};
     std::condition_variable m_decodeCond;
-    std::mutex m_mutex;
+    std::mutex              m_mutex;
 
     AtomicVector<Canon::VideoKeyFrame> m_keyFrameList;
 
-    Task task;
+    Task        task;
     TaskRunner *runner{nullptr};
 
     RingBuffer<AVFrame*, 3> m_frameList;
 
 #if defined(Q_OS_MAC)
     std::string hwdevice  = "videotoolbox";
-    std::string inputName = "/Users/qinzhou/workspace/test/input_file.mp4";
-    // std::string inputName = "/Users/qinzhou/workspace/test/DJI_20240820194031_0041_D.MP4";
+    // std::string inputName = "/Users/qinzhou/workspace/test/input_file.mp4";
+    std::string inputName = "/Users/qinzhou/workspace/test/DJI_20240820194031_0041_D.MP4";
 #elif defined(Q_OS_WIN)
     std::string hwdevice  = "dxva2";
     std::string inputName = "F:/DJI_20240811194553_0002_D.MP4";

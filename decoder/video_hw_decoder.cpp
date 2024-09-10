@@ -130,7 +130,7 @@ int HwDecoder::OpenCodec() {
 
 int HwDecoder::StartThread() {
     isExitDecode = false;
-    m_decodeType.store(DecodeType::KEY_FRAME);
+    m_decodeType.store(DecodeType::ALL_FRAME);
     th = std::thread(&HwDecoder::DoWork, this);
     return 1;
 }
@@ -156,10 +156,10 @@ void HwDecoder::StateSwitching()
     auto t = m_decodeType.load();
     switch (m_decodeType.load()) {
     case DecodeType::UNKNOWN:
-        m_decodeType.store(DecodeType::KEY_FRAME);
+        m_decodeType.store(DecodeType::INIT);
         break;
     case DecodeType::KEY_FRAME:
-        m_decodeType.store(DecodeType::ALL_FRAME);
+        m_decodeType.store(DecodeType::INIT);
         break;
     case DecodeType::ALL_FRAME:
         m_decodeType.store(DecodeType::INIT);
@@ -187,21 +187,17 @@ void HwDecoder::DoWork()
             if ((video_ret = av_read_frame(input_ctx, &packet)) < 0) // 解码结束
             {
                 video_ret = DecodeWrite(decoder_ctx, &packet);
-                // LOG_DEBUG() << "ret: " << video_ret << ", exit thread";
+                LOG_DEBUG() << "ret: " << video_ret << ", enter wait state";
                 StateSwitching();
+                av_packet_unref(&packet);
+            } else {
+                if (video_stream == packet.stream_index) {
+                    video_ret = DecodeWrite(decoder_ctx, &packet);
+                }
             }
-
-            if (video_stream == packet.stream_index) {
-                video_ret = DecodeWrite(decoder_ctx, &packet);
-            }
-            av_packet_unref(&packet);
-        } else {
-            video_ret = DecodeWrite(decoder_ctx, &packet);
-            LOG_DEBUG() << "ret: " << video_ret << ", exit thread";
-            // break;
-            StateSwitching();
         }
     }
+    LOG_DEBUG() << "size: " << m_keyFrameList.size();
 }
 
 int HwDecoder::DecodeWrite(AVCodecContext *avctx, AVPacket *packet)
@@ -215,66 +211,79 @@ int HwDecoder::DecodeWrite(AVCodecContext *avctx, AVPacket *packet)
         return ret;
     }
 
-    if (packet->flags & AV_PKT_FLAG_KEY && m_decodeType.load() == DecodeType::KEY_FRAME) {
+    if (m_decodeType.load() == DecodeType::KEY_FRAME) { // 解析关键帧
         // LOG_DEBUG() << "find key frame, timestame: " << packet->dts << ", offset: " << packet->pos;
-        Canon::VideoKeyFrame keyFrame;
-        keyFrame.posOffset = packet->pos;
-        keyFrame.timestamp = packet->dts;
-        m_keyFrameList.push_back(keyFrame);
-        return 1;
-    }
-    while (1) {
-        AVFrame *frame = NULL, *sw_frame = NULL;
-        AVFrame *tmp_frame = NULL;
-        if (!(frame = av_frame_alloc()) || !(sw_frame = av_frame_alloc())) {
-            LOG_DEBUG() << "Can not alloc frame\n";
-            ret = AVERROR(ENOMEM);
-            av_frame_free(&frame);
-            av_frame_free(&sw_frame);
-            if (ret < 0)
-                return ret;
+        if (packet->flags & AV_PKT_FLAG_KEY) {
+            Canon::VideoKeyFrame keyFrame;
+            keyFrame.posOffset = packet->pos;
+            keyFrame.timestamp = packet->dts;
+            m_keyFrameList.push_back(keyFrame);
         }
-
-        ret = avcodec_receive_frame(avctx, frame);
-        if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF) {
+        while(1) {
+            AVFrame *frame = av_frame_alloc();
+            auto ret = avcodec_receive_frame(avctx, frame);
             av_frame_free(&frame);
-            av_frame_free(&sw_frame);
-            return 0;
-        } else if (ret < 0) {
-            LOG_DEBUG() << "Error while decoding\n";
-            av_frame_free(&frame);
-            av_frame_free(&sw_frame);
-            if (ret < 0)
-                return ret;
+            if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF) {
+                return 0;
+            } else if (ret < 0) {
+                LOG_DEBUG() << "Error while decoding\n";
+                if (ret < 0)
+                    return ret;
+            }
         }
-        AVRational time_base = input_ctx->streams[video_stream]->time_base;
-        // LOG_DEBUG() << "hw_pix_fmt: " << av_get_pix_fmt_name((AVPixelFormat)hw_pix_fmt);
-        if (frame->format == hw_pix_fmt) {
-            /* retrieve data from GPU to CPU */
-            if ((ret = av_hwframe_transfer_data(sw_frame, frame, 0)) < 0) {
-                LOG_DEBUG() << "Error transferring the data to system memory";
+    } else if (m_decodeType.load() == DecodeType::ALL_FRAME) {
+        while (1) {
+            AVFrame *frame = NULL, *sw_frame = NULL;
+            AVFrame *tmp_frame = NULL;
+            if (!(frame = av_frame_alloc()) || !(sw_frame = av_frame_alloc())) {
+                LOG_DEBUG() << "Can not alloc frame\n";
+                ret = AVERROR(ENOMEM);
                 av_frame_free(&frame);
                 av_frame_free(&sw_frame);
                 if (ret < 0)
                     return ret;
             }
-            sw_frame->width     = frame->width;
-            sw_frame->height    = frame->height;
-            sw_frame->pts       = frame->pts;
-            sw_frame->pkt_dts   = frame->pkt_dts;
-            sw_frame->pict_type = frame->pict_type;
-            sw_frame->time_base = time_base;
-            tmp_frame           = sw_frame;
-            av_frame_free(&frame);
-        } else {
-            tmp_frame = frame;
-            av_frame_free(&sw_frame);
+
+            ret = avcodec_receive_frame(avctx, frame);
+            if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF) {
+                av_frame_free(&frame);
+                av_frame_free(&sw_frame);
+                return 0;
+            } else if (ret < 0) {
+                LOG_DEBUG() << "Error while decoding\n";
+                av_frame_free(&frame);
+                av_frame_free(&sw_frame);
+                if (ret < 0)
+                    return ret;
+            }
+            AVRational time_base = input_ctx->streams[video_stream]->time_base;
+            // LOG_DEBUG() << "hw_pix_fmt: " << av_get_pix_fmt_name((AVPixelFormat)hw_pix_fmt);
+            if (frame->format == hw_pix_fmt) {
+                /* retrieve data from GPU to CPU */
+                if ((ret = av_hwframe_transfer_data(sw_frame, frame, 0)) < 0) {
+                    LOG_DEBUG() << "Error transferring the data to system memory";
+                    av_frame_free(&frame);
+                    av_frame_free(&sw_frame);
+                    if (ret < 0)
+                        return ret;
+                }
+                sw_frame->width     = frame->width;
+                sw_frame->height    = frame->height;
+                sw_frame->pts       = frame->pts;
+                sw_frame->pkt_dts   = frame->pkt_dts;
+                sw_frame->pict_type = frame->pict_type;
+                sw_frame->time_base = time_base;
+                tmp_frame           = sw_frame;
+                av_frame_free(&frame);
+            } else {
+                tmp_frame = frame;
+                av_frame_free(&sw_frame);
+            }
+            // LOG_DEBUG() << "format: " << av_get_pix_fmt_name((AVPixelFormat)tmp_frame->format);
+            if (m_decodeType.load() == DecodeType::ALL_FRAME) {
+                m_frameList.PushBack(std::move(tmp_frame));
+            }
         }
-
-        // LOG_DEBUG() << "format: " << av_get_pix_fmt_name((AVPixelFormat)tmp_frame->format);
-        m_frameList.PushBack(std::move(tmp_frame));
-
-        // av_frame_free(&tmp_frame);
     }
 
     return 0;
