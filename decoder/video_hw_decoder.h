@@ -33,9 +33,9 @@ class HwDecoder : public QObject
     Q_OBJECT
 public:
     // HwDecoder() {}
-    explicit HwDecoder(QObject *parent = nullptr): QObject{parent}
+    explicit HwDecoder(const std::string& inputName, QObject *parent = nullptr): QObject{parent}
     {
-        Init();
+        Init(inputName);
     }
     virtual ~HwDecoder();
 
@@ -62,7 +62,7 @@ public:
 
 private:
     // 初始化资源
-    int Init();
+    int Init(const std::string& inputName);
 
     // 解码核心函数
     int Decoder(AVCodecContext *avctx, AVPacket *packet);
@@ -103,11 +103,8 @@ private:
 
 #if defined(Q_OS_MAC)
     std::string hwdevice  = "videotoolbox";
-    std::string inputName = "/Users/qinzhou/workspace/test/input_file.mp4";
-    // std::string inputName = "/Users/qinzhou/workspace/test/DJI_20240820194031_0041_D.MP4";
 #elif defined(Q_OS_WIN)
     std::string hwdevice  = "dxva2";
-    std::string inputName = "F:/DJI_20240811194553_0002_D.MP4";
 #endif
 
 };

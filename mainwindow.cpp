@@ -67,7 +67,7 @@ void MainWindow::InitComponent()
     glImage = new GL_Image(paintPlane);
     glImage->setFixedSize(paintWinSize);
 
-    decoder = new HwDecoder;
+    decoder = new HwDecoder(m_fileName);
     decoder->Start();
 
     connect(&timer, SIGNAL(timeout()), this, SLOT(slotTimeOut()));

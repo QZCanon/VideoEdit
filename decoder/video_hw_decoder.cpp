@@ -35,7 +35,7 @@ HwDecoder::~HwDecoder()
     av_buffer_unref(&hw_device_ctx);
 }
 
-int HwDecoder::Init()
+int HwDecoder::Init(const std::string& inputName)
 {
     //通过你传入的名字来找到对应的硬件解码类型
     auto type = av_hwdevice_find_type_by_name(hwdevice.c_str());
