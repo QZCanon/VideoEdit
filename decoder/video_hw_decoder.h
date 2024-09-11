@@ -6,7 +6,6 @@
 #include <thread>
 
 #include "core/ring_buffer.hpp"
-#include "task_runner/task_runner.hpp"
 #include "core/types.h"
 #include "core/atomic_vector.hpp"
 
@@ -39,52 +38,68 @@ public:
         Init();
     }
     virtual ~HwDecoder();
-    int Init();
-    auto GetFileFPS() const { return m_fps; }
-    AVFrame* GetFrame()     { return m_frameList.FrontAndPop(); }
-    bool BufferIsEmpty()    { return m_frameList.Empty(); }
-    auto GetCreateTime()    { return m_createTime; }
+
+    // 开始解码
     int Start();
+
+    // 获取解码帧
+    AVFrame* GetFrame()     { return m_frameList.FrontAndPop(); }
+
+    // 判断解码缓存队列是否为空
+    bool BufferIsEmpty()    { return m_frameList.Empty(); }
+
+    // 获取视频录制时间
+    auto GetCreateTime()    { return m_createTime; }
+
+    // 获取视频帧率
+    auto GetFileFPS() const { return m_fps; }
+
+    // 重头开始播放
     int Restart();
+
+    // 从某关键帧开始播放
     void StartFromKeyFrameAsync(const Canon::VideoKeyFrame keyFrame);
-    void StartFromKeyFrame(const Canon::VideoKeyFrame keyFrame);
-
-signals:
 
 private:
-    int DecodeWrite(AVCodecContext *avctx, AVPacket *packet);
+    // 初始化资源
+    int Init();
+
+    // 解码核心函数
+    int Decoder(AVCodecContext *avctx, AVPacket *packet);
+
+    // 创建和绑定硬件
     int HwDecoderInit(AVCodecContext *ctx, const AVHWDeviceType type);
+
+    // 解码线程执行函数
     void DoWork();
+
+    // 状态切换
     void StateSwitching();
-    int OpenCodec();
+
+    // 设置关键帧
+    void SetKeyFrame(const Canon::VideoKeyFrame keyFrame);
 
 private:
+    // ffmpeg资源相关
     AVFormatContext* input_ctx = NULL;
     int              video_stream;
     int              video_ret;
-    AVStream*        video = NULL;
     AVCodecContext*  decoder_ctx = NULL;
-    AVCodec*         decoder = NULL;
     AVPacket         packet;
-    enum AVHWDeviceType type;
+    AVBufferRef*     hw_device_ctx = NULL;
 
-    AVBufferRef* hw_device_ctx = NULL;
-    std::thread  th;
-    double       m_fps = 0;
-    uint64_t     m_createTime = -1;
-    std::atomic<bool> m_isDecoding{false};
+    double            m_fps = 0;
+    uint64_t          m_createTime = -1;
 
-    bool                    isExitDecode = false;
+    std::atomic<bool>       m_isDecoding{false};
+    std::thread             m_decodeThread;
+    bool                    m_isExitDecode{false};
     std::atomic<DecodeType> m_decodeType{DecodeType::UNKNOWN};
     std::condition_variable m_decodeCond;
     std::mutex              m_mutex;
 
     AtomicVector<Canon::VideoKeyFrame> m_keyFrameList;
-
-    Task        task;
-    TaskRunner *runner{nullptr};
-
-    RingBuffer<AVFrame*, 2> m_frameList;
+    RingBuffer<AVFrame*, 2>            m_frameList;
 
 #if defined(Q_OS_MAC)
     std::string hwdevice  = "videotoolbox";

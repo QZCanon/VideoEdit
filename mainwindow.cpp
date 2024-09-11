@@ -159,12 +159,14 @@ void MainWindow::SpeedCallback(int speed)
 
 void MainWindow::on_restart_clicked()
 {
+    decoder->Restart();
+}
+
+void MainWindow::on_keyFrame_clicked()
+{
     Canon::VideoKeyFrame keyFrame;
     keyFrame.posOffset = 70805634;
-    keyFrame.timestamp = 630630;
-
-    // 161800902, keyFrame.timestamp: 1441440
-    // decoder->Restart();
+    keyFrame.timestamp = 640630;
     decoder->StartFromKeyFrameAsync(keyFrame);
 }
 

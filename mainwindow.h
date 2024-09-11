@@ -46,6 +46,8 @@ private slots:
 
     void on_restart_clicked();
 
+    void on_keyFrame_clicked();
+
 protected:
      void resizeEvent(QResizeEvent* e) override;
 

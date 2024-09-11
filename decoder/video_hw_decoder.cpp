@@ -21,10 +21,10 @@ static enum AVPixelFormat GetHwFormat(AVCodecContext *,
 HwDecoder::~HwDecoder()
 {
     /* flush the decoder */
-    isExitDecode = true;
-    if (th.joinable()) {
+    m_isExitDecode = true;
+    if (m_decodeThread.joinable()) {
         LOG_DEBUG() << "join thread";
-        th.join();
+        m_decodeThread.join();
     }
     packet.data = NULL;
     packet.size = 0;
@@ -38,7 +38,7 @@ HwDecoder::~HwDecoder()
 int HwDecoder::Init()
 {
     //通过你传入的名字来找到对应的硬件解码类型
-    type = av_hwdevice_find_type_by_name(hwdevice.c_str());
+    auto type = av_hwdevice_find_type_by_name(hwdevice.c_str());
 
     if (type == AV_HWDEVICE_TYPE_NONE) {
         LOG_DEBUG() << "Available device types:";
@@ -57,7 +57,7 @@ int HwDecoder::Init()
         LOG_DEBUG() << "Cannot find input stream information.";
         return -1;
     }
-
+    AVCodec*         decoder = NULL;
     /* find the video stream information */
     video_ret = av_find_best_stream(input_ctx, AVMEDIA_TYPE_VIDEO, -1, -1, (const struct AVCodec **)(&decoder), 0);
     if (video_ret < 0) {
@@ -96,7 +96,7 @@ int HwDecoder::Init()
         LOG_DEBUG() << "metadata is null";
     }
 
-    video           = input_ctx->streams[video_stream];
+    auto video           = input_ctx->streams[video_stream];
     AVRational rate = video->avg_frame_rate;
     m_fps           = (double)rate.num / rate.den;
     LOG_DEBUG() << "fps: " << m_fps;
@@ -110,8 +110,12 @@ int HwDecoder::Init()
         return -1;
     }
 
-    OpenCodec();
-    return 1;
+    //绑定完成后 打开编解码器
+     if ((video_ret = avcodec_open2(decoder_ctx, decoder, NULL)) < 0) {
+         fprintf(stderr, "Failed to open codec for stream #%u\n", video_stream);
+         return -1;
+     }
+     return 1;
 }
 
 int HwDecoder::HwDecoderInit(AVCodecContext *ctx, const enum AVHWDeviceType type)
@@ -129,54 +133,34 @@ int HwDecoder::HwDecoderInit(AVCodecContext *ctx, const enum AVHWDeviceType type
     return err;
 }
 
-int HwDecoder::OpenCodec() {
-   //绑定完成后 打开编解码器
-    if ((video_ret = avcodec_open2(decoder_ctx, decoder, NULL)) < 0) {
-        fprintf(stderr, "Failed to open codec for stream #%u\n", video_stream);
-        return -1;
-    }
-    return 1;
-}
-
 int HwDecoder::Restart() {
-    // init
-    packet.data = NULL;
-    packet.size = 0;
-    av_packet_unref(&packet);
-
-    avcodec_free_context(&decoder_ctx);
-    avformat_close_input(&input_ctx);
-    av_buffer_unref(&hw_device_ctx);
-
-    Init();
-
-    m_decodeType.store(DecodeType::ALL_FRAME);
-    m_decodeCond.notify_all();
-
+    Canon::VideoKeyFrame beginFrame;
+    beginFrame.posOffset = 0;
+    beginFrame.timestamp = 0;
+    StartFromKeyFrameAsync(beginFrame);
     return 1;
 }
 
 int HwDecoder::Start() {
-    isExitDecode = false;
-    m_decodeType.store(DecodeType::KEY_FRAME);
-    th = std::thread(&HwDecoder::DoWork, this);
+    m_isExitDecode = false;
+    m_decodeType.store(DecodeType::ALL_FRAME);
+    m_decodeThread = std::thread(&HwDecoder::DoWork, this);
     return 1;
 }
 
 void HwDecoder::StartFromKeyFrameAsync(const Canon::VideoKeyFrame keyFrame) {
     std::thread([=]() {
-        StartFromKeyFrame(keyFrame);
+        SetKeyFrame(keyFrame);
     }).detach();
 }
 
-void HwDecoder::StartFromKeyFrame(const Canon::VideoKeyFrame keyFrame) {
+void HwDecoder::SetKeyFrame(const Canon::VideoKeyFrame keyFrame) {
     LOG_DEBUG() << "Set key frame, pos: " << keyFrame.posOffset << " timestamp: " << keyFrame.timestamp;
 
     m_decodeType.store(DecodeType::INIT);
-    // 2. 等待解码线程结束
     {
         std::unique_lock<std::mutex> lock(m_mutex);
-        if (th.joinable()) {
+        if (m_decodeThread.joinable()) {
             auto wait_until = std::chrono::steady_clock::now() + std::chrono::seconds(5); // 等待5秒
             // 直到进入wait状态，或者5秒超时
             if (!m_decodeCond.wait_until(lock, wait_until, [this] { return m_isDecoding.load() == false; })) {
@@ -187,10 +171,10 @@ void HwDecoder::StartFromKeyFrame(const Canon::VideoKeyFrame keyFrame) {
     auto it = m_keyFrameList.Find(keyFrame);
     if (it == m_keyFrameList.end()) {
         LOG_DEBUG() << "Key frame timestamp not found.";
-        // return;
+    } else {
+        int64_t keyFrameIndex = std::distance(m_keyFrameList.begin(), it);
+        LOG_DEBUG() << "Found key frame, keyFrameIndex: " << keyFrameIndex;
     }
-    int64_t keyFrameIndex = std::distance(m_keyFrameList.begin(), it);
-    LOG_DEBUG() << "Found key frame, keyFrameIndex: " << keyFrameIndex;
 
     int ret = av_seek_frame(input_ctx, video_stream, keyFrame.timestamp, AVSEEK_FLAG_BACKWARD);
     if (ret < 0) {
@@ -220,7 +204,7 @@ void HwDecoder::StateSwitching()
     default:
         break;
     }
-     LOG_DEBUG() << "before: " << (int)t << ", after: " << (int)m_decodeType.load();
+    LOG_DEBUG() << "before: " << (int)t << ", after: " << (int)m_decodeType.load();
 }
 
 void HwDecoder::DoWork()
@@ -232,27 +216,26 @@ void HwDecoder::DoWork()
             m_isDecoding.store(false);
             m_decodeCond.wait(lck);
         }
-        if (isExitDecode) {
-            LOG_DEBUG() << "isExitDecode: " << isExitDecode << ", exit thread";
+        if (m_isExitDecode) {
+            LOG_DEBUG() << "m_isExitDecode: " << m_isExitDecode << ", exit thread";
             break;
         }
         if (video_ret >= 0) {
             if ((video_ret = av_read_frame(input_ctx, &packet)) < 0) { // 解码结束
-                video_ret = DecodeWrite(decoder_ctx, &packet);
+                video_ret = Decoder(decoder_ctx, &packet);
                 LOG_DEBUG() << "ret: " << video_ret << ", enter wait state";
                 StateSwitching();
                 av_packet_unref(&packet);
             } else {
                 if (video_stream == packet.stream_index) {
-                    video_ret = DecodeWrite(decoder_ctx, &packet);
+                    video_ret = Decoder(decoder_ctx, &packet);
                 }
             }
         }
     }
-    LOG_DEBUG() << "size: " << m_keyFrameList.size();
 }
 
-int HwDecoder::DecodeWrite(AVCodecContext *avctx, AVPacket *packet)
+int HwDecoder::Decoder(AVCodecContext *avctx, AVPacket *packet)
 {
     int ret = 0;
     std::string name;
@@ -264,14 +247,13 @@ int HwDecoder::DecodeWrite(AVCodecContext *avctx, AVPacket *packet)
     }
 
     if (m_decodeType.load() == DecodeType::KEY_FRAME) { // 解析关键帧
-        // LOG_DEBUG() << "find key frame, timestame: " << packet->dts << ", offset: " << packet->pos;
         if (packet->flags & AV_PKT_FLAG_KEY) {
             Canon::VideoKeyFrame keyFrame;
             keyFrame.posOffset = packet->pos;
             keyFrame.timestamp = packet->dts;
-            LOG_DEBUG() << "keyFrame.posOffset: " << keyFrame.posOffset
-                        << ", keyFrame.timestamp: " << keyFrame.timestamp
-                        << ", stream_idx: " << packet->stream_index;
+            // LOG_DEBUG() << "keyFrame.posOffset: " << keyFrame.posOffset
+            //             << ", keyFrame.timestamp: " << keyFrame.timestamp
+            //             << ", stream_idx: " << packet->stream_index;
             m_keyFrameList.push_back(keyFrame);
         }
         while(1) {
@@ -281,7 +263,7 @@ int HwDecoder::DecodeWrite(AVCodecContext *avctx, AVPacket *packet)
             if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF) {
                 return 0;
             } else if (ret < 0) {
-                LOG_DEBUG() << "Error while decoding\n";
+                LOG_DEBUG() << "Error while decoding";
                 if (ret < 0)
                     return ret;
             }
@@ -291,7 +273,7 @@ int HwDecoder::DecodeWrite(AVCodecContext *avctx, AVPacket *packet)
             AVFrame *frame = NULL, *sw_frame = NULL;
             AVFrame *tmp_frame = NULL;
             if (!(frame = av_frame_alloc()) || !(sw_frame = av_frame_alloc())) {
-                LOG_DEBUG() << "Can not alloc frame\n";
+                LOG_DEBUG() << "Can not alloc frame";
                 ret = AVERROR(ENOMEM);
                 av_frame_free(&frame);
                 av_frame_free(&sw_frame);
@@ -305,7 +287,7 @@ int HwDecoder::DecodeWrite(AVCodecContext *avctx, AVPacket *packet)
                 av_frame_free(&sw_frame);
                 return 0;
             } else if (ret < 0) {
-                LOG_DEBUG() << "Error while decoding\n";
+                LOG_DEBUG() << "Error while decoding";
                 av_frame_free(&frame);
                 av_frame_free(&sw_frame);
                 if (ret < 0)
