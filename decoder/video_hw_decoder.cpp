@@ -184,16 +184,15 @@ void HwDecoder::StartFromKeyFrame(const Canon::VideoKeyFrame keyFrame) {
             }
         }
     }
-
     auto it = m_keyFrameList.Find(keyFrame);
     if (it == m_keyFrameList.end()) {
         LOG_DEBUG() << "Key frame timestamp not found.";
-        return;
+        // return;
     }
     int64_t keyFrameIndex = std::distance(m_keyFrameList.begin(), it);
     LOG_DEBUG() << "Found key frame, keyFrameIndex: " << keyFrameIndex;
 
-    int ret = av_seek_frame(input_ctx, video_stream, it->timestamp, AVSEEK_FLAG_BACKWARD);
+    int ret = av_seek_frame(input_ctx, video_stream, keyFrame.timestamp, AVSEEK_FLAG_BACKWARD);
     if (ret < 0) {
         LOG_DEBUG() << "Failed to seek to key frame.";
         return;
