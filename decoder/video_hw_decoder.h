@@ -46,7 +46,8 @@ public:
     auto GetCreateTime()    { return m_createTime; }
     int Start();
     int Restart();
-    void StartFromKeyFrame(const Canon::VideoKeyFrame keyFrameTimestamp);
+    void StartFromKeyFrameAsync(const Canon::VideoKeyFrame keyFrame);
+    void StartFromKeyFrame(const Canon::VideoKeyFrame keyFrame);
 
 signals:
 
@@ -69,8 +70,9 @@ private:
 
     AVBufferRef* hw_device_ctx = NULL;
     std::thread  th;
-    uint8_t      m_fps = 0;
+    double       m_fps = 0;
     uint64_t     m_createTime = -1;
+    std::atomic<bool> m_isDecoding{false};
 
     bool                    isExitDecode = false;
     std::atomic<DecodeType> m_decodeType{DecodeType::UNKNOWN};
@@ -82,7 +84,7 @@ private:
     Task        task;
     TaskRunner *runner{nullptr};
 
-    RingBuffer<AVFrame*, 3> m_frameList;
+    RingBuffer<AVFrame*, 2> m_frameList;
 
 #if defined(Q_OS_MAC)
     std::string hwdevice  = "videotoolbox";
