@@ -28,7 +28,7 @@ public:
         return m_list.size();
     }
 
-    auto Find(const T& t) {
+    auto find(const T& t) {
         std::lock_guard<std::mutex> lck(m_mutex);
         auto ret = std::find(m_list.begin(), m_list.end(), t);
         if (ret != m_list.end()) {

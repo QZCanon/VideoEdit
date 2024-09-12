@@ -20,17 +20,78 @@ void convert_hardware_yuv_to_rgba(const uint8_t *y_plane,
         return;
     }
 
+    auto fmt = std::string(av_get_pix_fmt_name((AVPixelFormat)hw_pix_fmt));
+    static std::string fmt_ = "";
+    if (fmt != fmt_) {
+        fmt_ = fmt;
+        LOG_DEBUG() << "yuv fmt: " << fmt;
+    }
+    if (fmt == "p010le") {
+        uint8_t *src_data[4] = {0};
+        int src_linesize[4] = {0};
+        uint8_t *dst_data[4] = {rgba_frame};
+        int dst_linesize[4] = {4 * width}; // RGBA format has 4 bytes per pixel
+
+        src_data[0]     = (uint8_t *)y_plane;  // Y plane
+        src_linesize[0] = width * 2;       // For 10-bit YUV, 2 bytes per pixel in Y plane
+        src_data[1]     = (uint8_t *)uv_plane;  // UV plane
+        src_linesize[1] = width * 2;        // For 10-bit YUV, 2 bytes per pixel in UV plane
+
+        sws_scale(sws_ctx, (const uint8_t * const *)src_data, src_linesize,
+                  0, height, dst_data, dst_linesize);
+
+        sws_freeContext(sws_ctx);
+    } else if (fmt == "nv12") {
+        uint8_t *src_data[4] = {0};
+        int src_linesize[4] = {0};
+        uint8_t *dst_data[4] = {0};
+        int dst_linesize[4] = {0};
+
+        src_data[0]     = (uint8_t *)y_plane;  // Y plane
+        src_linesize[0] = width;               // 1 byte per pixel in Y plane
+        src_data[1]     = (uint8_t *)uv_plane;  // UV plane
+        src_linesize[1] = width;               // 1 byte per pixel in UV plane, but UV is interleaved
+
+        dst_data[0] = rgba_frame;
+        dst_linesize[0] = 4 * width; // RGBA format has 4 bytes per pixel
+
+        sws_scale(sws_ctx, (const uint8_t * const *)src_data, src_linesize,
+                  0, height, dst_data, dst_linesize);
+
+        sws_freeContext(sws_ctx);
+    }
+}
+
+void convert_nv12_to_rgba(const uint8_t *y_plane,
+                          const uint8_t *uv_plane,
+                          uint8_t *rgba_frame,
+                          int width,
+                          int height)
+{
+    // Initialize SwsContext for format conversion
+    SwsContext *sws_ctx = sws_getContext(width, height, AV_PIX_FMT_NV12,
+                                         width, height, AV_PIX_FMT_RGBA,
+                                         SWS_BILINEAR, NULL, NULL, NULL);
+    if (!sws_ctx) {
+        // Handle error
+        return;
+    }
+
     // Prepare source and destination data pointers and line sizes
     uint8_t *src_data[4] = {0};
     int src_linesize[4] = {0};
-    uint8_t *dst_data[4] = {rgba_frame};
-    int dst_linesize[4] = {4 * width}; // RGBA format has 4 bytes per pixel
+    uint8_t *dst_data[4] = {0};
+    int dst_linesize[4] = {0};
 
     // Set source data pointers and line sizes
     src_data[0]     = (uint8_t *)y_plane;  // Y plane
-    src_linesize[0] = width * 2;       // For 10-bit YUV, 2 bytes per pixel in Y plane
+    src_linesize[0] = width;               // 1 byte per pixel in Y plane
     src_data[1]     = (uint8_t *)uv_plane;  // UV plane
-    src_linesize[1] = width * 2;        // For 10-bit YUV, 2 bytes per pixel in UV plane
+    src_linesize[1] = width;               // 1 byte per pixel in UV plane, but UV is interleaved
+
+    // Set destination data pointers and line sizes
+    dst_data[0] = rgba_frame;
+    dst_linesize[0] = 4 * width; // RGBA format has 4 bytes per pixel
 
     // Convert the frame
     sws_scale(sws_ctx, (const uint8_t * const *)src_data, src_linesize,

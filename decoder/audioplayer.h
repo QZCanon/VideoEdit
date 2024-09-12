@@ -11,6 +11,7 @@
 #include <QFile>
 
 #include "core/types.h"
+#include "core/atomic_vector.hpp"
 #include "audio_decoder.h"
 
 class AudioPlayer : public QObject {
@@ -22,11 +23,20 @@ public:
         Play();
     }
 
+    void Play(const uint64_t time = 0)
+    {
+        GetAudioData(time);
+        m_buffer.open(QIODevice::ReadWrite);
+        m_buffer.write(m_audioBuffer);
+        m_buffer.seek(0);
+        m_audioSink->start(&m_buffer);
+    }
+
 private:
     static void AudioDataCallBack(void* self, Canon::AudioData data)
     {
         AudioPlayer* player = (AudioPlayer*)self;
-        player->m_audioBuffer.append(data.data);
+        // player->m_audioBuffer.append(data.data);
         player->m_bufList.push_back(data);
     }
 
@@ -59,12 +69,21 @@ private:
                 this,      &AudioPlayer::AudioStateChanged);
     }
 
-    void Play()
+
+    void GetAudioData(const uint64_t time = 0)
     {
-        m_buffer.open(QIODevice::ReadWrite);
-        m_buffer.write(m_audioBuffer);
-        m_buffer.seek(0);
-        m_audioSink->start(&m_buffer);
+        Canon::AudioData data;
+        data.timestamp = time;
+        if (time > 0) {
+            auto it = m_bufList.find(data);
+            for (;it != m_bufList.end(); ++it) {
+                m_audioBuffer.append(it->data);
+            }
+        } else {
+            for (auto it = m_bufList.begin(); it != m_bufList.end(); ++it) {
+                m_audioBuffer.append(it->data);
+            }
+        }
     }
 
 public slots:
@@ -77,11 +96,12 @@ private:
     QAudioFormat m_audioFormat;
     QAudioSink*  m_audioSink{nullptr};
     QBuffer      m_buffer;
-    QByteArray   m_audioBuffer;
     QFile        m_sourceFile;
     uint64_t     m_fileCreateTime;
 
+    AtomicVector<Canon::AudioData> m_bufList;     // 单帧音频数据
+    QByteArray                    m_audioBuffer; // 所有的音频数据
+
     std::unique_ptr<AudioDecoder> m_audioDecoder{nullptr};
-    std::vector<Canon::AudioData>        m_bufList;
 };
 #endif // AUDIOPLAYER_H

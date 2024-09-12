@@ -41,6 +41,10 @@ using StopWatchList = std::vector<Canon::StopWatchMessage>;
 
 // 音频信息
 typedef struct AudioData_ {
+    bool operator==(const AudioData_& data) {
+        return this->timestamp == data.timestamp;
+    }
+
     uint64_t timestamp;
     QByteArray data;
 } AudioData;

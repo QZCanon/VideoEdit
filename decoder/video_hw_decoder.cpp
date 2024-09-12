@@ -168,7 +168,7 @@ void HwDecoder::SetKeyFrame(const Canon::VideoKeyFrame keyFrame) {
             }
         }
     }
-    auto it = m_keyFrameList.Find(keyFrame);
+    auto it = m_keyFrameList.find(keyFrame);
     if (it == m_keyFrameList.end()) {
         LOG_DEBUG() << "Key frame timestamp not found.";
     } else {

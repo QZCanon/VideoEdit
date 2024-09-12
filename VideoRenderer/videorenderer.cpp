@@ -54,8 +54,8 @@ void GL_Image::paintGL()
     convert_hardware_yuv_to_rgba(m_frame->data[0],
                                  m_frame->data[1],
                                  rgbaData,
-                                 1920,
-                                 1080,
+                                 m_frame->width,
+                                 m_frame->height,
                                  (AVPixelFormat)m_frame->format);
 
     QSize imageSize_;            //图片尺寸

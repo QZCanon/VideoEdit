@@ -17,7 +17,7 @@ MainWindow::MainWindow(QWidget *parent)
     // audioDecoer = new AudioDecoder;
     // audioDecoer->Init();
 
-    // m_audioPalyer = new AudioPlayer(m_fileName);
+    m_audioPalyer = new AudioPlayer(m_fileName);
 
     InitComponent();
     InitFitParse();
@@ -77,12 +77,12 @@ void MainWindow::InitComponent()
     LOG_DEBUG() << "time: " << time;
     timer.start(time);
 
-    dashBoard = new DashBoard(paintPlane);
-    dashBoard->setMaxValue(50);
-    int ww = paintPlane->width();
-    int wh = paintPlane->height();
-    int w = 200, h = 200;
-    dashBoard->setGeometry(ww - w, wh - h, dashBoardSize.width(), dashBoardSize.height());
+    // dashBoard = new DashBoard(paintPlane);
+    // dashBoard->setMaxValue(50);
+    // int ww = paintPlane->width();
+    // int wh = paintPlane->height();
+    // int w = 200, h = 200;
+    // dashBoard->setGeometry(ww - w, wh - h, dashBoardSize.width(), dashBoardSize.height());
 }
 
 void MainWindow::RepaintComponent(const QSize& size)
