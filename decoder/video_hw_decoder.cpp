@@ -222,16 +222,16 @@ void HwDecoder::DoWork()
         }
         if (video_ret >= 0) {
             if ((video_ret = av_read_frame(input_ctx, &packet)) < 0) { // 解码结束
-                video_ret = Decoder(decoder_ctx, &packet);
+                video_ret = Decoder(decoder_ctx, &packet); // 最后再解码一次
                 LOG_DEBUG() << "ret: " << video_ret << ", enter wait state";
                 StateSwitching();
-                av_packet_unref(&packet);
             } else {
                 if (video_stream == packet.stream_index) {
                     video_ret = Decoder(decoder_ctx, &packet);
                 }
             }
         }
+        av_packet_unref(&packet);
     }
 }
 
@@ -269,9 +269,9 @@ int HwDecoder::Decoder(AVCodecContext *avctx, AVPacket *packet)
             }
         }
     } else if (m_decodeType.load() == DecodeType::ALL_FRAME) {
+        AVFrame *frame = NULL, *sw_frame = NULL;
+        AVFrame *tmp_frame = NULL;
         while (m_decodeType.load() == DecodeType::ALL_FRAME) {
-            AVFrame *frame = NULL, *sw_frame = NULL;
-            AVFrame *tmp_frame = NULL;
             if (!(frame = av_frame_alloc()) || !(sw_frame = av_frame_alloc())) {
                 LOG_DEBUG() << "Can not alloc frame";
                 ret = AVERROR(ENOMEM);
@@ -311,15 +311,28 @@ int HwDecoder::Decoder(AVCodecContext *avctx, AVPacket *packet)
                 sw_frame->pict_type = frame->pict_type;
                 sw_frame->time_base = time_base;
                 tmp_frame           = sw_frame;
-                av_frame_free(&frame);
             } else {
                 tmp_frame = frame;
-                av_frame_free(&sw_frame);
             }
             // LOG_DEBUG() << "format: " << av_get_pix_fmt_name((AVPixelFormat)tmp_frame->format);
             if (m_decodeType.load() == DecodeType::ALL_FRAME) {
-                m_frameList.PushBack(std::move(tmp_frame));
+                Canon::VideoFrame* videoFrame = new  Canon::VideoFrame;
+                // 用户需手动释放
+                videoFrame->frame = new uint8_t[tmp_frame->width * tmp_frame->height * 4];
+                videoFrame->pts = tmp_frame->pts;
+                videoFrame->width = tmp_frame->width;
+                videoFrame->height = tmp_frame->height;
+                videoFrame->timeBase = tmp_frame->time_base;
+                convert_hardware_yuv_to_rgba(tmp_frame->data[0],
+                                             tmp_frame->data[1],
+                                             videoFrame->frame,
+                                             tmp_frame->width,
+                                             tmp_frame->height,
+                                             (AVPixelFormat)tmp_frame->format);
+                m_frameList.PushBack(std::move(videoFrame));
             }
+            av_frame_free(&frame);
+            av_frame_free(&sw_frame);
         }
     }
 

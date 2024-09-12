@@ -43,7 +43,7 @@ public:
     int Start();
 
     // 获取解码帧
-    AVFrame* GetFrame()     { return m_frameList.FrontAndPop(); }
+    Canon::VideoFrame* GetFrame()     { return m_frameList.FrontAndPop(); }
 
     // 判断解码缓存队列是否为空
     bool BufferIsEmpty()    { return m_frameList.Empty(); }
@@ -99,7 +99,7 @@ private:
     std::mutex              m_mutex;
 
     AtomicVector<Canon::VideoKeyFrame> m_keyFrameList;
-    RingBuffer<AVFrame*, 2>            m_frameList;
+    RingBuffer<Canon::VideoFrame*, 2>            m_frameList;
 
 #if defined(Q_OS_MAC)
     std::string hwdevice  = "videotoolbox";

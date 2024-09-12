@@ -50,16 +50,23 @@ typedef struct AudioData_ {
 } AudioData;
 
 // 视频帧完整信息
-typedef struct VideoFrameInfo_ {
-    VideoFrameInfo_()
+typedef struct VideoFrame_ {
+    VideoFrame_()
         : frame(nullptr)
         , stream_index(0)
         , packet_index(0)
+        , pts(0)
+        , width(0)
+        , height(0)
     {}
-    AVFrame *frame;
+    uint8_t* frame;
     int stream_index;
     int packet_index;
-} VideoFrameInfo;
+    int64_t pts;
+    int width;
+    int height;
+    AVRational timeBase;
+} VideoFrame;
 
 // 视频关键帧信息
 typedef struct VideoKeyFrame_ {

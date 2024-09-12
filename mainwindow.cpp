@@ -74,15 +74,15 @@ void MainWindow::InitComponent()
     timer.setTimerType(Qt::PreciseTimer);
     auto fps = decoder->GetFileFPS();
     int time = 1000 / fps;
-    LOG_DEBUG() << "time: " << time;
+    LOG_DEBUG() << "set timer: " << time << "ms";
     timer.start(time);
 
-    // dashBoard = new DashBoard(paintPlane);
-    // dashBoard->setMaxValue(50);
-    // int ww = paintPlane->width();
-    // int wh = paintPlane->height();
-    // int w = 200, h = 200;
-    // dashBoard->setGeometry(ww - w, wh - h, dashBoardSize.width(), dashBoardSize.height());
+    dashBoard = new DashBoard(paintPlane);
+    dashBoard->setMaxValue(50);
+    int ww = paintPlane->width();
+    int wh = paintPlane->height();
+    int w = 200, h = 200;
+    dashBoard->setGeometry(ww - w, wh - h, dashBoardSize.width(), dashBoardSize.height());
 }
 
 void MainWindow::RepaintComponent(const QSize& size)
@@ -110,16 +110,14 @@ void MainWindow::resizeEvent(QResizeEvent *e)
     // glImage->setFixedSize(paintWinSize);
 }
 
-
-// 主界面开启定时器，在界面循环显示4个方向的图片
 void MainWindow::slotTimeOut()
 {
     if (decoder->BufferIsEmpty()) {
         return;
     }
     if (glImage &&  !glImage->BePainting()) {
-        auto* frame = decoder->GetFrame();
-        if (!frame) {
+        auto frame = decoder->GetFrame();
+        if (!frame->frame) {
             return;
         }
         static bool key = true;
@@ -127,14 +125,16 @@ void MainWindow::slotTimeOut()
             key = false;
             // audioDecoer->PlayAudio();
         }
-        int64_t pts_in_us = frame->pts; // 假设这是原始的 PTS 值，单位是微秒
-        double pts_in_seconds = av_q2d(frame->time_base) * pts_in_us; // 转换为秒
+        int64_t pts_in_us = frame->pts;
+        double pts_in_seconds = av_q2d(frame->timeBase) * pts_in_us; // 转换为秒
         if (syncData) {
             syncData->SetImageTimestame((uint64_t)pts_in_seconds + decoder->GetCreateTime());
             syncData->Start();
         }
         glImage->SetFrame(frame);
         glImage->repaint();
+    } else {
+        // LOG_DEBUG() << "painting...";
     }
 }
 

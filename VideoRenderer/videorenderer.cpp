@@ -29,7 +29,7 @@ void GL_Image::initializeGL()
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 }
 
-void GL_Image::SetFrame(AVFrame* frame)
+void GL_Image::SetFrame(Canon::VideoFrame* frame)
 {
     if (!m_painting) {
         m_painting = true;
@@ -44,27 +44,25 @@ void GL_Image::paintGL()
     glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    if(m_frame == nullptr){
+    if(m_frame == nullptr) {
         m_painting = false;
         // LOG_DEBUG() << "frame is null";
         return;
     }
 
-    uint8_t *rgbaData = (uint8_t*)malloc(m_frame->width * m_frame->height * 4);
-    convert_hardware_yuv_to_rgba(m_frame->data[0],
-                                 m_frame->data[1],
-                                 rgbaData,
-                                 m_frame->width,
-                                 m_frame->height,
-                                 (AVPixelFormat)m_frame->format);
+    // uint8_t *rgbaData = (uint8_t*)malloc(m_frame->width * m_frame->height * 4);
+    // convert_hardware_yuv_to_rgba(m_frame->data[0],
+    //                              m_frame->data[1],
+    //                              rgbaData,
+    //                              m_frame->width,
+    //                              m_frame->height,
+    //                              (AVPixelFormat)m_frame->format);
 
     QSize imageSize_;            //图片尺寸
     imageSize_.setWidth(m_frame->width);
     imageSize_.setHeight(m_frame->height);
 
-    av_frame_free(&m_frame);
-
-    if (rgbaData == nullptr) {
+    if (!m_frame && m_frame->frame == nullptr) {
         m_painting = false;
         LOG_DEBUG() << "rgbaData is null";
         return;
@@ -82,7 +80,7 @@ void GL_Image::paintGL()
                     0,
                     GL_RGBA,
                     GL_UNSIGNED_BYTE,
-                    rgbaData);
+                    m_frame->frame);
 
         // 初始化顶点坐标（居中显示）
         int x_offset = 0;
@@ -146,10 +144,18 @@ void GL_Image::paintGL()
                         imageSize_.height(),
                         GL_RGBA,
                         GL_UNSIGNED_BYTE,
-                        rgbaData);
+                        m_frame->frame);
 
     }
-    free(rgbaData);
+    // free(rgbaData);
+    if (m_frame) {
+        if (m_frame->frame) {
+            delete m_frame->frame;
+            m_frame->frame = nullptr;
+        }
+        delete m_frame;
+        m_frame = nullptr;
+    }
 
     glEnable(GL_TEXTURE_2D);
     glBegin(GL_POLYGON);
