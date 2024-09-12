@@ -9,6 +9,9 @@ extern "C" {
 #include <QWheelEvent>
 #include <QOpenGLWidget>
 #include <QTimer>
+#include "core/types.h"
+
+#include <thread>
 
 class GL_Image : public QOpenGLWidget
 {
@@ -31,7 +34,7 @@ public:
     GL_Image(QWidget* parent = nullptr);
     ~GL_Image();
 
-    void SetFrame(AVFrame *frame);
+    void SetFrame(Canon::VideoFrame* frame);
 
     bool BePainting() { return m_painting; }
 private:
@@ -63,7 +66,7 @@ private:
     QPoint dragPos_;             //鼠标拖拽位置
     float scaleVal_;             //缩放倍率
 
-    AVFrame* m_frame{nullptr};
+    Canon::VideoFrame* m_frame;
     bool m_painting{false};
 };
 

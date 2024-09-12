@@ -6,7 +6,8 @@
 #include <thread>
 
 #include "core/ring_buffer.hpp"
-#include "task_runner/task_runner.hpp"
+#include "core/types.h"
+#include "core/atomic_vector.hpp"
 
 extern "C" {
 #include <libavcodec/avcodec.h>
@@ -19,55 +20,91 @@ extern "C" {
 #include <libswscale/swscale.h>
 }
 
+enum class DecodeType {
+    INIT,
+    KEY_FRAME,
+    ALL_FRAME,
+    UNKNOWN,
+};
+
 
 class HwDecoder : public QObject
 {
     Q_OBJECT
 public:
-    explicit HwDecoder(QObject *parent = nullptr);
-    ~HwDecoder();
-    int Init();
-    void Start();
-    auto GetFileFPS() const { return m_fps; }
-    AVFrame* GetFrame()     { return m_frameList.FrontAndPop(); }
+    // HwDecoder() {}
+    explicit HwDecoder(const std::string& inputName, QObject *parent = nullptr): QObject{parent}
+    {
+        Init(inputName);
+    }
+    virtual ~HwDecoder();
+
+    // 开始解码
+    int Start();
+
+    // 获取解码帧
+    Canon::VideoFrame* GetFrame()     { return m_frameList.FrontAndPop(); }
+
+    // 判断解码缓存队列是否为空
     bool BufferIsEmpty()    { return m_frameList.Empty(); }
+
+    // 获取视频录制时间
     auto GetCreateTime()    { return m_createTime; }
 
-signals:
+    // 获取视频帧率
+    auto GetFileFPS() const { return m_fps; }
+
+    // 重头开始播放
+    int Restart();
+
+    // 从某关键帧开始播放
+    void StartFromKeyFrameAsync(const Canon::VideoKeyFrame keyFrame);
 
 private:
-    int DecodeWrite(AVCodecContext *avctx, AVPacket *packet);
+    // 初始化资源
+    int Init(const std::string& inputName);
+
+    // 解码核心函数
+    int Decoder(AVCodecContext *avctx, AVPacket *packet);
+
+    // 创建和绑定硬件
     int HwDecoderInit(AVCodecContext *ctx, const AVHWDeviceType type);
+
+    // 解码线程执行函数
     void DoWork();
 
+    // 状态切换
+    void StateSwitching();
+
+    // 设置关键帧
+    void SetKeyFrame(const Canon::VideoKeyFrame keyFrame);
+
 private:
-    AVFormatContext *input_ctx = NULL;
-    int video_stream, video_ret;
-    AVStream *video = NULL;
-    AVCodecContext *decoder_ctx = NULL;
-    AVCodec *decoder = NULL;
-    AVPacket packet;
-    enum AVHWDeviceType type;
-    // int i;
-    AVBufferRef *hw_device_ctx = NULL;
-    std::thread th;
-    uint8_t m_fps = 0;
-    uint64_t m_createTime = -1;
+    // ffmpeg资源相关
+    AVFormatContext* input_ctx = NULL;
+    int              video_stream;
+    int              video_ret;
+    AVCodecContext*  decoder_ctx = NULL;
+    AVPacket         packet;
+    AVBufferRef*     hw_device_ctx = NULL;
 
-    bool isExitDecode = false;
+    double            m_fps = 0;
+    uint64_t          m_createTime = -1;
 
-    Task task;
-    TaskRunner *runner{nullptr};
+    std::atomic<bool>       m_isDecoding{false};
+    std::thread             m_decodeThread;
+    bool                    m_isExitDecode{false};
+    std::atomic<DecodeType> m_decodeType{DecodeType::UNKNOWN};
+    std::condition_variable m_decodeCond;
+    std::mutex              m_mutex;
 
-    RingBuffer<AVFrame*, 3> m_frameList;
+    AtomicVector<Canon::VideoKeyFrame> m_keyFrameList;
+    RingBuffer<Canon::VideoFrame*, 2>            m_frameList;
 
 #if defined(Q_OS_MAC)
     std::string hwdevice  = "videotoolbox";
-    // std::string inputName = "/Users/qinzhou/workspace/test/input_file.mp4";
-    std::string inputName = "/Users/qinzhou/workspace/test/DJI_20240820194031_0041_D.MP4";
 #elif defined(Q_OS_WIN)
     std::string hwdevice  = "dxva2";
-    std::string inputName = "F:/DJI_20240811194553_0002_D.MP4";
 #endif
 
 };

@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <mutex>
+#include  <algorithm>
 
 template <class T>
 class AtomicVector {
@@ -25,6 +26,25 @@ public:
     size_t size() {
         std::lock_guard<std::mutex> lck(m_mutex);
         return m_list.size();
+    }
+
+    auto find(const T& t) {
+        std::lock_guard<std::mutex> lck(m_mutex);
+        auto ret = std::find(m_list.begin(), m_list.end(), t);
+        if (ret != m_list.end()) {
+            return ret;
+        }
+        return m_list.end();
+    }
+
+    auto begin() {
+        std::lock_guard<std::mutex> lck(m_mutex);
+        return m_list.begin();
+    }
+
+    auto end() {
+        std::lock_guard<std::mutex> lck(m_mutex);
+        return m_list.end();
     }
 
 

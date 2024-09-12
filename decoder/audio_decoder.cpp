@@ -88,7 +88,7 @@ static void decode(AVCodecContext *dec_ctx,
 
         // QByteArray audioBuffer;
 
-        AudioData  audioData;
+        Canon::AudioData  audioData;
         int64_t    pts_in_us      = frame->pts;
         double     pts_in_seconds = av_q2d(frame->time_base) * pts_in_us;
         audioData.timestamp       = (uint64_t)pts_in_seconds + decode->m_createTime;
