@@ -20,16 +20,23 @@ public:
     AudioPlayer(std::string& fileName, QObject *parent = nullptr) : QObject(parent) {
         InitAudioDecoder(fileName);
         InitAudio();
-        Play();
     }
 
     void Play(const uint64_t time = 0)
     {
+        if (!m_isPlay.load()) {
+            m_isPlay.store(true);
+        }
         GetAudioData(time);
         m_buffer.open(QIODevice::ReadWrite);
         m_buffer.write(m_audioBuffer);
         m_buffer.seek(0);
         m_audioSink->start(&m_buffer);
+    }
+
+    void Replay(const uint64_t time = 0){
+        m_isPlay.store(false);
+        Play(time);
     }
 
 private:
@@ -69,7 +76,6 @@ private:
                 this,      &AudioPlayer::AudioStateChanged);
     }
 
-
     void GetAudioData(const uint64_t time = 0)
     {
         Canon::AudioData data;
@@ -89,7 +95,11 @@ private:
 public slots:
     void AudioStateChanged(QtAudio::State state)
     {
-        Q_UNUSED(state);
+        // Q_UNUSED(state);
+        LOG_DEBUG() << "state: "  << state;
+        if (state == QtAudio::State::IdleState) {
+            m_audioSink->stop();
+        }
     }
 
 private:
@@ -98,6 +108,7 @@ private:
     QBuffer      m_buffer;
     QFile        m_sourceFile;
     uint64_t     m_fileCreateTime;
+    std::atomic<bool> m_isPlay{false};
 
     AtomicVector<Canon::AudioData> m_bufList;     // 单帧音频数据
     QByteArray                    m_audioBuffer; // 所有的音频数据

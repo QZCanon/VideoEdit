@@ -14,11 +14,8 @@ MainWindow::MainWindow(QWidget *parent)
     ui->setupUi(this);
 
     runner = new TaskRunner;
-    // audioDecoer = new AudioDecoder;
-    // audioDecoer->Init();
 
     m_audioPalyer = new AudioPlayer(m_fileName);
-
     InitComponent();
     InitFitParse();
 }
@@ -72,17 +69,13 @@ void MainWindow::InitComponent()
 
     connect(&timer, SIGNAL(timeout()), this, SLOT(slotTimeOut()));
     timer.setTimerType(Qt::PreciseTimer);
-    auto fps = decoder->GetFileFPS();
-    int time = 1000 / fps;
-    LOG_DEBUG() << "set timer: " << time << "ms";
-    timer.start(time);
 
-    dashBoard = new DashBoard(paintPlane);
-    dashBoard->setMaxValue(50);
-    int ww = paintPlane->width();
-    int wh = paintPlane->height();
-    int w = 200, h = 200;
-    dashBoard->setGeometry(ww - w, wh - h, dashBoardSize.width(), dashBoardSize.height());
+    // dashBoard = new DashBoard(paintPlane);
+    // dashBoard->setMaxValue(50);
+    // int ww = paintPlane->width();
+    // int wh = paintPlane->height();
+    // int w = 200, h = 200;
+    // dashBoard->setGeometry(ww - w, wh - h, dashBoardSize.width(), dashBoardSize.height());
 }
 
 void MainWindow::RepaintComponent(const QSize& size)
@@ -127,8 +120,9 @@ void MainWindow::slotTimeOut()
         }
         int64_t pts_in_us = frame->pts;
         double pts_in_seconds = av_q2d(frame->timeBase) * pts_in_us; // 转换为秒
+        uint64_t timestamp = (uint64_t)pts_in_seconds + decoder->GetCreateTime();
         if (syncData) {
-            syncData->SetImageTimestame((uint64_t)pts_in_seconds + decoder->GetCreateTime());
+            syncData->SetImageTimestame(timestamp);
             syncData->Start();
         }
         glImage->SetFrame(frame);
@@ -136,16 +130,6 @@ void MainWindow::slotTimeOut()
     } else {
         // LOG_DEBUG() << "painting...";
     }
-}
-
-
-void MainWindow::on_add_task_clicked()
-{
-}
-
-
-void MainWindow::on_cancle_task_clicked()
-{
 }
 
 void MainWindow::SpeedCallback(int speed)
@@ -159,6 +143,7 @@ void MainWindow::SpeedCallback(int speed)
 
 void MainWindow::on_restart_clicked()
 {
+    m_audioPalyer->Replay();
     decoder->Restart();
 }
 
@@ -168,5 +153,15 @@ void MainWindow::on_keyFrame_clicked()
     keyFrame.posOffset = 70805634;
     keyFrame.timestamp = 640630;
     decoder->StartFromKeyFrameAsync(keyFrame);
+}
+
+
+void MainWindow::on_play_clicked()
+{
+    auto fps = decoder->GetFileFPS();
+    int time = 1000 / fps;
+    LOG_DEBUG() << "set timer: " << time << "ms";
+    timer.start(time);
+    m_audioPalyer->Play();
 }
 

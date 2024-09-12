@@ -203,14 +203,14 @@ int AudioDecoder::Init(const std::string& fileName)
         LOG_DEBUG() << "metadata is null";
     }
     m_isRun = true;
-    DoWork();
-
+    // DoWork();
+    this->start();
     return 1;
 }
 
 void AudioDecoder::run()
 {
-    // DoWork();
+    DoWork();
 }
 
 void AudioDecoder::DoWork()
