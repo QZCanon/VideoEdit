@@ -69,6 +69,11 @@ public:
     uint64_t m_createTime = -1;
     ADCallBack m_audioDataCB{nullptr};
     void* self;
+#if defined(Q_OS_MAC)
+    const std::string outfilename = "/Users/qinzhou/workspace/test/out.mp3";
+#elif defined(Q_OS_WIN)
+    const std::string outfilename = "F:/out.mp3";
+#endif
 };
 
 #endif // AUDIO_DECODER_H

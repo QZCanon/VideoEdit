@@ -10,7 +10,7 @@
 #include <QMediaDevices>
 #include "core/utils.h"
 
-#define SAVE_AUDIO 0
+#define SAVE_AUDIO 1
 
 AudioDecoder::AudioDecoder(QObject *parent)
     : QThread(parent)
@@ -77,7 +77,7 @@ static void decode(AVCodecContext *dec_ctx,
         }
 
         int data_size = av_get_bytes_per_sample(dec_ctx->sample_fmt);
-        if (data_size < 0) {
+        if (data_size <= 0) {
             /* This should not occur, checking just for paranoia */
             LOG_DEBUG() << "Failed to calculate data size";
             return;
@@ -88,18 +88,18 @@ static void decode(AVCodecContext *dec_ctx,
 
         // QByteArray audioBuffer;
 
+        bool dataIsValid = false;
         Canon::AudioData  audioData;
         int64_t    pts_in_us      = frame->pts;
         double     pts_in_seconds = av_q2d(frame->time_base) * pts_in_us;
         audioData.timestamp       = (uint64_t)pts_in_seconds + decode->m_createTime;
         for (int i = 0; i < frame->nb_samples; i++) {
             for (int ch = 0; ch < dec_ctx->ch_layout.nb_channels; ch++) {
+                dataIsValid = true;
                audioData.data.append((const char*)(frame->data[ch] + data_size * i), data_size);
             }
         }
-        av_frame_free(&frame);
-
-        if (decode->m_audioDataCB) {
+        if (dataIsValid && decode->m_audioDataCB) {
             decode->m_audioDataCB(decode->self, audioData);
         }
 
@@ -121,6 +121,7 @@ static void decode(AVCodecContext *dec_ctx,
 #else
         Q_UNUSED(outfile);
 #endif
+        av_frame_free(&frame);
     }
 }
 

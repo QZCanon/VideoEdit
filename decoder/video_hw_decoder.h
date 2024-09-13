@@ -97,6 +97,7 @@ private:
     std::atomic<DecodeType> m_decodeType{DecodeType::UNKNOWN};
     std::condition_variable m_decodeCond;
     std::mutex              m_mutex;
+    double                  m_timeInterval{0.0}; // 当前帧的持续时间
 
     AtomicVector<Canon::VideoKeyFrame> m_keyFrameList;
     RingBuffer<Canon::VideoFrame*, 2>            m_frameList;

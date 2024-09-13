@@ -11,6 +11,7 @@ extern "C" {
 #include <libavformat/avformat.h>
 }
 
+// 同步码表和视频
 class SyncData : public QObject
 {
     Q_OBJECT

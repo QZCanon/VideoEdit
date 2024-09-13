@@ -13,25 +13,48 @@
 #include "core/types.h"
 #include "core/atomic_vector.hpp"
 #include "audio_decoder.h"
+#include "task_runner/task_runner.hpp"
+
+enum class AudioPlayState {
+    AUDIO_NORMAL,           // 正常
+    AUDIO_ALREADY_PLAY,     // 已经播放
+    AUDIO_BUFFER_EMPTY,     // 音频缓冲区为空
+    AUDIO_TIMESTAME_ERROR,  // 时间戳错误（音视频不能同步上)
+    UNKNOWN,                // 为止状态
+};
 
 class AudioPlayer : public QObject {
     Q_OBJECT
 public:
-    AudioPlayer(std::string& fileName, QObject *parent = nullptr) : QObject(parent) {
+    AudioPlayer(std::string& fileName,
+                TaskRunner* runner = nullptr,
+                QObject *parent = nullptr)
+        : QObject(parent)
+        , m_runner(runner)
+    {
         InitAudioDecoder(fileName);
         InitAudio();
+        if (!m_task) {
+            m_task = CREATE_TASK_OCJECT();
+        }
     }
 
-    void Play(const uint64_t time = 0)
+    AudioPlayState Play(const uint64_t time = 0)
     {
         if (!m_isPlay.load()) {
             m_isPlay.store(true);
+        } else {
+            return AudioPlayState::AUDIO_ALREADY_PLAY;
         }
-        GetAudioData(time);
+        auto ret = GetAudioData(time);
+        if (ret != AudioPlayState::AUDIO_NORMAL) {
+            m_isPlay.store(false); // 当播放状态不正常时，下一次可再同步
+        }
         m_buffer.open(QIODevice::ReadWrite);
         m_buffer.write(m_audioBuffer);
         m_buffer.seek(0);
         m_audioSink->start(&m_buffer);
+        return ret;
     }
 
     void Replay(const uint64_t time = 0){
@@ -76,28 +99,40 @@ private:
                 this,      &AudioPlayer::AudioStateChanged);
     }
 
-    void GetAudioData(const uint64_t time = 0)
+    AudioPlayState GetAudioData(const uint64_t time = 0)
     {
         Canon::AudioData data;
         data.timestamp = time;
+        if (m_bufList.size() == 0) {
+            LOG_DEBUG() << "error: audio buffer is empty";
+            return AudioPlayState::AUDIO_BUFFER_EMPTY;
+        }
         if (time > 0) {
             auto it = m_bufList.find(data);
+            if (it == m_bufList.end()) {
+                LOG_DEBUG() << "not sync audio, video frame timestame: " << time
+                            << ", the audio time range [" << m_bufList.begin()->timestamp << ", "
+                            << (m_bufList.end() - 1)->timestamp;
+                return AudioPlayState::AUDIO_TIMESTAME_ERROR;
+            }
+            LOG_DEBUG() << "video and audio sync successful , video timestame: " << time
+                        << ", the timestamp: " << it->timestamp;
             for (;it != m_bufList.end(); ++it) {
                 m_audioBuffer.append(it->data);
             }
-        } else {
+        } else { // < = 0时，重播
             for (auto it = m_bufList.begin(); it != m_bufList.end(); ++it) {
                 m_audioBuffer.append(it->data);
             }
         }
+        return AudioPlayState::AUDIO_NORMAL;
     }
 
 public slots:
     void AudioStateChanged(QtAudio::State state)
     {
-        // Q_UNUSED(state);
-        LOG_DEBUG() << "state: "  << state;
-        if (state == QtAudio::State::IdleState) {
+        LOG_DEBUG() << "AudioSink state: "  << state;
+        if (state == QtAudio::State::StoppedState) {
             m_audioSink->stop();
         }
     }
@@ -114,5 +149,8 @@ private:
     QByteArray                    m_audioBuffer; // 所有的音频数据
 
     std::unique_ptr<AudioDecoder> m_audioDecoder{nullptr};
+
+    TaskRunner* m_runner{nullptr};
+    TaskSPtr    m_task{nullptr};
 };
 #endif // AUDIOPLAYER_H

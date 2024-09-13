@@ -100,7 +100,16 @@ public:
         return t;
     }
 
-    static size_t Next(size_t pos) { return (pos + 1) % bufferSize; }
+    T* PreviousPos()
+    {
+        Loc guard{m_mutex};
+        auto rp = m_readPosition.load();
+        return &(m_buffer[Prev(rp)]);
+    }
+
+    static size_t Next(size_t pos) { return (pos + 1) % (bufferSize + 1); }
+
+    static size_t Prev(size_t pos) { return (pos - 1) < 0 ? (bufferSize - 1) : (pos - 1); }
 
 private:
     mutable std::mutex m_mutex;          //
@@ -109,7 +118,7 @@ private:
     std::atomic<size_t> m_writePosition; //
     std::atomic<size_t> m_readPosition;  //
     std::atomic_bool m_isStopped;        //
-    std::array<T, bufferSize> m_buffer;  //
+    std::array<T, bufferSize + 1> m_buffer;  //
     Deleter m_deleter;                   //
 };
 

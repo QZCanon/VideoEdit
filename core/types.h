@@ -44,7 +44,6 @@ typedef struct AudioData_ {
     bool operator==(const AudioData_& data) {
         return this->timestamp == data.timestamp;
     }
-
     uint64_t timestamp;
     QByteArray data;
 } AudioData;
@@ -59,13 +58,14 @@ typedef struct VideoFrame_ {
         , width(0)
         , height(0)
     {}
-    uint8_t* frame;
-    int stream_index;
-    int packet_index;
-    int64_t pts;
-    int width;
-    int height;
+    uint8_t*   frame;
+    int        stream_index;
+    int        packet_index;
+    int64_t    pts;
+    int        width;
+    int        height;
     AVRational timeBase;
+    double     time_interval; // 当前帧的持续时间
 } VideoFrame;
 
 // 视频关键帧信息

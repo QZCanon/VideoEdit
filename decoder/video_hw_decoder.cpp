@@ -99,7 +99,8 @@ int HwDecoder::Init(const std::string& inputName)
     auto video           = input_ctx->streams[video_stream];
     AVRational rate = video->avg_frame_rate;
     m_fps           = (double)rate.num / rate.den;
-    LOG_DEBUG() << "fps: " << m_fps;
+    m_timeInterval  = (double)1000 / m_fps;
+    LOG_DEBUG() << "fps: " << m_fps << " init time interval: " << m_timeInterval;
 
     if (avcodec_parameters_to_context(decoder_ctx, video->codecpar) < 0)
         return -1;

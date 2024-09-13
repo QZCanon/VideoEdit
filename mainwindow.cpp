@@ -15,7 +15,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     runner = new TaskRunner;
 
-    m_audioPalyer = new AudioPlayer(m_fileName);
+    m_audioPalyer = new AudioPlayer(m_fileName, runner);
     InitComponent();
     InitFitParse();
 }
@@ -121,6 +121,8 @@ void MainWindow::slotTimeOut()
         int64_t pts_in_us = frame->pts;
         double pts_in_seconds = av_q2d(frame->timeBase) * pts_in_us; // 转换为秒
         uint64_t timestamp = (uint64_t)pts_in_seconds + decoder->GetCreateTime();
+        auto ret = m_audioPalyer->Play(timestamp);
+        // LOG_DEBUG() << "audio play state: " << (int)ret;
         if (syncData) {
             syncData->SetImageTimestame(timestamp);
             syncData->Start();
@@ -161,7 +163,6 @@ void MainWindow::on_play_clicked()
     auto fps = decoder->GetFileFPS();
     int time = 1000 / fps;
     LOG_DEBUG() << "set timer: " << time << "ms";
-    timer.start(time);
-    m_audioPalyer->Play();
+    timer.start(time + 1);
 }
 
