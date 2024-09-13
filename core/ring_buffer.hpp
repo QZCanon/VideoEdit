@@ -5,8 +5,7 @@
 #include <functional>
 #include <mutex>
 #include <condition_variable>
-
-#include "Logger/logger.h"
+#include <atomic>
 
 template <typename T, size_t bufferSize>
 class RingBuffer
@@ -16,7 +15,10 @@ public:
     using Loc = std::unique_lock<std::mutex>;
 
     RingBuffer(Deleter deleter)
-        : m_deleter(deleter), m_writePosition(0), m_readPosition(0), m_isStopped(false)
+        : m_deleter(deleter)
+        , m_writePosition(0)
+        , m_readPosition(0)
+        , m_isStopped(false)
     {
     }
     RingBuffer() :m_deleter(nullptr), m_writePosition(0), m_readPosition(0), m_isStopped(false) {}
@@ -65,7 +67,8 @@ public:
             }
         }
         m_writePosition = 0;
-        m_readPosition = 0;
+        m_readPosition  = 0;
+        m_dataSize      = 0;
     }
 
     /**
@@ -83,6 +86,7 @@ public:
         auto wp =  m_writePosition.load();
         m_buffer[wp] = std::move(x);
         m_writePosition = Next(wp);
+        m_dataSize++;
         if (m_readPosition == wp) {
             m_emtpy.notify_all();
         }
@@ -97,29 +101,40 @@ public:
         if (rp == Next(m_writePosition.load())) {
             m_full.notify_all();
         }
+        if (m_dataSize.load() <= 0) {
+            m_dataSize.store(0);
+        } else {
+            m_dataSize--;
+        }
         return t;
     }
 
-    T* PreviousPos()
+    T PreviousPos()
     {
         Loc guard{m_mutex};
         auto rp = m_readPosition.load();
-        return &(m_buffer[Prev(rp)]);
+        return m_buffer[rp];
     }
 
-    static size_t Next(size_t pos) { return (pos + 1) % (bufferSize + 1); }
+    size_t size()
+    {
+        return m_dataSize.load();
+    }
 
-    static size_t Prev(size_t pos) { return (pos - 1) < 0 ? (bufferSize - 1) : (pos - 1); }
+    static size_t Next(size_t pos) { return (pos + 1) % (bufferSize); }
+
+    static size_t Prev(size_t pos) { return (pos - 1) < 0 ? (bufferSize) : (pos - 1); }
 
 private:
-    mutable std::mutex m_mutex;          //
-    std::condition_variable m_emtpy;     //
-    std::condition_variable m_full;      //
-    std::atomic<size_t> m_writePosition; //
-    std::atomic<size_t> m_readPosition;  //
-    std::atomic_bool m_isStopped;        //
-    std::array<T, bufferSize + 1> m_buffer;  //
-    Deleter m_deleter;                   //
+    mutable std::mutex      m_mutex;
+    std::condition_variable m_emtpy;
+    std::condition_variable m_full;
+    std::atomic<size_t>     m_writePosition;
+    std::atomic<size_t>     m_readPosition;
+    std::atomic_bool        m_isStopped;
+    Deleter                 m_deleter;
+    std::atomic<size_t>     m_dataSize{0};
+    std::array<T, bufferSize> m_buffer;
 };
 
 #endif

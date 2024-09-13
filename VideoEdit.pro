@@ -64,7 +64,6 @@ SOURCES += \
 HEADERS += \
     FitParse/fitparse.h \
     FitParse/listener.h \
-    FitSDK/*.hpp \
     Logger/logger.h \
     SyncData/syncdata.h \
     VideoRenderer/videorenderer.h \

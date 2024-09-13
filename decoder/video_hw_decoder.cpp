@@ -310,19 +310,20 @@ int HwDecoder::Decoder(AVCodecContext *avctx, AVPacket *packet)
                 sw_frame->pts       = frame->pts;
                 sw_frame->pkt_dts   = frame->pkt_dts;
                 sw_frame->pict_type = frame->pict_type;
+                sw_frame->duration  = frame->duration;
                 sw_frame->time_base = time_base;
                 tmp_frame           = sw_frame;
             } else {
                 tmp_frame = frame;
             }
-            // LOG_DEBUG() << "format: " << av_get_pix_fmt_name((AVPixelFormat)tmp_frame->format);
+
             if (m_decodeType.load() == DecodeType::ALL_FRAME) {
-                Canon::VideoFrame* videoFrame = new  Canon::VideoFrame;
+                Canon::VideoFrame* videoFrame = new Canon::VideoFrame;
                 // 用户需手动释放
-                videoFrame->frame = new uint8_t[tmp_frame->width * tmp_frame->height * 4];
-                videoFrame->pts = tmp_frame->pts;
-                videoFrame->width = tmp_frame->width;
-                videoFrame->height = tmp_frame->height;
+                videoFrame->frame    = new uint8_t[tmp_frame->width * tmp_frame->height * 4];
+                videoFrame->pts      = tmp_frame->pts;
+                videoFrame->width    = tmp_frame->width;
+                videoFrame->height   = tmp_frame->height;
                 videoFrame->timeBase = tmp_frame->time_base;
                 convert_hardware_yuv_to_rgba(tmp_frame->data[0],
                                              tmp_frame->data[1],
@@ -330,6 +331,10 @@ int HwDecoder::Decoder(AVCodecContext *avctx, AVPacket *packet)
                                              tmp_frame->width,
                                              tmp_frame->height,
                                              (AVPixelFormat)tmp_frame->format);
+                AVRational time_base = tmp_frame->time_base;
+                int64_t duration     = tmp_frame->duration;
+                double milliseconds  = (double)duration * (double)time_base.num / (double)time_base.den * 1000; // ms
+                videoFrame->duration = milliseconds;
                 m_frameList.PushBack(std::move(videoFrame));
             }
             av_frame_free(&frame);

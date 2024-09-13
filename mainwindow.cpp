@@ -108,15 +108,10 @@ void MainWindow::slotTimeOut()
     if (decoder->BufferIsEmpty()) {
         return;
     }
-    if (glImage &&  !glImage->BePainting()) {
+    if (glImage &&  !glImage->BePainting()) { // 能够paint时，再去video frame
         auto frame = decoder->GetFrame();
         if (!frame->frame) {
             return;
-        }
-        static bool key = true;
-        if (key) {
-            key = false;
-            // audioDecoer->PlayAudio();
         }
         int64_t pts_in_us = frame->pts;
         double pts_in_seconds = av_q2d(frame->timeBase) * pts_in_us; // 转换为秒

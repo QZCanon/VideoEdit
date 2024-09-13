@@ -65,7 +65,7 @@ typedef struct VideoFrame_ {
     int        width;
     int        height;
     AVRational timeBase;
-    double     time_interval; // 当前帧的持续时间
+    double     duration; // 当前帧的持续时间
 } VideoFrame;
 
 // 视频关键帧信息

@@ -10,7 +10,7 @@
 #include <QMediaDevices>
 #include "core/utils.h"
 
-#define SAVE_AUDIO 1
+#define SAVE_AUDIO 0
 
 AudioDecoder::AudioDecoder(QObject *parent)
     : QThread(parent)

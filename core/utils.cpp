@@ -319,3 +319,11 @@ uint64_t DJIVideoCreateTimeConvert(const char* s)
 }
 
 
+
+uint64_t TimeBase2Timestamp(uint64_t pts, uint64_t createTime, AVRational timeBase)
+{
+    int64_t pts_in_us = pts;
+    double pts_in_seconds = av_q2d(timeBase) * pts_in_us; // 转换为秒
+    uint64_t timestamp = (uint64_t)pts_in_seconds + createTime;
+    return timestamp;
+}

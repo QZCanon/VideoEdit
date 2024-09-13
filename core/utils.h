@@ -30,9 +30,7 @@ void convert_nv12_to_rgba(const uint8_t *y_plane,
 uint64_t C416TimeConvert(uint64_t t);
 
 uint64_t DJIVideoCreateTimeConvert(const char* s);
-// void DJIAction4TimeConvert()
-// {
 
-// }
+uint64_t TimeBase2Timestamp(uint64_t pts, uint64_t createTime, AVRational timeBase);
 
 #endif // UTILS_H

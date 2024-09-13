@@ -66,7 +66,7 @@ private:
     QPoint dragPos_;             //鼠标拖拽位置
     float scaleVal_;             //缩放倍率
 
-    Canon::VideoFrame* m_frame;
+    Canon::VideoFrame* m_frame = nullptr;
     bool m_painting{false};
 };
 
