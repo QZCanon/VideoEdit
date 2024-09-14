@@ -82,6 +82,7 @@ private:
                 }
                 if (t && t->IsActive()) {
                     (*t)();
+                    std::this_thread::sleep_for(std::chrono:: microseconds(t->Sleep()));
                 } else {
                     t = nullptr;
                     endCurrentTask = true;

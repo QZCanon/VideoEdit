@@ -43,7 +43,14 @@ public:
     int Start();
 
     // 获取解码帧
-    Canon::VideoFrame* GetFrame()     { return m_frameList.FrontAndPop(); }
+    Canon::VideoFrame* GetFrame()
+    {
+        return m_frameList.FrontAndPop();
+    }
+
+    uint64_t GetPaintFrameDuration() { return m_frameList.ReadPos()->duration; }
+
+    void BufferWait() { m_frameList.Wait(); }
 
     // 判断解码缓存队列是否为空
     bool BufferIsEmpty()    { return m_frameList.Empty(); }

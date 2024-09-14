@@ -36,7 +36,7 @@ public:
 
     void SetFrame(Canon::VideoFrame* frame);
 
-    bool BePainting() { return m_painting; }
+    bool BePainting() { return m_painting.load(); }
 private:
 
 public slots:
@@ -67,7 +67,7 @@ private:
     float scaleVal_;             //缩放倍率
 
     Canon::VideoFrame* m_frame = nullptr;
-    bool m_painting{false};
+    std::atomic<bool> m_painting{false};
 };
 
 #endif // VIDEORENDERER_H

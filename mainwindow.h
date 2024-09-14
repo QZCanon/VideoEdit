@@ -38,6 +38,7 @@ private:
     void InitComponent();
     void InitFitParse();
     void RepaintComponent(const QSize& size);
+    void GetFrameTask();
 
 private slots:
     void SpeedCallback(int);
@@ -48,24 +49,22 @@ private slots:
 protected:
      void resizeEvent(QResizeEvent* e) override;
 
+signals:
+     void Paint();
+
 public slots:
-    void slotTimeOut();
-
-private:
-
-    AudioDecoder *audioDecoer = nullptr;
+    void PaintFrame();
 
 private:
     Ui::MainWindow *ui;
     QWidget* paintPlane{nullptr};
 
     TaskRunner* runner{nullptr};
-    TaskSPtr t;
+    TaskSPtr m_paintVideoTask = nullptr;
 
     HwDecoder*    decoder     = nullptr;
     GL_Image*   glImage     = nullptr;
     DashBoard*  dashBoard   = nullptr;
-    QTimer      timer;
     FitParse*   fitParse    = nullptr;
     Listener*   fitListener = nullptr;
     SyncData*   syncData;
@@ -89,7 +88,7 @@ private:
     // std::string m_fileName = "/Users/qinzhou/workspace/test/dage.mp4";
     // std::string m_fileName = "/Users/qinzhou/workspace/test/第054话.mkv";
 #elif defined(Q_OS_WIN)
-    std::string m_fileName = "F:/DJI_20240811194553_0002_D.MP4";
+    std::string m_fileName = "F:/DJI_20240908112154_0023_D.MP4";
 #endif
 
 };

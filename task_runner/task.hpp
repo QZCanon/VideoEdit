@@ -16,7 +16,7 @@ using TaskSPtr = std::shared_ptr<Task>;
 class Task
 {
 public:
-    Task() = default;
+    Task(const uint64_t sleep = 0) : m_sleepTime(sleep) {}
 
     Task(const Task& other)
     {
@@ -25,12 +25,14 @@ public:
         active.store(other.active.load());
     }
 
-    Task& operator=(const Task& other)
+    void SetTaskSleepTime(const uint64_t sleep)
     {
-        mTaskCallback = other.mTaskCallback;
-        mInitCallback = other.mInitCallback;
-        active.store(other.active.load());
-        return *this;
+        m_sleepTime = sleep;
+    }
+
+    uint64_t Sleep()
+    {
+        return m_sleepTime;
     }
 
     void SetTaskFunc(TaskFunc func)
@@ -41,6 +43,14 @@ public:
     void SetInitfunc(InitFunc func)
     {
         mInitCallback = std::move(func);
+    }
+
+    Task& operator=(const Task& other)
+    {
+        mTaskCallback = other.mTaskCallback;
+        mInitCallback = other.mInitCallback;
+        active.store(other.active.load());
+        return *this;
     }
 
     void operator()()
@@ -76,6 +86,7 @@ private:
     TaskFunc mTaskCallback;
     InitFunc mInitCallback;
     std::atomic<bool> active{false};
+    uint64_t m_sleepTime{0}; // us
 };
 
 #endif

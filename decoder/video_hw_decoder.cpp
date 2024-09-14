@@ -333,7 +333,7 @@ int HwDecoder::Decoder(AVCodecContext *avctx, AVPacket *packet)
                                              (AVPixelFormat)tmp_frame->format);
                 AVRational time_base = tmp_frame->time_base;
                 int64_t duration     = tmp_frame->duration;
-                double milliseconds  = (double)duration * (double)time_base.num / (double)time_base.den * 1000; // ms
+                double milliseconds  = (double)duration * (double)time_base.num / (double)time_base.den * 1000 * 1000; // us
                 videoFrame->duration = milliseconds;
                 m_frameList.PushBack(std::move(videoFrame));
             }

@@ -31,8 +31,8 @@ void GL_Image::initializeGL()
 
 void GL_Image::SetFrame(Canon::VideoFrame* frame)
 {
-    if (!m_painting) {
-        m_painting = true;
+    if (!m_painting.load()) {
+        m_painting.store(true);
         m_frame = frame;
     }
 }
@@ -45,7 +45,7 @@ void GL_Image::paintGL()
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     if(m_frame == nullptr) {
-        m_painting = false;
+        m_painting.store(false);
         // LOG_DEBUG() << "frame is null";
         return;
     }
@@ -63,7 +63,7 @@ void GL_Image::paintGL()
     imageSize_.setHeight(m_frame->height);
 
     if (!m_frame && m_frame->frame == nullptr) {
-        m_painting = false;
+        m_painting.store(false);
         LOG_DEBUG() << "rgbaData is null";
         return;
     }
@@ -169,7 +169,7 @@ void GL_Image::paintGL()
     glVertex2d(vertexPos_[Right_Bottom_X], vertexPos_[Right_Bottom_Y]);
     glEnd();
     glDisable(GL_TEXTURE_2D);
-    m_painting = false;
+    m_painting.store(false);
 }
 
 void GL_Image::resizeGL(int w, int h)

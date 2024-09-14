@@ -5,7 +5,6 @@
 #include <QFileDialog>
 #include <QTime>
 #include "core/types.h"
-#include "core/time.hpp"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -18,6 +17,14 @@ MainWindow::MainWindow(QWidget *parent)
     m_audioPalyer = new AudioPlayer(m_fileName, runner);
     InitComponent();
     InitFitParse();
+
+    connect(this, &MainWindow::Paint, this, &MainWindow::PaintFrame, Qt::AutoConnection);
+
+    m_paintVideoTask = CREATE_TASK_OCJECT();
+    uint64_t sleep = 1000000 / decoder->GetFileFPS();
+    LOG_DEBUG() << "task sleep: " << sleep;
+    m_paintVideoTask->SetTaskSleepTime(sleep);
+    m_paintVideoTask->SetTaskFunc(std::bind(&MainWindow::GetFrameTask, this));
 }
 
 MainWindow::~MainWindow()
@@ -36,14 +43,15 @@ void MainWindow::InitFitParse()
     // 创建对象之后，先连接信号槽，当前fit文件解析是在主线程
     connect(fitParse, SIGNAL(SendStopWatchMsg(Canon::StopWatchMessage&)),
             syncData, SLOT(AcceptStopWatchData(Canon::StopWatchMessage&)));
-    connect(syncData, SIGNAL(SpeedSignal(int)), this, SLOT(SpeedCallback(int)), Qt::ConnectionType::BlockingQueuedConnection);
+    connect(syncData, SIGNAL(SpeedSignal(int)),
+            this,     SLOT(SpeedCallback(int)),
+            Qt::ConnectionType::BlockingQueuedConnection);
 
 #if defined(Q_OS_MAC)
     fitParse->ReadFitFile("/Users/qinzhou/workspace/qt/VideoEdit_test/MAGENE_C416_2024-08-11_194425_907388_1723381873.fit");
 #elif defined(Q_OS_WIN)
     fitParse->ReadFitFile("F:/0830/0830.fit");
 #endif
-
 }
 
 void MainWindow::InitComponent()
@@ -66,9 +74,6 @@ void MainWindow::InitComponent()
 
     decoder = new HwDecoder(m_fileName);
     decoder->Start();
-
-    connect(&timer, SIGNAL(timeout()), this, SLOT(slotTimeOut()));
-    timer.setTimerType(Qt::PreciseTimer);
 
     // dashBoard = new DashBoard(paintPlane);
     // dashBoard->setMaxValue(50);
@@ -103,30 +108,29 @@ void MainWindow::resizeEvent(QResizeEvent *e)
     // glImage->setFixedSize(paintWinSize);
 }
 
-void MainWindow::slotTimeOut()
+void MainWindow::GetFrameTask()
 {
-    if (decoder->BufferIsEmpty()) {
+    decoder->BufferWait(); // 为空时应该wait
+    m_paintVideoTask->SetTaskSleepTime(decoder->GetPaintFrameDuration()); // 设置当前帧的持续时长
+    if (glImage &&  !glImage->BePainting()) {
+        emit Paint();
+    }
+}
+
+void MainWindow::PaintFrame()
+{
+    auto frame = decoder->GetFrame();
+    if (!frame->frame) {
         return;
     }
-    if (glImage &&  !glImage->BePainting()) { // 能够paint时，再去video frame
-        auto frame = decoder->GetFrame();
-        if (!frame->frame) {
-            return;
-        }
-        int64_t pts_in_us = frame->pts;
-        double pts_in_seconds = av_q2d(frame->timeBase) * pts_in_us; // 转换为秒
-        uint64_t timestamp = (uint64_t)pts_in_seconds + decoder->GetCreateTime();
-        auto ret = m_audioPalyer->Play(timestamp);
-        // LOG_DEBUG() << "audio play state: " << (int)ret;
-        if (syncData) {
-            syncData->SetImageTimestame(timestamp);
-            syncData->Start();
-        }
-        glImage->SetFrame(frame);
-        glImage->repaint();
-    } else {
-        // LOG_DEBUG() << "painting...";
+    uint64_t timestamp = TimeBase2Timestamp(frame->pts, decoder->GetCreateTime(), frame->timeBase);
+    m_audioPalyer->Play(timestamp);
+    if (syncData) {
+        syncData->SetImageTimestame(timestamp);
+        syncData->Start();
     }
+    glImage->SetFrame(frame);
+    glImage->repaint();
 }
 
 void MainWindow::SpeedCallback(int speed)
@@ -146,18 +150,19 @@ void MainWindow::on_restart_clicked()
 
 void MainWindow::on_keyFrame_clicked()
 {
-    Canon::VideoKeyFrame keyFrame;
-    keyFrame.posOffset = 70805634;
-    keyFrame.timestamp = 640630;
-    decoder->StartFromKeyFrameAsync(keyFrame);
+    // Canon::VideoKeyFrame keyFrame;
+    // keyFrame.posOffset = 70805634;
+    // keyFrame.timestamp = 640630;
+    // decoder->StartFromKeyFrameAsync(keyFrame);
 }
 
 
 void MainWindow::on_play_clicked()
 {
-    auto fps = decoder->GetFileFPS();
-    int time = 1000 / fps;
-    LOG_DEBUG() << "set timer: " << time << "ms";
-    timer.start(time + 1);
+    // auto fps = decoder->GetFileFPS();
+    // int time = 1000 / fps;
+    // LOG_DEBUG() << "set timer: " << time << "ms";
+    // timer.start(time + 1);
+    runner->AddTask(m_paintVideoTask);
 }
 

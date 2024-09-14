@@ -7,6 +7,8 @@
 #include <condition_variable>
 #include <atomic>
 
+#include "Logger/logger.h"
+
 template <typename T, size_t bufferSize>
 class RingBuffer
 {
@@ -32,6 +34,7 @@ public:
         }
         Loc guard{m_mutex};
         while (Empty() && !m_isStopped.load()) {
+            LOG_DEBUG() << "null wait...";
             m_emtpy.wait(guard);
         }
     }
@@ -109,7 +112,7 @@ public:
         return t;
     }
 
-    T PreviousPos()
+    T ReadPos()
     {
         Loc guard{m_mutex};
         auto rp = m_readPosition.load();

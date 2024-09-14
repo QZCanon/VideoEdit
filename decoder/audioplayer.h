@@ -54,6 +54,7 @@ public:
         m_buffer.write(m_audioBuffer);
         m_buffer.seek(0);
         m_audioSink->start(&m_buffer);
+        emit AudioStarted();
         return ret;
     }
 
@@ -61,6 +62,14 @@ public:
         m_isPlay.store(false);
         Play(time);
     }
+
+    auto IsPlay()
+    {
+        return m_isPlay.load();
+    }
+
+signals:
+    void AudioStarted();
 
 private:
     static void AudioDataCallBack(void* self, Canon::AudioData data)
