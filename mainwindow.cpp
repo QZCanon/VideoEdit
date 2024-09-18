@@ -112,9 +112,9 @@ void MainWindow::GetFrameTask()
 {
     decoder->BufferWait(); // 为空时应该wait
     m_paintVideoTask->SetTaskSleepTime(decoder->GetPaintFrameDuration()); // 设置当前帧的持续时长
-    if (glImage &&  !glImage->BePainting()) {
+    // if (glImage &&  !glImage->BePainting()) {
         emit Paint();
-    }
+    // }
 }
 
 void MainWindow::PaintFrame()
@@ -130,7 +130,7 @@ void MainWindow::PaintFrame()
         syncData->Start();
     }
     glImage->SetFrame(frame);
-    glImage->repaint();
+    // glImage->repaint();
 }
 
 void MainWindow::SpeedCallback(int speed)

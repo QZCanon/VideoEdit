@@ -2,7 +2,7 @@
 #include "VideoRenderer/videorenderer.h"
 #include "Logger/logger.h"
 #include "core/utils.h"
-#include <sys/time.h>>
+#include <sys/time.h>
 
 GL_Image::GL_Image(QWidget* parent):
     QOpenGLWidget(parent)
@@ -34,7 +34,9 @@ void GL_Image::SetFrame(Canon::VideoFrame* frame)
     if (!m_painting.load()) {
         m_painting.store(true);
         m_frame = frame;
+        update();
     }
+
 }
 
 // 窗口绘制函数
@@ -50,14 +52,6 @@ void GL_Image::paintGL()
         return;
     }
 
-    // uint8_t *rgbaData = (uint8_t*)malloc(m_frame->width * m_frame->height * 4);
-    // convert_hardware_yuv_to_rgba(m_frame->data[0],
-    //                              m_frame->data[1],
-    //                              rgbaData,
-    //                              m_frame->width,
-    //                              m_frame->height,
-    //                              (AVPixelFormat)m_frame->format);
-
     QSize imageSize_;            //图片尺寸
     imageSize_.setWidth(m_frame->width);
     imageSize_.setHeight(m_frame->height);
@@ -72,6 +66,7 @@ void GL_Image::paintGL()
     static bool initTextureFlag = false;
     if(!initTextureFlag)
     {
+        initTextureFlag = true;
         // 生成纹理
         glTexImage2D(GL_TEXTURE_2D, 0,
                     GL_RGBA,
@@ -131,7 +126,6 @@ void GL_Image::paintGL()
         texturePos_[Left_Top_X] = 0.0f;
         texturePos_[Left_Top_Y] = 1.0f;
 
-        initTextureFlag = true;
     }
     else
     {

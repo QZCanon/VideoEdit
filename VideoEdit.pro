@@ -51,6 +51,7 @@ SOURCES += \
     FitSDK/fit_protocol_validator.cpp \
     FitSDK/fit_unicode.cpp \
     SyncData/syncdata.cpp \
+    VideoRenderer/videopaint.cpp \
     VideoRenderer/videorenderer.cpp \
     core/time.cpp \
     core/utils.cpp \
@@ -66,6 +67,7 @@ HEADERS += \
     FitParse/listener.h \
     Logger/logger.h \
     SyncData/syncdata.h \
+    VideoRenderer/videopaint.h \
     VideoRenderer/videorenderer.h \
     core/InstanceManager.h \
     core/atomic_vector.hpp \

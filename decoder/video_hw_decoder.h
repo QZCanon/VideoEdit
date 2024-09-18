@@ -107,7 +107,7 @@ private:
     double                  m_timeInterval{0.0}; // 当前帧的持续时间
 
     AtomicVector<Canon::VideoKeyFrame> m_keyFrameList;
-    RingBuffer<Canon::VideoFrame*, 2>            m_frameList;
+    RingBuffer<Canon::VideoFrame*, 5>            m_frameList;
 
 #if defined(Q_OS_MAC)
     std::string hwdevice  = "videotoolbox";

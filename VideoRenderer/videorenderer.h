@@ -11,8 +11,6 @@ extern "C" {
 #include <QTimer>
 #include "core/types.h"
 
-#include <thread>
-
 class GL_Image : public QOpenGLWidget
 {
     Q_OBJECT
