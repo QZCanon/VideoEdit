@@ -133,6 +133,10 @@ contains(QMAKE_HOST.arch, aarch64){
         INCLUDEPATH += E:/install/ffmpeg-6.1.1/include
         DEPENDPATH += E:/install/ffmpeg-6.1.1/include
 
+        win32: LIBS += E:/install/SDL2-2.30.7/lib/x64/SDL2.lib
+
+        INCLUDEPATH += E:/install/SDL2-2.30.7/include
+        DEPENDPATH += E:/install/SDL2-2.30.7/include
     }
 
     #仅在linux -x86 平台下的内容
@@ -154,3 +158,5 @@ contains(QMAKE_HOST.arch, aarch64){
 	INCLUDEPATH += /opt/homebrew/Cellar/sdl2/2.30.7/include
     }
 }
+
+

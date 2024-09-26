@@ -22,7 +22,7 @@ MainWindow::MainWindow(QWidget *parent)
     m_paintVideoTask = CREATE_TASK_OCJECT();
     uint64_t sleep = 1000000 / decoder->GetFileFPS();
     LOG_DEBUG() << "task sleep: " << sleep;
-    m_paintVideoTask->SetTaskSleepTime(30000);
+    m_paintVideoTask->SetTaskSleepTime(sleep);
     m_paintVideoTask->SetTaskFunc(std::bind(&MainWindow::GetFrameTask, this));
 }
 
@@ -123,12 +123,12 @@ void MainWindow::PaintFrame()
         return;
     }
     uint64_t timestamp = TimeBase2Timestamp(frame->pts, decoder->GetCreateTime(), frame->timeBase);
+    m_audioPalyer->Play(timestamp);
     if (syncData) {
         syncData->SetImageTimestame(timestamp);
         syncData->Start();
     }
     glImage->SetFrame(frame);
-    m_audioPalyer->Play(timestamp);
     // glImage->repaint();
 }
 

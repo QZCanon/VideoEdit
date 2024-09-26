@@ -15,7 +15,11 @@
 #include "audio_decoder.h"
 #include "task_runner/task_runner.hpp"
 
+#if defined(Q_OS_MAC)
 #include "SDL2/SDL.h"
+#elif defined(Q_OS_WIN)
+#include "SDL.h"
+#endif
 
 enum class AudioPlayState {
     AUDIO_NORMAL,           // 正常
