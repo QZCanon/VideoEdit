@@ -1,7 +1,6 @@
 
 #include "VideoRenderer/videorenderer.h"
 #include "Logger/logger.h"
-#include "core/utils.h"
 #include <sys/time.h>
 
 GL_Image::GL_Image(QWidget* parent):
@@ -10,6 +9,8 @@ GL_Image::GL_Image(QWidget* parent):
     imageData_ = nullptr;
     dragFlag_ = false;
     scaleVal_ = 1.0;
+
+
 }
 
 GL_Image::~GL_Image()
@@ -36,7 +37,6 @@ void GL_Image::SetFrame(Canon::VideoFrame* frame)
         m_frame = frame;
         update();
     }
-
 }
 
 // 窗口绘制函数
@@ -52,7 +52,7 @@ void GL_Image::paintGL()
         return;
     }
 
-    QSize imageSize_;            //图片尺寸
+                //图片尺寸
     imageSize_.setWidth(m_frame->width);
     imageSize_.setHeight(m_frame->height);
 
@@ -76,7 +76,6 @@ void GL_Image::paintGL()
                     GL_RGBA,
                     GL_UNSIGNED_BYTE,
                     m_frame->frame);
-
         // 初始化顶点坐标（居中显示）
         int x_offset = 0;
         int y_offset = 0;
@@ -125,7 +124,6 @@ void GL_Image::paintGL()
         texturePos_[Right_Top_Y] = 1.0f;
         texturePos_[Left_Top_X] = 0.0f;
         texturePos_[Left_Top_Y] = 1.0f;
-
     }
     else
     {

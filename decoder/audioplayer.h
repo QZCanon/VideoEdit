@@ -15,6 +15,9 @@
 #include "audio_decoder.h"
 #include "task_runner/task_runner.hpp"
 
+#include "SDL2/SDL.h"
+#include "SDL2/SDL_thread.h"
+
 enum class AudioPlayState {
     AUDIO_NORMAL,           // 正常
     AUDIO_ALREADY_PLAY,     // 已经播放
@@ -22,6 +25,14 @@ enum class AudioPlayState {
     AUDIO_TIMESTAME_ERROR,  // 时间戳错误（音视频不能同步上)
     UNKNOWN,                // 为止状态
 };
+
+// 定义一个结构体来保存音频播放所需的数据
+typedef struct {
+    SDL_AudioDeviceID deviceId;
+    bool running;
+    SDL_mutex* mutex;
+    SDL_cond* cond;
+} AudioData;
 
 class AudioPlayer : public QObject {
     Q_OBJECT
@@ -33,7 +44,7 @@ public:
         , m_runner(runner)
     {
         InitAudioDecoder(fileName);
-        InitAudio();
+        InitSDL();
         if (!m_task) {
             m_task = CREATE_TASK_OCJECT();
         }
@@ -50,12 +61,50 @@ public:
         if (ret != AudioPlayState::AUDIO_NORMAL) {
             m_isPlay.store(false); // 当播放状态不正常时，下一次可再同步
         }
-        m_buffer.open(QIODevice::ReadWrite);
-        m_buffer.write(m_audioBuffer);
-        m_buffer.seek(0);
-        m_audioSink->start(&m_buffer);
-        emit AudioStarted();
+        SDLPlay();
         return ret;
+    }
+
+    int InitSDL()
+    {
+        // 初始化 SDL
+       if (SDL_Init(SDL_INIT_AUDIO) < 0) {
+           LOG_DEBUG() <<  "SDL_Init Error: " << SDL_GetError();
+           return 0;
+       }
+
+       // 设置音频格式
+       SDL_AudioSpec desiredSpec;
+       SDL_zero(desiredSpec);
+       desiredSpec.freq = m_audioDecoder->GetSampleRate();
+       desiredSpec.format = AUDIO_F32LSB;
+       desiredSpec.channels = m_audioDecoder->GetChannels();
+       desiredSpec.samples = 4096;
+
+       // 打开音频设备
+       deviceId = SDL_OpenAudioDevice(NULL, 0, &desiredSpec, NULL, 0);
+       if (deviceId == 0) {
+           LOG_DEBUG() << "无法打开音频设备: " << SDL_GetError();
+           SDL_Quit();
+           return 0;
+       }
+       return 1;
+    }
+
+    int SDLPlay()
+    {
+        SDL_QueueAudio(deviceId, m_audioBuffer.data(), m_audioBuffer.size());
+        std::thread audio_thread([&]() {
+            while (1) {
+                // 播放音频
+                SDL_PauseAudioDevice(deviceId, 0);
+                SDL_Delay(20);
+            }
+            // 关闭音频设备
+            SDL_CloseAudioDevice(deviceId);
+        });
+        audio_thread.detach();
+        return 1;
     }
 
     void Replay(const uint64_t time = 0){
@@ -75,7 +124,7 @@ private:
     static void AudioDataCallBack(void* self, Canon::AudioData data)
     {
         AudioPlayer* player = (AudioPlayer*)self;
-        // player->m_audioBuffer.append(data.data);
+        player->m_audioBuffer.append(data.data);
         player->m_bufList.push_back(data);
     }
 
@@ -153,6 +202,7 @@ private:
     QFile        m_sourceFile;
     uint64_t     m_fileCreateTime;
     std::atomic<bool> m_isPlay{false};
+    SDL_AudioDeviceID deviceId;
 
     AtomicVector<Canon::AudioData> m_bufList;     // 单帧音频数据
     QByteArray                    m_audioBuffer; // 所有的音频数据

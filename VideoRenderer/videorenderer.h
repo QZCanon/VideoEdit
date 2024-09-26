@@ -63,6 +63,7 @@ private:
     bool dragFlag_;              //鼠标拖拽状态
     QPoint dragPos_;             //鼠标拖拽位置
     float scaleVal_;             //缩放倍率
+    QSize imageSize_;
 
     Canon::VideoFrame* m_frame = nullptr;
     std::atomic<bool> m_painting{false};
