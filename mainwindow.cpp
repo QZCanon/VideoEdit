@@ -6,8 +6,6 @@
 #include <QTime>
 #include "core/types.h"
 
-#include "SDL2/SDL.h"
-
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
@@ -20,12 +18,11 @@ MainWindow::MainWindow(QWidget *parent)
     InitComponent();
     InitFitParse();
 
-
-    connect(this, &MainWindow::Paint, this, &MainWindow::PaintFrame, Qt::AutoConnection);
+    connect(this, &MainWindow::Paint, this, &MainWindow::PaintFrame, Qt::QueuedConnection);
     m_paintVideoTask = CREATE_TASK_OCJECT();
     uint64_t sleep = 1000000 / decoder->GetFileFPS();
     LOG_DEBUG() << "task sleep: " << sleep;
-    m_paintVideoTask->SetTaskSleepTime(sleep);
+    m_paintVideoTask->SetTaskSleepTime(30000);
     m_paintVideoTask->SetTaskFunc(std::bind(&MainWindow::GetFrameTask, this));
 }
 
@@ -50,7 +47,8 @@ void MainWindow::InitFitParse()
             Qt::ConnectionType::BlockingQueuedConnection);
 
 #if defined(Q_OS_MAC)
-    fitParse->ReadFitFile("/Users/qinzhou/workspace/qt/VideoEdit_test/MAGENE_C416_2024-08-11_194425_907388_1723381873.fit");
+    fitParse->ReadFitFile("/Users/qinzhou/workspace/qt/VideoEdit_test"
+                          "/MAGENE_C416_2024-08-11_194425_907388_1723381873.fit");
 #elif defined(Q_OS_WIN)
     fitParse->ReadFitFile("F:/0830/0830.fit");
 #endif
@@ -85,54 +83,6 @@ void MainWindow::InitComponent()
     // dashBoard->setGeometry(ww - w, wh - h, dashBoardSize.width(), dashBoardSize.height());
 }
 
-void MainWindow::InitSDL()
-{
-    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_TIMER)) {
-        LOG_DEBUG() << "SDL init is fail";
-        return ;
-    }
-
-    // SDL_Window* window = SDL_CreateWindowFrom((void *)winId());
-    // 准备音频数据
-    QByteArray audioData; // 假设这里填充了音频数据
-    SDL_AudioSpec desiredSpec, obtainedSpec;
-    SDL_AudioCVT cvt;
-    SDL_AudioDeviceID deviceId;
-
-    // 设置期望的音频格式
-    desiredSpec.freq = 44100; // 采样率
-    desiredSpec.format = AUDIO_S16SYS; // 音频格式，这里以16位系统音频为例
-    desiredSpec.channels = 2; // 声道数
-    desiredSpec.samples = 4096; // 每次回调填充的样本数
-    desiredSpec.callback = NULL; // 使用默认音频回调
-
-    // 打开音频设备
-    deviceId = SDL_OpenAudioDevice(NULL, 0, &desiredSpec, &obtainedSpec, 0);
-    if (deviceId == 0) {
-        fprintf(stderr, "SDL_OpenAudioDevice Error: %s\n", SDL_GetError());
-        SDL_Quit();
-        return ;
-    }
-
-    // 将音频数据复制到SDL的音频缓冲区
-    // 注意：这里需要确保audioData的格式与desiredSpec匹配
-    Uint8* buffer = new Uint8[audioData.size()];
-    memcpy(buffer, audioData.constData(), audioData.size());
-
-    // 开始播放音频
-    SDL_QueueAudio(deviceId, buffer, audioData.size());
-    SDL_PauseAudioDevice(deviceId, 0);
-
-    // 等待一段时间，或者执行其他任务，直到音频播放完成
-    SDL_Delay(5000); // 假设音频长度足够播放5秒
-
-    // 清理资源
-    delete[] buffer;
-    SDL_CloseAudioDevice(deviceId);
-    SDL_Quit();
-
-}
-
 void MainWindow::RepaintComponent(const QSize& size)
 {
     softwareWinSize = size;
@@ -161,7 +111,6 @@ void MainWindow::resizeEvent(QResizeEvent *e)
 void MainWindow::GetFrameTask()
 {
     decoder->BufferWait(); // 为空时应该wait
-    m_paintVideoTask->SetTaskSleepTime(decoder->GetPaintFrameDuration()); // 设置当前帧的持续时长
     if (glImage &&  !glImage->BePainting()) {
         emit Paint();
     }
@@ -174,12 +123,12 @@ void MainWindow::PaintFrame()
         return;
     }
     uint64_t timestamp = TimeBase2Timestamp(frame->pts, decoder->GetCreateTime(), frame->timeBase);
-    m_audioPalyer->Play(timestamp);
     if (syncData) {
         syncData->SetImageTimestame(timestamp);
         syncData->Start();
     }
     glImage->SetFrame(frame);
+    m_audioPalyer->Play(timestamp);
     // glImage->repaint();
 }
 
@@ -191,31 +140,22 @@ void MainWindow::SpeedCallback(int speed)
     }
 }
 
-
 void MainWindow::on_restart_clicked()
 {
-    return;
     m_audioPalyer->Replay();
     decoder->Restart();
 }
 
 void MainWindow::on_keyFrame_clicked()
 {
-    return;
     // Canon::VideoKeyFrame keyFrame;
     // keyFrame.posOffset = 70805634;
     // keyFrame.timestamp = 640630;
     // decoder->StartFromKeyFrameAsync(keyFrame);
 }
 
-
 void MainWindow::on_play_clicked()
 {
-    // auto fps = decoder->GetFileFPS();
-    // int time = 1000 / fps;
-    // LOG_DEBUG() << "set timer: " << time << "ms";
-    // timer.start(time + 1);
     runner->AddTask(m_paintVideoTask);
-    // m_audioPalyer->Play();
 }
 

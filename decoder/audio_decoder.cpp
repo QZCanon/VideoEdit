@@ -96,7 +96,7 @@ static void decode(AVCodecContext *dec_ctx,
         for (int i = 0; i < frame->nb_samples; i++) {
             for (int ch = 0; ch < dec_ctx->ch_layout.nb_channels; ch++) {
                 dataIsValid = true;
-               audioData.data.append((const char*)(frame->data[ch] + data_size * i), data_size);
+                audioData.data.append((const char*)(frame->data[ch] + data_size * i), data_size);
             }
         }
         if (dataIsValid && decode->m_audioDataCB) {

@@ -40,8 +40,6 @@ private:
     void RepaintComponent(const QSize& size);
     void GetFrameTask();
 
-    void InitSDL();
-
 private slots:
     void SpeedCallback(int);
     void on_restart_clicked();
@@ -86,8 +84,8 @@ private:
 
 #if defined(Q_OS_MAC)
     // std::string m_fileName = "/Users/qinzhou/workspace/test/input_file.mp4";
-    std::string m_fileName = "/Users/qinzhou/workspace/test/DJI_20240820194031_0041_D.MP4";
-    // std::string m_fileName = "/Users/qinzhou/workspace/test/alalei.mp4";
+    // std::string m_fileName = "/Users/qinzhou/workspace/test/DJI_20240820194031_0041_D.MP4";
+    std::string m_fileName = "/Users/qinzhou/workspace/test/alalei.mp4";
     // std::string m_fileName = "/Users/qinzhou/workspace/test/第054话.mkv";
 #elif defined(Q_OS_WIN)
     std::string m_fileName = "F:/DJI_20240908112154_0023_D.MP4";

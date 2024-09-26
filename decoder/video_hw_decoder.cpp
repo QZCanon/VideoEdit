@@ -169,13 +169,13 @@ void HwDecoder::SetKeyFrame(const Canon::VideoKeyFrame keyFrame) {
             }
         }
     }
-    auto it = m_keyFrameList.find(keyFrame);
-    if (it == m_keyFrameList.end()) {
-        LOG_DEBUG() << "Key frame timestamp not found.";
-    } else {
-        int64_t keyFrameIndex = std::distance(m_keyFrameList.begin(), it);
-        LOG_DEBUG() << "Found key frame, keyFrameIndex: " << keyFrameIndex;
-    }
+    // auto it = m_keyFrameList.find(keyFrame);
+    // if (it == m_keyFrameList.end()) {
+    //     LOG_DEBUG() << "Key frame timestamp not found.";
+    // } else {
+    //     int64_t keyFrameIndex = std::distance(m_keyFrameList.begin(), it);
+    //     LOG_DEBUG() << "Found key frame, keyFrameIndex: " << keyFrameIndex;
+    // }
 
     int ret = av_seek_frame(input_ctx, video_stream, keyFrame.timestamp, AVSEEK_FLAG_BACKWARD);
     if (ret < 0) {
@@ -184,8 +184,8 @@ void HwDecoder::SetKeyFrame(const Canon::VideoKeyFrame keyFrame) {
     }
     avcodec_flush_buffers(decoder_ctx); // 仅刷新缓冲区，不重置解码器
     m_decodeType.store(DecodeType::ALL_FRAME);
-    m_decodeCond.notify_all();
     m_isDecoding.store(false);
+    m_decodeCond.notify_all();
 }
 
 void HwDecoder::StateSwitching()
@@ -213,9 +213,10 @@ void HwDecoder::DoWork()
     while (1) {
         if (m_decodeType.load() == DecodeType::INIT) {
             std::unique_lock<std::mutex> lck(m_mutex);
-            LOG_DEBUG() << "wait...";
+            LOG_DEBUG() << "The decode type is INIT, please wait...";
             m_isDecoding.store(false);
             m_decodeCond.wait(lck);
+            LOG_DEBUG() << "ok, continue";
         }
         if (m_isExitDecode) {
             LOG_DEBUG() << "m_isExitDecode: " << m_isExitDecode << ", exit thread";
