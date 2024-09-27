@@ -82,10 +82,25 @@ private:
                 }
                 if (t && t->IsActive()) {
                     (*t)();
-                    std::this_thread::sleep_for(std::chrono:: microseconds(t->Sleep()));
+                    Delay_us(t->Sleep());
                 } else {
                     t = nullptr;
                     endCurrentTask = true;
+                }
+            }
+        }
+
+    private:
+
+        void Delay_us(int timeout)
+        {
+            auto start = std::chrono::system_clock::now();
+            while (true)
+            {
+                auto duration = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now() - start).count();
+                if (duration > timeout) {
+                    // LOG_DEBUG() << "timeout occurred,timeout " << timeout;
+                    break;
                 }
             }
         }
