@@ -2,7 +2,7 @@
 #define VIDEO_HW_DECODER_H
 
 #include <QObject>
-
+#include <QWidget>
 #include <thread>
 
 #include "core/ring_buffer.hpp"
@@ -20,6 +20,12 @@ extern "C" {
 #include <libswscale/swscale.h>
 }
 
+#if defined(Q_OS_MAC)
+#include "SDL2/SDL.h"
+#elif defined(Q_OS_WIN)
+#include "SDL.h"
+#endif
+
 enum class DecodeType {
     INIT,
     KEY_FRAME,
@@ -33,9 +39,9 @@ class HwDecoder : public QObject
     Q_OBJECT
 public:
     // HwDecoder() {}
-    explicit HwDecoder(const std::string& inputName, QObject *parent = nullptr): QObject{parent}
+    explicit HwDecoder(const std::string& inputName, QWidget* obj, QObject *parent = nullptr): QObject{parent}
     {
-        Init(inputName);
+        Init(inputName, obj);
     }
     virtual ~HwDecoder();
 
@@ -69,7 +75,7 @@ public:
 
 private:
     // 初始化资源
-    int Init(const std::string& inputName);
+    int Init(const std::string& inputName, QWidget* obj);
 
     // 解码核心函数
     int Decoder(AVCodecContext *avctx, AVPacket *packet);
@@ -114,6 +120,11 @@ private:
 #elif defined(Q_OS_WIN)
     std::string hwdevice  = "dxva2";
 #endif
+
+private:
+    SDL_Window* window = nullptr;
+    SDL_Renderer* renderer = nullptr;
+    SDL_Texture* texture = nullptr;
 
 };
 

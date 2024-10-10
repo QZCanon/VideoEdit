@@ -14,7 +14,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     runner = new TaskRunner;
 
-    m_audioPalyer = new AudioPlayer(m_fileName, runner);
+    // m_audioPalyer = new AudioPlayer(m_fileName, runner);
     InitComponent();
     InitFitParse();
 
@@ -69,10 +69,10 @@ void MainWindow::InitComponent()
                             softwareWinSize.height() - MENU_BAR_HEIGHT - STATUS_BAR_HEIGHT);
     paintPlane->setStyleSheet("background-color: black;");
 
-    glImage = new GL_Image(paintPlane);
-    glImage->setFixedSize(paintWinSize);
+    // glImage = new GL_Image(paintPlane);
+    // glImage->setFixedSize(paintWinSize);
 
-    decoder = new HwDecoder(m_fileName);
+    decoder = new HwDecoder(m_fileName, paintPlane);
     decoder->Start();
 
     // dashBoard = new DashBoard(paintPlane);
@@ -104,7 +104,7 @@ void MainWindow::RepaintComponent(const QSize& size)
 
 void MainWindow::resizeEvent(QResizeEvent *e)
 {
-    RepaintComponent(e->size());
+    // RepaintComponent(e->size());
     // glImage->setFixedSize(paintWinSize);
 }
 
@@ -123,7 +123,7 @@ void MainWindow::PaintFrame()
         return;
     }
     uint64_t timestamp = TimeBase2Timestamp(frame->pts, decoder->GetCreateTime(), frame->timeBase);
-    m_audioPalyer->Play(timestamp);
+    // m_audioPalyer->Play(timestamp);
     if (syncData) {
         syncData->SetImageTimestame(timestamp);
         syncData->Start();
@@ -142,7 +142,7 @@ void MainWindow::SpeedCallback(int speed)
 
 void MainWindow::on_restart_clicked()
 {
-    m_audioPalyer->Replay();
+    // m_audioPalyer->Replay();
     decoder->Restart();
 }
 
@@ -156,6 +156,7 @@ void MainWindow::on_keyFrame_clicked()
 
 void MainWindow::on_play_clicked()
 {
-    runner->AddTask(m_paintVideoTask);
+    // runner->AddTask(m_paintVideoTask);
+    // m_audioPalyer->Play();
 }
 

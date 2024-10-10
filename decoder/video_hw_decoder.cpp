@@ -2,6 +2,7 @@
 #include "Logger/logger.h"
 #include "core/utils.h"
 
+
 enum AVPixelFormat hw_pix_fmt;
 
 static enum AVPixelFormat GetHwFormat(AVCodecContext *,
@@ -35,7 +36,7 @@ HwDecoder::~HwDecoder()
     av_buffer_unref(&hw_device_ctx);
 }
 
-int HwDecoder::Init(const std::string& inputName)
+int HwDecoder::Init(const std::string& inputName, QWidget* obj)
 {
     //通过你传入的名字来找到对应的硬件解码类型
     auto type = av_hwdevice_find_type_by_name(hwdevice.c_str());
@@ -95,7 +96,6 @@ int HwDecoder::Init(const std::string& inputName)
     } else {
         LOG_DEBUG() << "metadata is null";
     }
-
     auto video           = input_ctx->streams[video_stream];
     AVRational rate = video->avg_frame_rate;
     m_fps           = (double)rate.num / rate.den;
@@ -116,6 +116,15 @@ int HwDecoder::Init(const std::string& inputName)
          fprintf(stderr, "Failed to open codec for stream #%u\n", video_stream);
          return -1;
      }
+     auto channels = decoder_ctx->ch_layout.nb_channels;
+     LOG_DEBUG() << "channels: " << channels;
+
+     // init SDL
+     SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO);
+     window = SDL_CreateWindowFrom((void*)obj->winId());
+     renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+     LOG_DEBUG() << "w: " << obj->width() << ", h: " << obj->height();
+
      return 1;
 }
 
@@ -336,10 +345,46 @@ int HwDecoder::Decoder(AVCodecContext *avctx, AVPacket *packet)
                 int64_t duration     = tmp_frame->duration;
                 double milliseconds  = (double)duration * (double)time_base.num / (double)time_base.den * 1000 * 1000; // us
                 videoFrame->duration = milliseconds;
-                m_frameList.PushBack(std::move(videoFrame));
+
+                // 创建 SDL 纹理
+                SDL_Texture* texture = SDL_CreateTexture(renderer,
+                                                         SDL_PIXELFORMAT_RGBA32,
+                                                         SDL_TEXTUREACCESS_STREAMING,
+                                                         tmp_frame->width,
+                                                         tmp_frame->height);
+
+                SDL_UpdateTexture(texture, NULL, videoFrame->frame, videoFrame->width * 4);
+
+                // 4. 渲染纹理到窗口
+                SDL_RenderClear(renderer);
+                SDL_RenderCopy(renderer, texture, NULL, NULL);
+                SDL_RenderPresent(renderer);
+
+                // 清理资源
+                SDL_DestroyTexture(texture);
+
+                std::this_thread::sleep_for(std::chrono::milliseconds(10));
+
+                 delete[] videoFrame->frame;
+                delete videoFrame;
+                // m_frameList.PushBack(std::move(videoFrame));
             }
+
+            // 将YUV数据更新到纹理
+            // static bool textIsSet = false;
+            // if (!textIsSet) {
+            //     textIsSet = true;
+            //     texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_NV12, SDL_TEXTUREACCESS_STREAMING, tmp_frame->width, tmp_frame->height);
+            // }
+            // SDL_UpdateTexture(texture, NULL, tmp_frame->data[0], tmp_frame->linesize[0]);
+            // // 渲染纹理到窗口
+            // SDL_RenderClear(renderer);
+            // SDL_RenderCopy(renderer, texture, NULL, NULL);
+            // SDL_RenderPresent(renderer);
+
             av_frame_free(&frame);
             av_frame_free(&sw_frame);
+
         }
     }
 

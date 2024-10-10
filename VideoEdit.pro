@@ -80,6 +80,7 @@ HEADERS += \
     dashboard/dashboard.h \
     decoder/audio_decoder.h \
     decoder/audioplayer.h \
+    decoder/player.h \
     decoder/video_hw_decoder.h \
     mainwindow.h \
     myslide/myslide.h \

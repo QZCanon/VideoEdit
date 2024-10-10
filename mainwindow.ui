@@ -6,54 +6,14 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1249</width>
-    <height>780</height>
+    <width>679</width>
+    <height>445</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>MainWindow</string>
   </property>
-  <widget class="QWidget" name="centralwidget">
-   <widget class="QPushButton" name="play">
-    <property name="geometry">
-     <rect>
-      <x>125</x>
-      <y>0</y>
-      <width>80</width>
-      <height>23</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>paly</string>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="restart">
-    <property name="geometry">
-     <rect>
-      <x>537</x>
-      <y>0</y>
-      <width>80</width>
-      <height>23</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>restart</string>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="keyFrame">
-    <property name="geometry">
-     <rect>
-      <x>950</x>
-      <y>0</y>
-      <width>80</width>
-      <height>23</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>keyFrame</string>
-    </property>
-   </widget>
-  </widget>
+  <widget class="QWidget" name="centralwidget"/>
  </widget>
  <resources/>
  <connections/>
