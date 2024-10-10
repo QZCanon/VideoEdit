@@ -33,17 +33,18 @@ enum class DecodeType {
     UNKNOWN,
 };
 
-
 class HwDecoder : public QObject
 {
     Q_OBJECT
 public:
     // HwDecoder() {}
-    explicit HwDecoder(const std::string& inputName, QWidget* obj, QObject *parent = nullptr): QObject{parent}
+    explicit HwDecoder(const std::string& inputName, QObject *parent = nullptr): QObject{parent}
     {
-        Init(inputName, obj);
+        Init(inputName);
     }
     virtual ~HwDecoder();
+
+    void SetPaintPlane(QWidget* paintUI) { m_ui = paintUI; }
 
     // 开始解码
     int Start();
@@ -75,7 +76,7 @@ public:
 
 private:
     // 初始化资源
-    int Init(const std::string& inputName, QWidget* obj);
+    int Init(const std::string& inputName);
 
     // 解码核心函数
     int Decoder(AVCodecContext *avctx, AVPacket *packet);
@@ -114,6 +115,7 @@ private:
 
     AtomicVector<Canon::VideoKeyFrame> m_keyFrameList;
     RingBuffer<Canon::VideoFrame*, 5>            m_frameList;
+    QWidget* m_ui;
 
 #if defined(Q_OS_MAC)
     std::string hwdevice  = "videotoolbox";

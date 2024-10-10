@@ -91,7 +91,6 @@ private:
         }
 
     private:
-
         void Delay_us(int timeout)
         {
             auto start = std::chrono::system_clock::now();

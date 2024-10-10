@@ -204,8 +204,8 @@ int AudioDecoder::Init(const std::string& fileName)
         LOG_DEBUG() << "metadata is null";
     }
     m_isRun = true;
-    // DoWork();
-    this->start();
+    DoWork();
+    // this->start();
     return 1;
 }
 

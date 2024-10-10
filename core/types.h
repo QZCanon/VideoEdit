@@ -84,6 +84,14 @@ typedef struct VideoKeyFrame_ {
     uint64_t posOffset;
 } VideoKeyFrame;
 
+enum class AudioPlayState {
+    AUDIO_NORMAL,           // 正常
+    AUDIO_ALREADY_PLAY,     // 已经播放
+    AUDIO_BUFFER_EMPTY,     // 音频缓冲区为空
+    AUDIO_TIMESTAME_ERROR,  // 时间戳错误（音视频不能同步上)
+    UNKNOWN,                // 为止状态
+};
+
 }
 
 #define PRINT_MSGS(MSGS)                                      \

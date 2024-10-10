@@ -4,7 +4,6 @@
 
 #include <QFileDialog>
 #include <QTime>
-#include "core/types.h"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -14,23 +13,12 @@ MainWindow::MainWindow(QWidget *parent)
 
     runner = new TaskRunner;
 
-    // m_audioPalyer = new AudioPlayer(m_fileName, runner);
     InitComponent();
     InitFitParse();
-
-    connect(this, &MainWindow::Paint, this, &MainWindow::PaintFrame, Qt::QueuedConnection);
-    m_paintVideoTask = CREATE_TASK_OCJECT();
-    uint64_t sleep = 1000000 / decoder->GetFileFPS();
-    LOG_DEBUG() << "task sleep: " << sleep;
-    m_paintVideoTask->SetTaskSleepTime(sleep);
-    m_paintVideoTask->SetTaskFunc(std::bind(&MainWindow::GetFrameTask, this));
 }
 
 MainWindow::~MainWindow()
 {
-    // if (paintPlane) delete paintPlane;
-    // if (glImage)    delete glImage;
-    // if (dashBoard)  delete dashBoard;
     delete ui;
 }
 
@@ -39,7 +27,6 @@ void MainWindow::InitFitParse()
     syncData = new SyncData(runner);
     fitParse = new FitParse;
 
-    // 创建对象之后，先连接信号槽，当前fit文件解析是在主线程
     connect(fitParse, SIGNAL(SendStopWatchMsg(Canon::StopWatchMessage&)),
             syncData, SLOT(AcceptStopWatchData(Canon::StopWatchMessage&)));
     connect(syncData, SIGNAL(SpeedSignal(int)),
@@ -69,11 +56,10 @@ void MainWindow::InitComponent()
                             softwareWinSize.height() - MENU_BAR_HEIGHT - STATUS_BAR_HEIGHT);
     paintPlane->setStyleSheet("background-color: black;");
 
-    // glImage = new GL_Image(paintPlane);
-    // glImage->setFixedSize(paintWinSize);
-
-    decoder = new HwDecoder(m_fileName, paintPlane);
-    decoder->Start();
+    m_playerImpl = new PlayerImpl(m_fileName, paintPlane);
+    m_playerImpl->SetTaskRunner(runner);
+    m_playerImpl->PlayAudio();
+    m_playerImpl->PlayVideo();
 
     // dashBoard = new DashBoard(paintPlane);
     // dashBoard->setMaxValue(50);
@@ -108,55 +94,11 @@ void MainWindow::resizeEvent(QResizeEvent *e)
     // glImage->setFixedSize(paintWinSize);
 }
 
-void MainWindow::GetFrameTask()
-{
-    decoder->BufferWait(); // 为空时应该wait
-    if (glImage &&  !glImage->BePainting()) {
-        emit Paint();
-    }
-}
-
-void MainWindow::PaintFrame()
-{
-    auto frame = decoder->GetFrame();
-    if (!frame->frame) {
-        return;
-    }
-    uint64_t timestamp = TimeBase2Timestamp(frame->pts, decoder->GetCreateTime(), frame->timeBase);
-    // m_audioPalyer->Play(timestamp);
-    if (syncData) {
-        syncData->SetImageTimestame(timestamp);
-        syncData->Start();
-    }
-    glImage->SetFrame(frame);
-    // glImage->repaint();
-}
-
 void MainWindow::SpeedCallback(int speed)
 {
     // LOG_DEBUG() << "speed : " << speed;
     if (dashBoard) {
         dashBoard->setValue(speed);
     }
-}
-
-void MainWindow::on_restart_clicked()
-{
-    // m_audioPalyer->Replay();
-    decoder->Restart();
-}
-
-void MainWindow::on_keyFrame_clicked()
-{
-    // Canon::VideoKeyFrame keyFrame;
-    // keyFrame.posOffset = 70805634;
-    // keyFrame.timestamp = 640630;
-    // decoder->StartFromKeyFrameAsync(keyFrame);
-}
-
-void MainWindow::on_play_clicked()
-{
-    // runner->AddTask(m_paintVideoTask);
-    // m_audioPalyer->Play();
 }
 

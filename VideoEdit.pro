@@ -51,12 +51,11 @@ SOURCES += \
     FitSDK/fit_protocol_validator.cpp \
     FitSDK/fit_unicode.cpp \
     SyncData/syncdata.cpp \
-    VideoRenderer/videopaint.cpp \
-    VideoRenderer/videorenderer.cpp \
     core/time.cpp \
     core/utils.cpp \
     dashboard/dashboard.cpp \
     decoder/audio_decoder.cpp \
+    decoder/player.cpp \
     decoder/video_hw_decoder.cpp \
     main.cpp \
     mainwindow.cpp \
@@ -79,7 +78,6 @@ HEADERS += \
     core/utils.h \
     dashboard/dashboard.h \
     decoder/audio_decoder.h \
-    decoder/audioplayer.h \
     decoder/player.h \
     decoder/video_hw_decoder.h \
     mainwindow.h \
