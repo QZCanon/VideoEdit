@@ -49,24 +49,32 @@ void MainWindow::InitComponent()
     statusBarSize   = {this->size().width(), STATUS_BAR_HEIGHT};
     dashBoardSize   = {dashBoardwidth, dashBoardHeight};
     qRegisterMetaType<AVFrame*>("AVFrame*");//注册类型
+
+    // 初始化渲染面板
     paintPlane = new QWidget(this);
     paintPlane->setGeometry(0,
-                            MENU_BAR_HEIGHT,
+                            MENU_BAR_HEIGHT * 2,
                             softwareWinSize.width(),
                             softwareWinSize.height() - MENU_BAR_HEIGHT - STATUS_BAR_HEIGHT);
+    paintPlane->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+    paintPlane->setWindowFlags(Qt::Widget);  // 确保是普通窗口
     paintPlane->setStyleSheet("background-color: black;");
 
+    // 初始化播放器
     m_playerImpl = new PlayerImpl(m_fileName, paintPlane);
     m_playerImpl->SetTaskRunner(runner);
-    m_playerImpl->PlayAudio();
+    // m_playerImpl->PlayAudio();
     m_playerImpl->PlayVideo();
 
-    // dashBoard = new DashBoard(paintPlane);
-    // dashBoard->setMaxValue(50);
-    // int ww = paintPlane->width();
-    // int wh = paintPlane->height();
-    // int w = 200, h = 200;
-    // dashBoard->setGeometry(ww - w, wh - h, dashBoardSize.width(), dashBoardSize.height());
+    // 初始化仪表盘
+    dashBoard = new DashBoard(paintPlane);
+    dashBoard->setMaxValue(50);
+    int ww = paintPlane->width();
+    int wh = paintPlane->height();
+    int w = 200, h = 200;
+    dashBoard->setGeometry(ww - w, wh - h, dashBoardSize.width(), dashBoardSize.height());
+    dashBoard->raise();
+    dashBoard->repaint();
 }
 
 void MainWindow::RepaintComponent(const QSize& size)
@@ -90,6 +98,7 @@ void MainWindow::RepaintComponent(const QSize& size)
 
 void MainWindow::resizeEvent(QResizeEvent *e)
 {
+    // LOG_DEBUG() << "paint ui w: " << ui->widget->width() << ", h: " << ui->widget->height();
     // RepaintComponent(e->size());
     // glImage->setFixedSize(paintWinSize);
 }

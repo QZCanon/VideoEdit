@@ -22,7 +22,9 @@ class PlayerImpl : public QObject
 {
     Q_OBJECT
 public:
-    PlayerImpl(const std::string fileName, QWidget* paintUI, QObject* parent = nullptr) {
+    PlayerImpl(const std::string fileName, QWidget* paintUI, QObject* parent = nullptr)
+        : m_paintUI(paintUI)
+    {
         Q_UNUSED(parent);
         InitSDL();
         InitAudioDecoder(fileName);
@@ -73,6 +75,7 @@ private:
     SDL_Renderer* m_renderer      = nullptr;
     SDL_Texture*  m_texture       = nullptr;
     TaskSPtr      m_videoPlayTask = nullptr;
+    QWidget*      m_paintUI       = nullptr;
 };
 
 #endif // PLAYER_H

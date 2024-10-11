@@ -82,8 +82,10 @@ int HwDecoder::Init(const std::string& inputName)
         }
     }
 
-    if (!(decoder_ctx = avcodec_alloc_context3(decoder)))
+    if (!(decoder_ctx = avcodec_alloc_context3(decoder))) {
         return AVERROR(ENOMEM);
+    }
+
 
     if (input_ctx->metadata) {
         auto* time_ = av_dict_get(input_ctx->metadata, "creation_time", nullptr, 0);
@@ -116,6 +118,9 @@ int HwDecoder::Init(const std::string& inputName)
          fprintf(stderr, "Failed to open codec for stream #%u\n", video_stream);
          return -1;
      }
+     int expected_width = decoder_ctx->width;
+     int expected_height = decoder_ctx->height;
+      LOG_DEBUG() << "expected w: " << expected_width << ", h: " << expected_height;
 
      return 1;
 }
@@ -284,6 +289,11 @@ int HwDecoder::Decoder(AVCodecContext *avctx, AVPacket *packet)
                     return ret;
             }
 
+            // 获取解码器上下文中的宽度和高度
+            int expected_width = decoder_ctx->width;
+            int expected_height = decoder_ctx->height;
+            // LOG_DEBUG() << "expected w: " << expected_width << ", h: " << expected_height;
+
             ret = avcodec_receive_frame(avctx, frame);
             if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF) {
                 av_frame_free(&frame);
@@ -318,6 +328,8 @@ int HwDecoder::Decoder(AVCodecContext *avctx, AVPacket *packet)
             } else {
                 tmp_frame = frame;
             }
+
+            // LOG_DEBUG() << "w: " << frame->width << ", h: " << frame->height;
 
             if (m_decodeType.load() == DecodeType::ALL_FRAME) {
                 Canon::VideoFrame* videoFrame = new Canon::VideoFrame;

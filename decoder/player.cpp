@@ -91,7 +91,7 @@ void PlayerImpl::InitVideoDecoder(const std::string& fileName, QWidget* paintUI)
     m_decoder       = new HwDecoder(fileName);
     m_decoder->Start(); // ???
     m_window        = SDL_CreateWindowFrom((void*)paintUI->winId());
-    m_renderer      = SDL_CreateRenderer(m_window, -1, SDL_RENDERER_ACCELERATED);
+    m_renderer      = SDL_CreateRenderer(m_window, -1, SDL_RENDERER_TARGETTEXTURE);
     m_videoPlayTask = CREATE_TASK_OCJECT();
     uint64_t sleep  = 1000000 / m_decoder->GetFileFPS();
     LOG_DEBUG() << "task sleep: " << sleep;
@@ -102,7 +102,6 @@ void PlayerImpl::InitVideoDecoder(const std::string& fileName, QWidget* paintUI)
 void PlayerImpl::PlayVideo()
 {
     if (m_runner) {
-        LOG_DEBUG() << "add video task";
         m_runner->AddTask(m_videoPlayTask);
     }
 }
@@ -116,21 +115,27 @@ void PlayerImpl::VideoTaskFunc()
     }
     m_videoPlayTask->SetTaskSleepTime(frameData->duration);
     // 创建 SDL 纹理
-    SDL_Texture* texture = SDL_CreateTexture(m_renderer,
-                                             SDL_PIXELFORMAT_RGBA32,
-                                             SDL_TEXTUREACCESS_STREAMING,
-                                             frameData->width,
-                                             frameData->height);
-
-    SDL_UpdateTexture(texture, NULL, frameData->frame, frameData->width * 4);
+    if (!m_texture) {
+        m_texture = SDL_CreateTexture(m_renderer,
+                                      SDL_PIXELFORMAT_RGBA32,
+                                      SDL_TEXTUREACCESS_STREAMING,
+                                      frameData->width,
+                                      frameData->height);
+        SDL_Rect topLeftViewport = {0, 0, 256, 256};
+        SDL_RenderSetViewport(m_renderer, &topLeftViewport);
+        SDL_RenderSetLogicalSize(m_renderer, frameData->width, frameData->height); // 设置图像宽高，SDL会自动根据比例缩放
+    }
+    SDL_Rect dstRect = {0, 0, 256, 256};
+    SDL_UpdateTexture(m_texture, NULL, frameData->frame, frameData->width * 4);
 
     // 渲染纹理到窗口
     SDL_RenderClear(m_renderer);
-    SDL_RenderCopy(m_renderer, texture, NULL, NULL);
+    SDL_RenderCopy(m_renderer, m_texture, NULL, NULL);
+    // SDL_RenderCopy(m_renderer, m_texture, NULL, &dstRect);
     SDL_RenderPresent(m_renderer);
 
     // 清理资源
-    SDL_DestroyTexture(texture);
+    // SDL_DestroyTexture(m_texture);
     if (frameData) {
         if (frameData->frame) {
             delete frameData->frame;
