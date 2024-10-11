@@ -1,6 +1,8 @@
 #include "dashboard.h"
 #include "ui_dashboard.h"
 
+#include <QGraphicsOpacityEffect>
+
 #define OUTERMOST_WIIDTH 20//仪表盘最外面圆宽度
 #define SCALE_WIIDTH 50 //刻度圆环宽度
 #define TRIANGLE_WIDTH 16//指针三角形底的宽度

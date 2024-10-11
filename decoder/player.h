@@ -35,6 +35,8 @@ public:
 
     virtual ~PlayerImpl() {}
 
+signals:
+
 public:
     int InitSDL();
 

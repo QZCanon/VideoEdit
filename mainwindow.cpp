@@ -1,5 +1,6 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
+#include <QGraphicsOpacityEffect>
 #include "Logger/logger.h"
 
 #include <QFileDialog>
@@ -67,7 +68,7 @@ void MainWindow::InitComponent()
     m_playerImpl->PlayVideo();
 
     // 初始化仪表盘
-    dashBoard = new DashBoard(paintPlane);
+    dashBoard = new DashBoard(this);
     dashBoard->setMaxValue(50);
     int ww = paintPlane->width();
     int wh = paintPlane->height();
@@ -75,6 +76,7 @@ void MainWindow::InitComponent()
     dashBoard->setGeometry(ww - w, wh - h, dashBoardSize.width(), dashBoardSize.height());
     dashBoard->raise();
     dashBoard->repaint();
+
 }
 
 void MainWindow::RepaintComponent(const QSize& size)
@@ -98,9 +100,7 @@ void MainWindow::RepaintComponent(const QSize& size)
 
 void MainWindow::resizeEvent(QResizeEvent *e)
 {
-    // LOG_DEBUG() << "paint ui w: " << ui->widget->width() << ", h: " << ui->widget->height();
-    // RepaintComponent(e->size());
-    // glImage->setFixedSize(paintWinSize);
+    RepaintComponent(e->size());
 }
 
 void MainWindow::SpeedCallback(int speed)
