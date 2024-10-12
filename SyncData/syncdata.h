@@ -28,8 +28,9 @@ public:
         if (m_task && m_runner && false == m_taskIsAdded.load()) {
             m_taskIsAdded.store(true);
             m_runner->AddTask(m_task);
+            LOG_DEBUG() << " add task is ok.";
         } else {
-            // LOG_DEBUG() << " add task is fail.";
+            LOG_DEBUG() << " add task is fail.";
         }
     }
 

@@ -31,6 +31,8 @@ public:
         InitVideoDecoder(fileName, paintUI);
     }
 
+    void SetDashBoard(QWidget* dashBoard) { m_dashBoard = dashBoard; }
+
     void SetTaskRunner(TaskRunner* runner) { m_runner = runner; }
 
     virtual ~PlayerImpl() {}
@@ -78,6 +80,7 @@ private:
     SDL_Texture*  m_texture       = nullptr;
     TaskSPtr      m_videoPlayTask = nullptr;
     QWidget*      m_paintUI       = nullptr;
+    QWidget*      m_dashBoard     = nullptr;
 };
 
 #endif // PLAYER_H

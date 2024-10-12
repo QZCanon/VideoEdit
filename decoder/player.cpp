@@ -106,6 +106,30 @@ void PlayerImpl::PlayVideo()
     }
 }
 
+// 将QImage转换为SDL_Surface
+SDL_Surface* QImageToSurface(const QImage& img)
+{
+    // 将QImage转换为RGBA32格式
+    QImage rgbaImg = img.convertToFormat(QImage::Format_RGBA8888);
+
+    SDL_Surface* surface = SDL_CreateRGBSurfaceFrom(
+        reinterpret_cast<void*>(rgbaImg.bits()),
+        rgbaImg.width(), rgbaImg.height(),
+        32, rgbaImg.bytesPerLine(),
+        0x000000ff, 0x0000ff00, 0x00ff0000, 0xff000000
+    );
+    return surface;
+}
+
+// 将QImage转换为SDL_Texture
+SDL_Texture* QImageToTexture(const QImage& img, SDL_Renderer* renderer)
+{
+    SDL_Surface* surface = QImageToSurface(img);
+    SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, surface);
+    SDL_FreeSurface(surface);
+    return texture;
+}
+
 void PlayerImpl::VideoTaskFunc()
 {
     m_decoder->BufferWait(); // 为空时应该wait
@@ -128,10 +152,20 @@ void PlayerImpl::VideoTaskFunc()
     SDL_Rect dstRect = {0, 0, 256, 256};
     SDL_UpdateTexture(m_texture, NULL, frameData->frame, frameData->width * 4);
 
+
+
     // 渲染纹理到窗口
     SDL_RenderClear(m_renderer);
     SDL_RenderCopy(m_renderer, m_texture, NULL, NULL);
     // SDL_RenderCopy(m_renderer, m_texture, NULL, &dstRect);
+    if (m_dashBoard) {
+        QImage watermarkImage = m_dashBoard->grab().toImage();
+        SDL_Texture* watermarkTexture = QImageToTexture(watermarkImage, m_renderer);
+        SDL_Rect watermarkPos = { 0, 0, 500, 500 };
+        SDL_RenderCopy(m_renderer, watermarkTexture, NULL, &watermarkPos);
+
+        SDL_DestroyTexture(watermarkTexture);
+    }
     SDL_RenderPresent(m_renderer);
 
     // 清理资源
